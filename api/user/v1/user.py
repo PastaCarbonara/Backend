@@ -40,7 +40,7 @@ async def get_user_list(
 )
 async def create_user(request: CreateUserRequestSchema):
     await UserService().create_user(**request.dict())
-    return {"email": request.email, "nickname": request.nickname}
+    return {"username": request.username}
 
 
 @user_router.post(
@@ -49,5 +49,5 @@ async def create_user(request: CreateUserRequestSchema):
     responses={"404": {"model": ExceptionResponseSchema}},
 )
 async def login(request: LoginRequest):
-    token = await UserService().login(email=request.email, password=request.password)
+    token = await UserService().login(username=request.username, password=request.password)
     return {"token": token.token, "refresh_token": token.refresh_token}

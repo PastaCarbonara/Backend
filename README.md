@@ -9,3 +9,9 @@ Boilerplate from [teamhide](https://github.com/teamhide/fastapi-boilerplate).
 `.\venv\Scripts\activate`
 
 `python -m pip install -r .\requirements.txt`
+
+## Migrate database
+
+`alembic revision -m "REVISION NAME" --autogenerate`
+
+`alembic upgrade head`

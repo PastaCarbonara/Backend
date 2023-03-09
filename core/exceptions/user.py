@@ -7,10 +7,10 @@ class PasswordDoesNotMatchException(CustomException):
     message = "password does not match"
 
 
-class DuplicateEmailOrNicknameException(CustomException):
+class DuplicateUsernameException(CustomException):
     code = 400
-    error_code = "USER__DUPLICATE_EMAIL_OR_NICKNAME"
-    message = "duplicate email or nickname"
+    error_code = "USER__DUPLICATE_USERNAME"
+    message = "duplicate username"
 
 
 class UserNotFoundException(CustomException):
