@@ -2,7 +2,7 @@
 name = "fastapi-boilerplate"
 version = "0.1.0"
 description = "FastAPI Boilerplate"
-authors = ["Hide <padocon@naver.com>"]
+authors = ["MealMatch"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
