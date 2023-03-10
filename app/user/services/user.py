@@ -48,7 +48,6 @@ class UserService:
         user = User()
         session.add(user)
         await session.flush()
-        await session.refresh(user)
 
         user_profile = UserProfile(user_id=user.id, username=username, password=password)
         session.add(user_profile)
@@ -66,7 +65,7 @@ class UserService:
 
     async def login(self, username: str, password: str) -> LoginResponseSchema:
         result = await session.execute(
-            select(UserProfile).where(and_(UserProfile.username == username, password == password))
+            select(UserProfile).where(and_(UserProfile.username == username, UserProfile.password == password))
         )
         user = result.scalars().first()
         if not user:
@@ -77,3 +76,6 @@ class UserService:
             refresh_token=TokenHelper.encode(payload={"sub": "refresh"}),
         )
         return response
+
+    def get_password_hash():
+        ...

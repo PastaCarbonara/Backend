@@ -33,7 +33,7 @@ class User(Base, TimestampMixin):
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True)
-    profile = relationship("UserProfile", backref="user")
+    profile = relationship("UserProfile", backref="user", uselist=False)
 
     recipes = relationship("Recipe", backref="creator")
     judged_recipes = relationship("Recipe", secondary=recipe_judgement, backref="users")
