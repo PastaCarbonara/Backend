@@ -97,6 +97,7 @@ class Tag(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50), unique=True)
+
     recipes: Mapped[RecipeTag] = relationship(back_populates="tag")
 
 
@@ -132,7 +133,6 @@ class Swipe(Base):
     __tablename__ = "swipe"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-
     like: Mapped[bool] = mapped_column()
     swipe_session_id: Mapped[int] = mapped_column(ForeignKey("swipe_session.id"))
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
