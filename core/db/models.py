@@ -48,7 +48,7 @@ class RecipeIngredient(Base):
 
     recipe_id: Mapped[int] = mapped_column(ForeignKey("recipe.id"), primary_key=True)
     ingredient_id: Mapped[int] = mapped_column(
-        ForeignKey("receipe.id"), primary_key=True
+        ForeignKey("recipe.id"), primary_key=True
     )
 
     amount: Mapped[float] = mapped_column()
@@ -121,7 +121,7 @@ class SwipeSession(Base):
 class Swipe(Base):
     __tablename__ = "swipe"
 
-    id: int = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     like: Mapped[bool] = mapped_column()
     swipe_session_id: Mapped[int] = mapped_column(ForeignKey("swipe_session.id"))
