@@ -1,6 +1,8 @@
 import os
-
+from dotenv import load_dotenv
 from pydantic import BaseSettings
+
+load_dotenv()
 
 
 class Config(BaseSettings):
@@ -8,8 +10,12 @@ class Config(BaseSettings):
     DEBUG: bool = True
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8000
-    WRITER_DB_URL: str = f"postgresql+asyncpg://postgres:postgres@localhost:3301/mealmatch"
-    READER_DB_URL: str = f"postgresql+asyncpg://postgres:postgres@localhost:3301/mealmatch"
+    WRITER_DB_URL: str = (
+        f"postgresql+asyncpg://postgres:postgres@localhost:3301/mealmatch"
+    )
+    READER_DB_URL: str = (
+        f"postgresql+asyncpg://postgres:postgres@localhost:3301/mealmatch"
+    )
     JWT_SECRET_KEY: str = "fastapi"
     JWT_ALGORITHM: str = "HS256"
     SENTRY_SDN: str = None
@@ -27,8 +33,8 @@ class DevelopmentConfig(Config):
 
 
 class LocalConfig(Config):
-    WRITER_DB_URL: str = f"postgresql+asyncpg://postgres:postgres@localhost:5432/mealmatch_local"
-    READER_DB_URL: str = f"postgresql+asyncpg://postgres:postgres@localhost:5432/mealmatch_local"
+    WRITER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('DU')}:{os.getenv('DP')}@{os.getenv('H')}:{os.getenv('P')}/{os.getenv('DB')}"
+    READER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('DU')}:{os.getenv('DP')}@{os.getenv('H')}:{os.getenv('P')}/{os.getenv('DB')}"
 
 
 class ProductionConfig(Config):
