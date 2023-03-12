@@ -1,12 +1,13 @@
+from typing import List
 from pydantic import BaseModel, Field
-from app.tag.schemas import Tag
+from .tag import RecipeTagSchema
 
 
 class GetRecipeListResponseSchema(BaseModel):
-    recipe_id: int = Field(..., description="ID")
+    id: int = Field(..., description="ID")
     name: str = Field(..., description="Recipe name")
     image: str = Field(..., description="Url of image")
-    tag: Tag = Field(..., description="Tag")
+    tags: List[RecipeTagSchema] = Field(..., description="Tags of the recipe")
 
     class Config:
         orm_mode = True
