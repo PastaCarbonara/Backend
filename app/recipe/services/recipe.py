@@ -11,15 +11,22 @@ class RecipeService:
 
     @Transactional()
     async def judge_recipe(self, recipe_id: int, user_id: int, like: bool) -> None:
-        session.add(RecipeJudgement(recipe_id, user_id, like))
+        exists_query = select(RecipeJudgement).where(
+            (RecipeJudgement.recipe_id == recipe_id)
+            & (RecipeJudgement.user_id == user_id)
+        )
+        result = await session.execute(exists_query)
+        judgment = result.scalars().first()
+        if judgment:
+            judgment.like = like
+        else:
+            session.add(
+                RecipeJudgement(recipe_id=recipe_id, user_id=user_id, like=like)
+            )
 
     async def get_recipe_list(self) -> List[Recipe]:
         query = select(Recipe).options(
             joinedload(Recipe.tags).joinedload(RecipeTag.tag)
         )
         result = await session.execute(query)
-        # recipes = result.unique().scalars().all()
-        # for recipe in recipes:
-        #     for tag in recipe.tags:
-        #         print(tag.tag.id)
         return result.unique().scalars().all()

@@ -16,6 +16,3 @@ class GetRecipeListResponseSchema(BaseModel):
 class JudgeRecipeRequestSchema(BaseModel):
     user_id: int = Field(..., description="userID")
     like: bool = Field(..., description="Of je de recept leuk vindt")
-
-    class Config:
-        orm_mode = True

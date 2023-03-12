@@ -29,7 +29,8 @@ async def get_recipe_list():
 
 @recipe_router.post("{recipe_id}/judge")
 async def judge_recipe(recipe_id: int, request: JudgeRecipeRequestSchema):
-    return await RecipeService.judge_recipe(recipe_id, **request.dict())
+    await RecipeService().judge_recipe(recipe_id, **request.dict())
+    return "Ok"
 
 
 @user_router.get(
