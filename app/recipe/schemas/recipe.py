@@ -1,8 +1,12 @@
 from pydantic import BaseModel, Field
+from app.tag.schemas import Tag
 
 
 class GetRecipeListResponseSchema(BaseModel):
     recipe_id: int = Field(..., description="ID")
+    name: str = Field(..., description="Recipe name")
+    image: str = Field(..., description="Url of image")
+    tag: Tag = Field(..., description="Tag")
 
     class Config:
         orm_mode = True
