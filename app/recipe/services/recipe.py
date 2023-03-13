@@ -1,6 +1,7 @@
 from typing import List
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import joinedload
+from app.recipe.schemas import CreatorCreateRecipeRequestSchema, GetFullRecipeResponseSchema
 from core.db.models import RecipeJudgement, Recipe, RecipeTag, User
 from core.db import Transactional, session
 from core.exceptions.recipe import RecipeNotFoundExeption
@@ -38,6 +39,24 @@ class RecipeService:
             session.add(
                 RecipeJudgement(recipe_id=recipe_id, user_id=user_id, like=like)
             )
+
+    @Transactional()
+    async def create_recipe(self, request: CreatorCreateRecipeRequestSchema) -> int:
+        db_recipe = Recipe(**request.dict())
+
+        session.add(db_recipe)
+        await session.flush()
+        
+        return db_recipe.id
+    
+    async def get_recipe_by_id(self, recipe_id) -> Recipe:
+        query = select(Recipe).where(Recipe.id==recipe_id).options(
+            joinedload(Recipe.tags).joinedload(RecipeTag.tag),
+            joinedload(Recipe.creator),
+            joinedload(Recipe.judgements),
+        )
+        result = await session.execute(query)
+        return result.scalars().first()
 
     async def get_recipe_list(self) -> List[Recipe]:
         query = select(Recipe).options(

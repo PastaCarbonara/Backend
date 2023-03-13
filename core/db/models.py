@@ -29,7 +29,7 @@ class User(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    profile: Mapped["UserProfile"] = relationship(back_populates="user")
+    profile: Mapped["UserProfile"] = relationship(back_populates="user", lazy="joined")
     recipes: Mapped[List["Recipe"]] = relationship(back_populates="creator")
     judged_recipes: Mapped[List[RecipeJudgement]] = relationship(back_populates="user")
 
@@ -58,8 +58,8 @@ class RecipeIngredient(Base):
     amount: Mapped[float] = mapped_column()
     unit_id: Mapped[float] = mapped_column(ForeignKey("unit.id"))
 
-    recipe: Mapped["Recipe"] = relationship(back_populates="ingredients")
-    ingredient: Mapped["Ingredient"] = relationship(back_populates="recipes")
+    # recipe: Mapped["Recipe"] = relationship(back_populates="ingredients")
+    # ingredient: Mapped["Ingredient"] = relationship(back_populates="recipes")
 
 
 class RecipeTag(Base):
@@ -83,7 +83,8 @@ class Recipe(Base, TimestampMixin):
     image: Mapped[str] = mapped_column()
     creator_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"))
 
-    ingredients: Mapped[List[RecipeIngredient]] = relationship(back_populates="recipe")
+    ingredients = Column(JSON, nullable=False)
+    # ingredients: Mapped[List[RecipeIngredient]] = relationship(back_populates="recipe")
     tags: Mapped[List[RecipeTag]] = relationship(back_populates="recipe")
     creator: Mapped[User] = relationship(back_populates="recipes")
     judgements: Mapped[RecipeJudgement] = relationship(back_populates="recipe")
@@ -107,7 +108,7 @@ class Ingredient(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50))
 
-    recipes: Mapped[RecipeIngredient] = relationship(back_populates="ingredient")
+    # recipes: Mapped[RecipeIngredient] = relationship(back_populates="ingredient")
 
 
 class Unit(Base):
