@@ -12,6 +12,7 @@ from .user import (
     PasswordDoesNotMatchException,
     DuplicateUsernameException,
     UserNotFoundException,
+    IncorrectPasswordException,
 )
 
 
@@ -28,4 +29,5 @@ __all__ = [
     "PasswordDoesNotMatchException",
     "DuplicateUsernameException",
     "UserNotFoundException",
+    "IncorrectPasswordException"
 ]
