@@ -4,7 +4,7 @@ from sqlalchemy.orm import joinedload
 from app.recipe.schemas import CreatorCreateRecipeRequestSchema, GetFullRecipeResponseSchema
 from core.db.models import RecipeJudgement, Recipe, RecipeTag, User
 from core.db import Transactional, session
-from core.exceptions.recipe import RecipeNotFoundExeption
+from core.exceptions.recipe import RecipeNotFoundException
 from core.exceptions.user import UserNotFoundException
 
 
@@ -18,7 +18,7 @@ class RecipeService:
         result = await session.execute(recipe_query)
         recipe = result.scalars().first()
         if not recipe:
-            raise RecipeNotFoundExeption
+            raise RecipeNotFoundException
 
         user_query = select(User).where(User.id == user_id)
         result = await session.execute(user_query)
