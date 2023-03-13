@@ -15,9 +15,9 @@ auth_router = APIRouter()
 )
 async def refresh_token(request: RefreshTokenRequest):
     token = await JwtService().create_refresh_token(
-        token=request.token, refresh_token=request.refresh_token
+        access_token=request.token, refresh_token=request.refresh_token
     )
-    return {"token": token.token, "refresh_token": token.refresh_token}
+    return {"access_token": token.access_token, "refresh_token": token.refresh_token}
 
 
 @auth_router.post("/verify")

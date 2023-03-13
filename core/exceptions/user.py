@@ -7,6 +7,12 @@ class PasswordDoesNotMatchException(CustomException):
     message = "password does not match"
 
 
+class IncorrectPasswordException(CustomException):
+    code = 403
+    error_code = "USER__INCORRECT_PASSWORD"
+    message = "password is incorrect"
+
+
 class DuplicateUsernameException(CustomException):
     code = 400
     error_code = "USER__DUPLICATE_USERNAME"
