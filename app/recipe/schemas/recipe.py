@@ -11,8 +11,8 @@ from .tag import RecipeTagSchema
 class GetRecipeListResponseSchema(BaseModel):
     id: int = Field(..., description="ID")
     name: str = Field(..., description="Recipe name")
-    image: str = Field(..., description="Url of image")
-    tags: List[RecipeTagSchema] = Field(..., description="Tags of the recipe")
+    image: str = Field(..., description="Image url")
+    tags: List[RecipeTagSchema] = Field(..., description="Recipe tags")
 
     class Config:
         orm_mode = True
@@ -45,5 +45,5 @@ class CreateRecipeRequestSchema(BaseModel):
 
 
 class JudgeRecipeRequestSchema(BaseModel):
-    user_id: int = Field(..., description="userID")
-    like: bool = Field(..., description="Like the recipe")
+    user_id: int | None = Field(None, description="UserID, optional")
+    like: bool = Field(..., description="Like / Dislike")

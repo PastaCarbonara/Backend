@@ -7,6 +7,12 @@ class PasswordDoesNotMatchException(CustomException):
     message = "password does not match"
 
 
+class IncorrectPasswordException(CustomException):
+    code = 403
+    error_code = "USER__INCORRECT_PASSWORD"
+    message = "password is incorrect"
+
+
 class DuplicateUsernameException(CustomException):
     code = 400
     error_code = "USER__DUPLICATE_USERNAME"
@@ -17,3 +23,9 @@ class UserNotFoundException(CustomException):
     code = 404
     error_code = "USER__NOT_FOUND"
     message = "user not found"
+
+
+class MissingUserIDException(CustomException):
+    code = 400
+    error_code = "USER__NO_ID"
+    message = "no id was provided, or was not logged in"
