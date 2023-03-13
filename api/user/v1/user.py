@@ -28,7 +28,7 @@ user_router = APIRouter()
 )
 async def get_user_list(
     limit: int = Query(10, description="Limit"),
-    prev: int = Query(None, description="Prev ID"),
+    prev: int = Query(None, description="Previous ID"),
 ):
     return await UserService().get_user_list(limit=limit, prev=prev)
 
