@@ -8,7 +8,7 @@ from app.recipe.schemas import (
     GetRecipeListResponseSchema,
 )
 from app.recipe.services import RecipeService
-from core.fastapi.dependencies.permission import AllowAll, PermissionDependency
+from core.fastapi.dependencies.permission import AllowAll, PermissionDependency, ProvidesUserID
 from core.exceptions.user import MissingUserIDException
 
 
@@ -28,14 +28,8 @@ async def get_recipe_list():
     "{recipe_id}/judge",
     response_model_exclude={"id"},
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([AllowAll]))],
+    dependencies=[Depends(PermissionDependency([AllowAll, ProvidesUserID]))],
 )
 async def judge_recipe(recipe_id: int, request: JudgeRecipeRequestSchema, http_request: Request):
-    if http_request.user.id:
-        request.user_id = http_request.user.id
-
-    if request.user_id == None:
-        raise MissingUserIDException
-        
     await RecipeService().judge_recipe(recipe_id, **request.dict())
     return "Ok"

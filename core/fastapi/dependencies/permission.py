@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import json
 from typing import List, Type
 
 from fastapi import Request
@@ -6,7 +7,7 @@ from fastapi.openapi.models import APIKey, APIKeyIn
 from fastapi.security.base import SecurityBase
 
 from app.user.services import UserService
-from core.exceptions import CustomException, UnauthorizedException
+from core.exceptions import CustomException, UnauthorizedException, MissingUserIDException
 
 
 class BasePermission(ABC):
@@ -38,8 +39,25 @@ class IsAdmin(BasePermission):
 class AllowAll(BasePermission):
     async def has_permission(self, request: Request) -> bool:
         return True
+    
+class ProvidesUserID(BasePermission):
+    exception = MissingUserIDException
 
+    async def has_permission(self, request: Request) -> bool:
+        data = await request.json()
 
+        if data.get("user_id"):
+            return True
+        
+        if request.user.id is None:
+            return False
+        
+        data["user_id"] = request.user.id
+        new_body = json.dumps(data, indent=2).encode('utf-8')
+        request.body = new_body
+
+        return True
+        
 class PermissionDependency(SecurityBase):
     def __init__(self, permissions: List[Type[BasePermission]]):
         self.permissions = permissions
