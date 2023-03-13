@@ -16,7 +16,7 @@ class Config(BaseSettings):
     READER_DB_URL: str = (
         f"postgresql+asyncpg://postgres:postgres@localhost:3301/mealmatch"
     )
-    JWT_SECRET_KEY: str = "fastapi"
+    JWT_SECRET_KEY: str = os.getenv('JWT_SECRET_KEY')
     JWT_ALGORITHM: str = "HS256"
     SENTRY_SDN: str = None
     CELERY_BROKER_URL: str = "amqp://user:bitnami@localhost:5672/"

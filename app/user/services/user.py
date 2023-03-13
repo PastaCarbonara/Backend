@@ -9,13 +9,15 @@ from core.exceptions import (
     PasswordDoesNotMatchException,
     DuplicateUsernameException,
     UserNotFoundException,
+    IncorrectPasswordException,
 )
 from core.utils.token_helper import TokenHelper
+from passlib.context import CryptContext
 
 
 class UserService:
     def __init__(self):
-        ...
+        self.pwd_context = pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     async def get_user_list(
         self,
@@ -44,12 +46,13 @@ class UserService:
         is_exist = result.scalars().first()
         if is_exist:
             raise DuplicateUsernameException
-
+        hashed_pwd = self.get_password_hash(password)
+        
         user = User()
         session.add(user)
         await session.flush()
 
-        user_profile = UserProfile(user_id=user.id, username=username, password=password)
+        user_profile = UserProfile(user_id=user.id, username=username, password=hashed_pwd)
         session.add(user_profile)
 
     async def is_admin(self, user_id: int) -> bool:
@@ -65,17 +68,23 @@ class UserService:
 
     async def login(self, username: str, password: str) -> LoginResponseSchema:
         result = await session.execute(
-            select(UserProfile).where(and_(UserProfile.username == username, UserProfile.password == password))
+            select(UserProfile).where(and_(UserProfile.username == username))
         )
         user = result.scalars().first()
         if not user:
             raise UserNotFoundException
+        
+        if not self.verify_password(password, user.password):
+            raise IncorrectPasswordException
 
         response = LoginResponseSchema(
-            token=TokenHelper.encode(payload={"user_id": user.user_id}),
+            access_token=TokenHelper.encode(payload={"user_id": user.user_id}),
             refresh_token=TokenHelper.encode(payload={"sub": "refresh"}),
         )
         return response
 
-    def get_password_hash():
-        ...
+    def get_password_hash(self, password):
+        return self.pwd_context.hash(password)
+    
+    def verify_password(self, plain_password, hashed_password):
+        return self.pwd_context.verify(plain_password, hashed_password)
