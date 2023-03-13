@@ -1,18 +1,11 @@
-
-from email.policy import default
+from typing import List
 from sqlalchemy import (
     Column,
-    Float,
-    Integer,
     String,
-    Text,
     ForeignKey,
-    Boolean,
-    Table,
     JSON,
 )
 
-import sqlalchemy
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from core.db import Base
@@ -20,23 +13,25 @@ from core.db.mixins import TimestampMixin
 from core.db.enums import SwipeSessionEnum
 
 
-recipe_judgement = Table(
-    "recipe_judgement",
-    Base.metadata,
-    Column("recipe_id", ForeignKey("recipe.id", ondelete="CASCADE"), primary_key=True),
-    Column("user_id", ForeignKey("user.id", ondelete="CASCADE"), primary_key=True),
-    Column("like", Boolean, default=False),
-)
+class RecipeJudgement(Base, TimestampMixin):
+    __tablename__ = "recipe_judgement"
+
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipe.id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), primary_key=True)
+    like: Mapped[bool] = mapped_column(default=False)
+
+    user: Mapped["User"] = relationship(back_populates="judged_recipes")
+    recipe: Mapped["Recipe"] = relationship(back_populates="judgements")
 
 
 class User(Base, TimestampMixin):
     __tablename__ = "user"
 
-    id = Column(Integer, primary_key=True)
-    profile = relationship("UserProfile", backref="user", uselist=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-    recipes = relationship("Recipe", backref="creator")
-    judged_recipes = relationship("Recipe", secondary=recipe_judgement, backref="users")
+    profile: Mapped["UserProfile"] = relationship(back_populates="user")
+    recipes: Mapped[List["Recipe"]] = relationship(back_populates="creator")
+    judged_recipes: Mapped[List[RecipeJudgement]] = relationship(back_populates="user")
 
     def __repr__(self):
         return f"{self.username} {self.id}"
@@ -45,51 +40,53 @@ class User(Base, TimestampMixin):
 class UserProfile(Base, TimestampMixin):
     __tablename__ = "user_profile"
 
-    user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), primary_key=True)
+    username: Mapped[str] = mapped_column(String(50))
+    password: Mapped[str] = mapped_column()
+    is_admin: Mapped[bool] = mapped_column(default=False)
 
-    # user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
-
-    username = Column(String(50), nullable=False)
-    password = Column(Text, nullable=False)
-    is_admin = Column(Boolean, default=False)
+    user: Mapped[User] = relationship(back_populates="profile")
 
 
-recipe_ingredient = Table(
-    "recipe_ingredient",
-    Base.metadata,
-    Column("recipe_id", ForeignKey("recipe.id", ondelete="CASCADE"), primary_key=True),
-    Column(
-        "ingredient_id",
-        ForeignKey("ingredient.id", ondelete="CASCADE"),
-        primary_key=True,
-    ),
-    Column("amount", Float),
-    Column("unit_id", ForeignKey("unit.id", ondelete="CASCADE")),
-)
+class RecipeIngredient(Base):
+    __tablename__ = "recipe_ingredient"
 
-recipe_tag = Table(
-    "recipe_tag",
-    Base.metadata,
-    Column("recipe_id", ForeignKey("recipe.id", ondelete="CASCADE"), primary_key=True),
-    Column("tag_id", ForeignKey("tag.id", ondelete="CASCADE"), primary_key=True),
-)
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipe.id"), primary_key=True)
+    ingredient_id: Mapped[int] = mapped_column(
+        ForeignKey("ingredient.id"), primary_key=True
+    )
+    amount: Mapped[float] = mapped_column()
+    unit_id: Mapped[float] = mapped_column(ForeignKey("unit.id"))
+
+    recipe: Mapped["Recipe"] = relationship(back_populates="ingredients")
+    ingredient: Mapped["Ingredient"] = relationship(back_populates="recipes")
+
+
+class RecipeTag(Base):
+    __tablename__ = "recipe_tag"
+
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipe.id"), primary_key=True)
+    tag_id: Mapped[int] = mapped_column(ForeignKey("tag.id"), primary_key=True)
+
+    recipe: Mapped["Recipe"] = relationship(back_populates="tags")
+    tag: Mapped["Tag"] = relationship(back_populates="recipes")
 
 
 class Recipe(Base, TimestampMixin):
     __tablename__ = "recipe"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), nullable=False)
-    description = Column(Text)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50))
+    description: Mapped[str] = mapped_column()
     instructions = Column(JSON, nullable=False)
-    ingredients = relationship(
-        "Ingredient", secondary=recipe_ingredient, backref="recipes"
-    )
-    tags = relationship("Tag", secondary=recipe_tag, backref="recipes")
+    preparing_time: Mapped[int | None] = mapped_column()
+    image: Mapped[str] = mapped_column()
+    creator_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"))
 
-    creator_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
-    preparing_time = Column(Integer)
-    image = Column(Text, nullable=False)
+    ingredients: Mapped[List[RecipeIngredient]] = relationship(back_populates="recipe")
+    tags: Mapped[List[RecipeTag]] = relationship(back_populates="recipe")
+    creator: Mapped[User] = relationship(back_populates="recipes")
+    judgements: Mapped[RecipeJudgement] = relationship(back_populates="recipe")
 
     def __repr__(self) -> str:
         return self.name
@@ -98,42 +95,47 @@ class Recipe(Base, TimestampMixin):
 class Tag(Base):
     __tablename__ = "tag"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), nullable=False, unique=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50), unique=True)
+
+    recipes: Mapped[RecipeTag] = relationship(back_populates="tag")
 
 
 class Ingredient(Base):
     __tablename__ = "ingredient"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50))
+
+    recipes: Mapped[RecipeIngredient] = relationship(back_populates="ingredient")
 
 
 class Unit(Base):
     __tablename__ = "unit"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(30), nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(30))
 
 
 class SwipeSession(Base):
     __tablename__ = "swipe_session"
 
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("user.id"))
-    status = Column(
-        sqlalchemy.Enum(
-            SwipeSessionEnum, values_callable=lambda x: [e.value for e in x]
-        ),
-        default=SwipeSessionEnum.IN_PROGRESS,
+    id: Mapped[int] = mapped_column(primary_key=True)
+    status: Mapped[SwipeSessionEnum] = mapped_column(
+        default=SwipeSessionEnum.IN_PROGRESS
     )
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+
+    swipes: Mapped[List["Swipe"]] = relationship(back_populates="swipe_session")
 
 
 class Swipe(Base):
     __tablename__ = "swipe"
 
-    id = Column(Integer, primary_key=True)
-    swipe_session_id = Column(Integer, ForeignKey("swipe_session.id"))
-    user_id = Column(Integer, ForeignKey("user.id"))
-    recipe_id = Column(Integer, ForeignKey("recipe.id"))
-    like = Column(Boolean, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    like: Mapped[bool] = mapped_column()
+    swipe_session_id: Mapped[int] = mapped_column(ForeignKey("swipe_session.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipe.id"))
+
+    swipe_session: Mapped[SwipeSession] = relationship(back_populates="swipes")
