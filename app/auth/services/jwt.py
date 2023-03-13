@@ -9,15 +9,15 @@ class JwtService:
 
     async def create_refresh_token(
         self,
-        token: str,
+        access_token: str,
         refresh_token: str,
     ) -> RefreshTokenSchema:
-        token = TokenHelper.decode(token=token)
+        access_token = TokenHelper.decode(token=access_token)
         refresh_token = TokenHelper.decode(token=refresh_token)
         if refresh_token.get("sub") != "refresh":
             raise DecodeTokenException
 
         return RefreshTokenSchema(
-            token=TokenHelper.encode(payload={"user_id": token.get("user_id")}),
+            access_token=TokenHelper.encode(payload={"user_id": access_token.get("user_id")}),
             refresh_token=TokenHelper.encode(payload={"sub": "refresh"}),
         )

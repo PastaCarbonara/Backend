@@ -50,4 +50,4 @@ async def create_user(request: CreateUserRequestSchema):
 )
 async def login(request: LoginRequest):
     token = await UserService().login(username=request.username, password=request.password)
-    return {"token": token.token, "refresh_token": token.refresh_token}
+    return {"token": token.access_token, "refresh_token": token.refresh_token}

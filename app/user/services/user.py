@@ -78,7 +78,7 @@ class UserService:
             raise IncorrectPasswordException
 
         response = LoginResponseSchema(
-            token=TokenHelper.encode(payload={"user_id": user.user_id}),
+            access_token=TokenHelper.encode(payload={"user_id": user.user_id}),
             refresh_token=TokenHelper.encode(payload={"sub": "refresh"}),
         )
         return response
