@@ -4,7 +4,6 @@ from fastapi import FastAPI, Request, Depends
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from core.fastapi_versioning import VersionedFastAPI
 
 from api import router
 from api.home.home import home_router
@@ -85,8 +84,6 @@ def create_app() -> FastAPI:
     init_routers(app_=app_)
     init_listeners(app_=app_)
     init_cache()
-    app_ = VersionedFastAPI(app_, enable_latest=True, version_format='{major}', prefix_format='/v{major}', prefix="/api")
-
     return app_
 
 
