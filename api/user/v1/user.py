@@ -1,6 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Query
+from core.fastapi_versioning.versioning import version
 
 from api.user.v1.request.user import LoginRequest
 from api.user.v1.response.user import LoginResponse
@@ -15,7 +16,6 @@ from core.fastapi.dependencies import (
     PermissionDependency,
     IsAdmin,
 )
-from core.fastapi_versioning.versioning import version
 
 user_v1_router = APIRouter()
 
