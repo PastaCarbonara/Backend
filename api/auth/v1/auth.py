@@ -1,18 +1,20 @@
 from fastapi import APIRouter, Response
 
-from api.auth.request.auth import RefreshTokenRequest, VerifyTokenRequest
-from api.auth.response.auth import RefreshTokenResponse
+from api.auth.v1.request.auth import RefreshTokenRequest, VerifyTokenRequest
+from api.auth.v1.response.auth import RefreshTokenResponse
 from app.auth.services.jwt import JwtService
 from app.user.schemas import ExceptionResponseSchema
+from core.fastapi_versioning import version
 
-auth_router = APIRouter()
+auth_v1_router = APIRouter()
 
 
-@auth_router.post(
+@auth_v1_router.post(
     "/refresh",
     response_model=RefreshTokenResponse,
     responses={"400": {"model": ExceptionResponseSchema}},
 )
+@version(1)
 async def refresh_token(request: RefreshTokenRequest):
     token = await JwtService().create_refresh_token(
         access_token=request.token, refresh_token=request.refresh_token
@@ -20,7 +22,8 @@ async def refresh_token(request: RefreshTokenRequest):
     return {"access_token": token.access_token, "refresh_token": token.refresh_token}
 
 
-@auth_router.post("/verify")
+@auth_v1_router.post("/verify")
+@version(1)
 async def verify_token(request: VerifyTokenRequest):
     await JwtService().verify_token(token=request.token)
     return Response(status_code=200)
