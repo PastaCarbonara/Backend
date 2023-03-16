@@ -30,9 +30,9 @@ class GetFullRecipeResponseSchema(BaseModel):
     tags: List[FlattendRecipeTagSchema] = Field(..., description="Tags of the recipe")
     instructions: List[str] = Field(..., description="Instructions for the recipe")
     ingredients: List[str] = Field(..., description="Ingridients for the recipe")
-    # judgements: List[JudgementSchema] = Field(
-    #     ..., description="Judgements of the recipe"
-    # )
+    judgements: List[JudgementSchema] = Field(
+        ..., description="Judgements of the recipe"
+    )
 
     class Config:
         orm_mode = True

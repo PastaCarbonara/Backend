@@ -77,6 +77,7 @@ class RecipeService:
             select(Recipe)
             .options(joinedload(Recipe.tags).joinedload(RecipeTag.tag))
             .options(joinedload(Recipe.creator))
+            .options(joinedload(Recipe.judgements))
         )
         result = await session.execute(query)
         return result.unique().scalars().all()
