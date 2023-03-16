@@ -29,12 +29,11 @@ def VersionedFastAPI(
     app: FastAPI,
     version_format: str = "{major}.{minor}",
     prefix_format: str = "/v{major}_{minor}",
+    app_prefix: str = "",
     default_version: Tuple[int, int] = (1, 0),
     enable_latest: bool = False,
-    prefix: str = "",
     **kwargs: Any,
 ) -> FastAPI:
-    base_prefix = prefix
     parent_app = FastAPI(
         title=app.title,
         **kwargs,
@@ -65,12 +64,12 @@ def VersionedFastAPI(
                 unique_routes[route.path + "|" + method] = route
         for route in unique_routes.values():
             versioned_app.router.routes.append(route)
-        parent_app.mount(f"{base_prefix}{prefix}", versioned_app)
+        parent_app.mount(f"{app_prefix}{prefix}", versioned_app)
 
         @parent_app.get(
-            f"{base_prefix}{prefix}/openapi.json", name=semver, tags=["Versions"]
+            f"{app_prefix}{prefix}/openapi.json", name=semver, tags=["Versions"]
         )
-        @parent_app.get(f"{base_prefix}{prefix}/docs", name=semver, tags=["Documentations"])
+        @parent_app.get(f"{app_prefix}{prefix}/docs", name=semver, tags=["Documentations"])
         def noop() -> None:
             ...
 
@@ -85,6 +84,6 @@ def VersionedFastAPI(
         )
         for route in unique_routes.values():
             versioned_app.router.routes.append(route)
-        parent_app.mount(f"{base_prefix}{prefix}", versioned_app)
+        parent_app.mount(f"{app_prefix}{prefix}", versioned_app)
 
     return parent_app
