@@ -11,7 +11,7 @@ class RecipeTagSchema(BaseModel):
 
 
 class FlattendRecipeTagSchema(BaseModel):
-    tag_id: int = Field(..., description="ID")
+    id: int = Field(..., description="ID")
     name: str = Field(..., description="Tag name")
 
     @root_validator(pre=True)
