@@ -25,6 +25,7 @@
 
             var ws = new WebSocket(`${ws_url}/${application_name}/${client_id}`);
             ws.onmessage = function(event) {
+                console.log(event.data)
                 var messages = document.getElementById('messages')
                 var message = document.createElement('li')
 

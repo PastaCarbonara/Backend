@@ -1,5 +1,3 @@
-import asyncio
-from contextlib import asynccontextmanager
 from typing import List
 
 from fastapi import FastAPI, Request, Depends
@@ -74,18 +72,6 @@ def init_cache() -> None:
     Cache.init(backend=RedisBackend(), key_maker=CustomKeyMaker())
 
 
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     print("Starting")
-#     # Start response swiping session WebSocket
-#     from core.helpers.socket import manager
-#     ws_respond_task = asyncio.create_task(manager.consume())
-    
-#     yield
-#     print("Stopping")
-#     # Stop responses
-#     ws_respond_task.cancel()
-
 def create_app() -> FastAPI:
     app_ = FastAPI(
         title="MealMatch",
@@ -107,15 +93,9 @@ def create_app() -> FastAPI:
         app_prefix="/api",
         dependencies=[Depends(Logging)],
         middleware=make_middleware(),
-        # lifespan=lifespan,
     )
 
     return app_
 
 
 app = create_app()
-
-@app.on_event("startup")
-async def subscribe():
-    from core.helpers.socket import manager
-    asyncio.create_task(manager.consume())
