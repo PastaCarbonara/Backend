@@ -17,7 +17,7 @@ from passlib.context import CryptContext
 
 class UserService:
     def __init__(self):
-        self.pwd_context = pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     async def get_user_list(
         self,

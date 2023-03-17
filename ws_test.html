@@ -1,54 +1,65 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Chat</title>
-    </head>
-    <body>
-        <h1>WebSocket Chat</h1>
-        <h2>Your ID: <span id="ws-id"></span></h2>
-        <hr>
-        <input type="text" value="test" id="application_name" placeholder="application_name">
-        <button onclick="reconnect()">Reconnect</button>
-        <hr>
-        <form action="" onsubmit="sendMessage(event)">
-            <input type="text" id="messageText" autocomplete="off"/>
-            <button>Send</button>
-        </form>
-        <ul id='messages'>
-        </ul>
-        <script>
-            var ws_url = "ws://localhost:8000/api/latest/swipe_sessions"
 
-            var client_id = Date.now()
-            var application_name = "test"
-            document.querySelector("#ws-id").textContent = client_id;
+<head>
+    <title>Chat</title>
+</head>
 
-            var ws = new WebSocket(`${ws_url}/${application_name}/${client_id}`);
-            ws.onmessage = function(event) {
-                console.log(event.data)
-                var messages = document.getElementById('messages')
-                var message = document.createElement('li')
+<body>
+    <h1>WebSocket Chat</h1>
+    <h2>Your ID: <span id="ws-id"></span></h2>
+    <hr>
+    <input type="text" value="test" id="application_name" placeholder="application_name">
+    <button onclick="reconnect()">Reconnect</button>
+    <hr>
+    <form action="" onsubmit="sendMessage(event)">
+        <input type="text" id="messageText" autocomplete="off" />
+        <button>Send</button>
+    </form>
+    <ul id='messages'>
+    </ul>
+    <script>
+        var ws_url = "ws://localhost:8000/api/latest/swipe_sessions"
 
+        var client_id = Date.now()
+        var application_name = "test"
+        document.querySelector("#ws-id").textContent = client_id;
+
+        var ws = new WebSocket(`${ws_url}/${application_name}/${client_id}`);
+        ws = setOnMessage(ws);
+
+        function setOnMessage(ws) {
+            ws.onmessage = function (event) {
                 var data = JSON.parse(event.data)
-                var content = document.createTextNode(`${data.client_id} says: ${data.message}`)
+                var messages = document.getElementById('messages')
 
+                var message = document.createElement('li')
+                var content = document.createTextNode(data.message)
                 message.appendChild(content)
                 messages.appendChild(message)
             };
-            
-            function reconnect() {
-                ws.close()
+            return ws;
+        }
 
-                application_name = document.getElementById("application_name").value
-                ws = new WebSocket(`${ws_url}/${application_name}/${client_id}`);
-            }
+        function reconnect() {
+            ws.close()
 
-            function sendMessage(event) {
-                var input = document.getElementById("messageText")
-                ws.send(input.value)
-                input.value = ''
-                event.preventDefault()
+            application_name = document.getElementById("application_name").value
+            ws = new WebSocket(`${ws_url}/${application_name}/${client_id}`);
+
+            ws = setOnMessage(ws);
+        }
+
+        function sendMessage(event) {
+            var input = document.getElementById("messageText")
+            var message = {
+                message: input.value
             }
-        </script>
-    </body>
+            ws.send(JSON.stringify(message))
+            input.value = ''
+            event.preventDefault()
+        }
+    </script>
+</body>
+
 </html>
