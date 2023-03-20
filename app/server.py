@@ -79,13 +79,17 @@ def create_app() -> FastAPI:
         version="0.1.0",
         docs_url=None if config.ENV == "production" else "/docs",
         redoc_url=None if config.ENV == "production" else "/redoc",
+        dependencies=[Depends(Logging)],
+        middleware=make_middleware(),
     )
+
     init_routers(app_=app_)
     init_listeners(app_=app_)
     init_cache()
-
+    
     app_ = VersionedFastAPI(
         app_,
+        init_func=init_listeners,
         enable_latest=True,
         version_format="{major}",
         prefix_format="/v{major}",
