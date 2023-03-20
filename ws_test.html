@@ -10,7 +10,7 @@
     <h2>Your ID: <span id="ws-id"></span></h2>
     <hr>
     <input type="text" value="test" id="application_name" placeholder="application_name">
-    <button onclick="reconnect()">Reconnect</button>
+    <button onclick="reconnect()">Connect</button>
     <hr>
     <form action="" onsubmit="sendMessage(event)">
         <input type="text" id="messageText" autocomplete="off" />
@@ -25,8 +25,8 @@
         var application_name = "test"
         document.querySelector("#ws-id").textContent = client_id;
 
-        var ws = new WebSocket(`${ws_url}/${application_name}/${client_id}`);
-        ws = setOnMessage(ws);
+        var ws = null //new WebSocket(`${ws_url}/${application_name}/${client_id}`);
+        // ws = setOnMessage(ws);
 
         function setOnMessage(ws) {
             ws.onmessage = function (event) {
@@ -42,7 +42,7 @@
         }
 
         function reconnect() {
-            ws.close()
+            if (ws) ws.close()
 
             application_name = document.getElementById("application_name").value
             ws = new WebSocket(`${ws_url}/${application_name}/${client_id}`);

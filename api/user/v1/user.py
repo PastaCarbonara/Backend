@@ -1,12 +1,12 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Query
+from core.exceptions import ExceptionResponseSchema
 from core.fastapi_versioning.versioning import version
 
 from api.user.v1.request.user import LoginRequest
 from api.user.v1.response.user import LoginResponse
 from app.user.schemas import (
-    ExceptionResponseSchema,
     GetUserListResponseSchema,
     CreateUserRequestSchema,
     CreateUserResponseSchema,

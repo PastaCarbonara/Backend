@@ -15,6 +15,9 @@ from .user import (
     MissingUserIDException,
     IncorrectPasswordException,
 )
+from .recipe import RecipeNotFoundException
+from .responses import ExceptionResponseSchema
+from .hashids import IncorrectHashIDException
 
 
 __all__ = [
@@ -31,5 +34,8 @@ __all__ = [
     "DuplicateUsernameException",
     "UserNotFoundException",
     "MissingUserIDException"
-    "IncorrectPasswordException"
+    "IncorrectPasswordException",
+    "ExceptionResponseSchema",
+    "RecipeNotFoundException",
+    "IncorrectHashIDException"
 ]
