@@ -46,15 +46,18 @@ class ProvidesUserID(BasePermission):
     async def has_permission(self, request: Request) -> bool:
         data = await request.json()
 
-        if data.get("user_id"):
-            return True
-        
+        # if user is logged in AND admin: can input user_id
+        # if user is logged in NOT admin: just use their id
+        # if user is NOT logged in: can input user_id
+
         if request.user.id is None:
-            return False
+            return data.get("user_id")
         
-        data["user_id"] = request.user.id
-        new_body = json.dumps(data, indent=2).encode('utf-8')
-        request.body = new_body
+        elif UserService().is_admin(user_id=request.user.id):
+            if not data.get("user_id"):
+                data["user_id"] = request.user.id
+                new_body = json.dumps(data, indent=2).encode('utf-8')
+                request.body = new_body
 
         return True
         
