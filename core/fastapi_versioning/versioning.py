@@ -27,6 +27,7 @@ def version_to_route(
 
 def VersionedFastAPI(
     app: FastAPI,
+    init_func,
     version_format: str = "{major}.{minor}",
     prefix_format: str = "/v{major}_{minor}",
     default_version: Tuple[int, int] = (1, 0),
@@ -38,6 +39,9 @@ def VersionedFastAPI(
         title=app.title,
         **kwargs,
     )
+
+    init_func(parent_app)
+
     version_route_mapping: Dict[Tuple[int, int], List[APIRoute]] = defaultdict(
         list
     )
@@ -59,6 +63,7 @@ def VersionedFastAPI(
             description=app.description,
             version=semver,
         )
+        init_func(versioned_app)
         for route in version_route_mapping[version]:
             for method in route.methods:
                 unique_routes[route.path + "|" + method] = route
@@ -82,6 +87,7 @@ def VersionedFastAPI(
             description=app.description,
             version=semver,
         )
+        init_func(versioned_app)
         for route in unique_routes.values():
             versioned_app.router.routes.append(route)
         parent_app.mount(f"{app_prefix}{prefix}", versioned_app)
