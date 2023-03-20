@@ -21,20 +21,21 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str, user_id: str
     "",
     response_model=List[SwipeSessionSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([IsAdmin, ProvidesUserID]))],
+    dependencies=[Depends(PermissionDependency([IsAdmin]))],
 )
 @version(1)
 async def get_swipe_sessions():
-    return SwipeSessionService().get_swipe_session_list()
+    return await SwipeSessionService().get_swipe_session_list()
 
 
 @swipe_session_v1_router.post(
     "",
-    response_model=SwipeSessionSchema,
+    # response_model=SwipeSessionSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([IsAdmin, ProvidesUserID]))],
 )
 @version(1)
 async def create_swipe_session(request: CreateSwipeSessionSchema):
-    session_id = await SwipeSessionService().create_recipe(request)
+    print(request)
+    session_id = await SwipeSessionService().create_swipe_session(request)
     return await SwipeSessionService().get_swipe_session_by_id(session_id)

@@ -57,7 +57,7 @@ class SwipeSessionService:
         try:
             while True:
                 data = await websocket.receive_text()
-                await manager.send_personal_message(f"You wrote: {data}", websocket)
+                await manager.send_personal_message('{"message": ' + f"You wrote: {data}" + '}', websocket)
                 await manager.broadcast(session_id, data)
 
         except WebSocketDisconnect:
@@ -86,8 +86,15 @@ class SwipeSessionService:
         result = await session.execute(query)
         return result.scalars().first()
 
-    async def create_swipe_session(self, swipe_session: CreateSwipeSessionSchema):
-        ...
+    @Transactional()
+    async def create_swipe_session(self, request: CreateSwipeSessionSchema):
+        print(request.dict())
+        db_swipe_session = SwipeSession(**request.dict())
+
+        session.add(db_swipe_session)
+        await session.flush()
+
+        return db_swipe_session.id
 
     async def create_swipe(self, swipe: CreateSwipeSchema):
         ...

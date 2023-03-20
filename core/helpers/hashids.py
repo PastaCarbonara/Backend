@@ -34,16 +34,14 @@ def decode_single(hashed_ids):
 
 
 def check_id(hashed_ids, func):
+    real_ids = ()
     try:
-        real_ids = decode(hashed_ids)
+        real_ids = decode_single(hashed_ids)
     
     except:
         return False
     
-    finally:
-        if len(real_ids) < 1:
-            return False
-
+    else:
         obj = func(real_ids[0])
         if not obj:
             return False
