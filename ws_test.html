@@ -9,7 +9,8 @@
     <h1>WebSocket Chat</h1>
     <h2>Your ID: <span id="ws-id"></span></h2>
     <hr>
-    <input type="text" value="test" id="application_name" placeholder="application_name">
+    <input type="text" value="" id="application_name" placeholder="application_name">
+    <input type="text" value="" id="user_id" placeholder="hashed user id">
     <button onclick="reconnect()">Connect</button>
     <hr>
     <form action="" onsubmit="sendMessage(event)">
@@ -22,7 +23,8 @@
         var ws_url = "ws://localhost:8000/api/latest/swipe_sessions"
 
         var client_id = Date.now()
-        var application_name = "test"
+        var application_name = ""
+        var user_id = ""
         document.querySelector("#ws-id").textContent = client_id;
 
         var ws = null //new WebSocket(`${ws_url}/${application_name}/${client_id}`);
@@ -30,6 +32,7 @@
 
         function setOnMessage(ws) {
             ws.onmessage = function (event) {
+                console.log(event.data)
                 var data = JSON.parse(event.data)
                 var messages = document.getElementById('messages')
 
@@ -45,7 +48,8 @@
             if (ws) ws.close()
 
             application_name = document.getElementById("application_name").value
-            ws = new WebSocket(`${ws_url}/${application_name}/${client_id}`);
+            user_id = document.getElementById("user_id").value
+            ws = new WebSocket(`${ws_url}/${application_name}/${user_id}`);
 
             ws = setOnMessage(ws);
         }

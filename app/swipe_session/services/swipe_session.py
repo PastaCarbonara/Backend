@@ -1,3 +1,4 @@
+import json
 from typing import List
 from fastapi import WebSocket, WebSocketDisconnect
 from app.swipe_session.schemas.swipe import CreateSwipeSchema
@@ -54,10 +55,11 @@ class SwipeSessionService:
             manager.disconnect(session_id, websocket)
             return
         
+        await manager.send_personal_message('{"message": "You have connected!!"}', websocket)
+        
         try:
             while True:
                 data = await websocket.receive_text()
-                await manager.send_personal_message('{"message": ' + f"You wrote: {data}" + '}', websocket)
                 await manager.broadcast(session_id, data)
 
         except WebSocketDisconnect:
@@ -73,7 +75,7 @@ class SwipeSessionService:
         )
 
         result = await session.execute(query)
-        return result.scalars().all()
+        return result.unique().scalars().all()
 
     async def get_swipe_session_by_id(self, session_id) -> SwipeSession:
         query = (
@@ -88,7 +90,6 @@ class SwipeSessionService:
 
     @Transactional()
     async def create_swipe_session(self, request: CreateSwipeSessionSchema):
-        print(request.dict())
         db_swipe_session = SwipeSession(**request.dict())
 
         session.add(db_swipe_session)

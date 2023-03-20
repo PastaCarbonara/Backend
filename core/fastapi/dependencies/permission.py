@@ -53,7 +53,7 @@ class ProvidesUserID(BasePermission):
         if request.user.id is None:
             return data.get("user_id")
         
-        elif UserService().is_admin(user_id=request.user.id):
+        elif await UserService().is_admin(user_id=request.user.id):
             if not data.get("user_id"):
                 data["user_id"] = request.user.id
                 new_body = json.dumps(data, indent=2).encode('utf-8')

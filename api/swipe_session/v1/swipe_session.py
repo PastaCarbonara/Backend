@@ -30,12 +30,11 @@ async def get_swipe_sessions():
 
 @swipe_session_v1_router.post(
     "",
-    # response_model=SwipeSessionSchema,
+    response_model=SwipeSessionSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([IsAdmin, ProvidesUserID]))],
 )
 @version(1)
 async def create_swipe_session(request: CreateSwipeSessionSchema):
-    print(request)
     session_id = await SwipeSessionService().create_swipe_session(request)
     return await SwipeSessionService().get_swipe_session_by_id(session_id)
