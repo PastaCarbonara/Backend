@@ -12,7 +12,12 @@ from app.recipe.schemas import (
     CreatorCreateRecipeRequestSchema,
 )
 from app.recipe.services import RecipeService
-from core.fastapi.dependencies.permission import AllowAll, PermissionDependency, ProvidesUserID, IsAdmin
+from core.fastapi.dependencies.permission import (
+    AllowAll,
+    PermissionDependency,
+    ProvidesUserID,
+    IsAdmin,
+)
 
 
 recipe_v1_router = APIRouter()
@@ -21,11 +26,11 @@ recipe_v1_router = APIRouter()
 @recipe_v1_router.get(
     "",
     responses={"400": {"model": ExceptionResponseSchema}},
-    response_model=List[GetRecipeListResponseSchema],
+    response_model=List[GetFullRecipeResponseSchema],
 )
 @version(1)
 async def get_recipe_list():
-    return await RecipeService().get_recipe_list()
+    return await RecipeService().get_full_recipe_list()
 
 
 @recipe_v1_router.get(
@@ -58,8 +63,7 @@ async def judge_recipe(recipe_id: int, request: JudgeRecipeRequestSchema):
 )
 @version(1)
 async def create_recipe(request: UserCreateRecipeRequestSchema):
-    recipe_id = await RecipeService().create_recipe(CreatorCreateRecipeRequestSchema(
-        creator_id=request.user_id,
-        **request.dict()
-    ))
+    recipe_id = await RecipeService().create_recipe(
+        CreatorCreateRecipeRequestSchema(creator_id=request.user_id, **request.dict())
+    )
     return await RecipeService().get_recipe_by_id(recipe_id)

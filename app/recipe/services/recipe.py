@@ -1,7 +1,10 @@
 from typing import List
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import joinedload
-from app.recipe.schemas import CreatorCreateRecipeRequestSchema, GetFullRecipeResponseSchema
+from app.recipe.schemas import (
+    CreatorCreateRecipeRequestSchema,
+    GetFullRecipeResponseSchema,
+)
 from core.db.models import RecipeJudgement, Recipe, RecipeTag, User
 from core.db import Transactional, session
 from core.exceptions.recipe import RecipeNotFoundException
@@ -46,14 +49,18 @@ class RecipeService:
 
         session.add(db_recipe)
         await session.flush()
-        
+
         return db_recipe.id
-    
+
     async def get_recipe_by_id(self, recipe_id) -> Recipe:
-        query = select(Recipe).where(Recipe.id==recipe_id).options(
-            joinedload(Recipe.tags).joinedload(RecipeTag.tag),
-            joinedload(Recipe.creator),
-            joinedload(Recipe.judgements),
+        query = (
+            select(Recipe)
+            .where(Recipe.id == recipe_id)
+            .options(
+                joinedload(Recipe.tags).joinedload(RecipeTag.tag),
+                joinedload(Recipe.creator),
+                joinedload(Recipe.judgements),
+            )
         )
         result = await session.execute(query)
         return result.scalars().first()
@@ -61,6 +68,16 @@ class RecipeService:
     async def get_recipe_list(self) -> List[Recipe]:
         query = select(Recipe).options(
             joinedload(Recipe.tags).joinedload(RecipeTag.tag)
+        )
+        result = await session.execute(query)
+        return result.unique().scalars().all()
+
+    async def get_full_recipe_list(self) -> List[Recipe]:
+        query = (
+            select(Recipe)
+            .options(joinedload(Recipe.tags).joinedload(RecipeTag.tag))
+            .options(joinedload(Recipe.creator))
+            .options(joinedload(Recipe.judgements))
         )
         result = await session.execute(query)
         return result.unique().scalars().all()
