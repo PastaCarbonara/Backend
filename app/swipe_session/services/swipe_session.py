@@ -1,6 +1,5 @@
 from typing import List
 from fastapi import WebSocket, WebSocketDisconnect, WebSocketException, status
-from app.swipe_session.schemas.swipe import CreateSwipeSchema
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import joinedload
 from app.user.services.user import UserService
@@ -108,9 +107,6 @@ class SwipeSessionService:
         await session.flush()
 
         return db_swipe_session.id
-
-    async def create_swipe(self, swipe: CreateSwipeSchema):
-        ...
 
 
 manager = SwipeSessionConnectionManager()
