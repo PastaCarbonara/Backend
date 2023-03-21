@@ -53,6 +53,9 @@ session: Union[AsyncSession, async_scoped_session] = async_scoped_session(
 
 
 class Base(DeclarativeBase):
+    """Base class for SQLAlchemy"""
+
+    # type annotation map is for the enums to be represented as their value, not their key
     type_annotation_map = {
         enum.Enum: sqlalchemy.Enum(enum.Enum, values_callable=lambda x: [e.value for e in x]),
     }

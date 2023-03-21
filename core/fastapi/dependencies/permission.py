@@ -44,7 +44,11 @@ class ProvidesUserID(BasePermission):
     exception = MissingUserIDException
 
     async def has_permission(self, request: Request) -> bool:
-        data = await request.json()
+        try:
+            data = await request.json()
+            
+        except json.JSONDecodeError:
+            return False
 
         # if user is logged in AND admin: can input user_id
         # if user is logged in NOT admin: just use their id

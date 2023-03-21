@@ -21,21 +21,21 @@ from .hashids import IncorrectHashIDException
 
 
 __all__ = [
-    "CustomException",
     "BadRequestException",
-    "NotFoundException",
-    "ForbiddenException",
-    "UnprocessableEntity",
-    "DuplicateValueException",
-    "UnauthorizedException",
+    "CustomException",
     "DecodeTokenException",
-    "ExpiredTokenException",
-    "PasswordDoesNotMatchException",
+    "UnprocessableEntity",
     "DuplicateUsernameException",
-    "UserNotFoundException",
-    "MissingUserIDException"
-    "IncorrectPasswordException",
+    "DuplicateValueException",
     "ExceptionResponseSchema",
+    "ExpiredTokenException",
+    "ForbiddenException",
+    "IncorrectHashIDException",
+    "IncorrectPasswordException",
+    "MissingUserIDException",
+    "NotFoundException",
+    "PasswordDoesNotMatchException",
     "RecipeNotFoundException",
-    "IncorrectHashIDException"
+    "UnauthorizedException",
+    "UserNotFoundException",
 ]

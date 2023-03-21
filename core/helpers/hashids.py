@@ -5,24 +5,27 @@ from core.exceptions.hashids import IncorrectHashIDException
 
 
 salt = os.getenv('HASH_SALT')
-min_length = os.getenv('HASH_MIN_LEN')
+min_length = int(os.getenv('HASH_MIN_LEN'))
 
 hashids = Hashids(salt=salt, min_length=min_length)
 
 
 def encode(id):
+    """Hashids encode function"""
     return hashids.encode(id)
 
 
 def decode(hashed_ids):
+    """Hashids decode function"""
     try:
         return hashids.decode(hashed_ids)
 
-    except:
+    except Exception:
         raise IncorrectHashIDException
     
         
-def decode_single(hashed_ids):
+def decode_single(hashed_ids) -> int:
+    """Decode, return single ID"""
     real_ids = ()
 
     real_ids = decode(hashed_ids)
@@ -34,11 +37,12 @@ def decode_single(hashed_ids):
 
 
 def check_id(hashed_ids, func):
+    """Check if the id returns a value from the provided function"""
     real_id = None
     try:
         real_id = decode_single(hashed_ids)
     
-    except:
+    except IncorrectHashIDException:
         return False
     
     else:
