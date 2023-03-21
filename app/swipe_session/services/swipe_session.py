@@ -19,23 +19,27 @@ class SwipeSessionConnectionManager:
     async def connect(self, websocket: WebSocket, session_id: str):
         await websocket.accept()
 
-        # Check if session_id exists in db
-
         if session_id not in self.active_connections:
             self.active_connections[session_id] = []
 
         self.active_connections[session_id].append(websocket)
 
-    def disconnect(self, session_id: str, websocket: WebSocket):
+    def disconnect(self, session_id: str, websocket: WebSocket) -> bool:
+        """Returns a bool wether or not there are still connections active"""
+        
         self.active_connections[session_id].remove(websocket)
+
+        if len(self.active_connections[session_id]) == 0:
+            del self.active_connections[session_id]
+            return False
+        
+        return True
+
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
 
     async def broadcast(self, session_id: str, message: str):
-
-        # store message?
-
         for connection in self.active_connections[session_id]:
             await connection.send_text(message)
 
@@ -45,14 +49,14 @@ class SwipeSessionService:
         ...
 
     async def handler(self, websocket: WebSocket, session_id: str, user_id: int):
-        user_id = check_id(user_id, UserService().get_user_by_id)
-        session_id = check_id(session_id, self.get_swipe_session_by_id)
+        user = await check_id(user_id, UserService().get_user_by_id)
+        session = await check_id(session_id, self.get_swipe_session_by_id)
 
-        await manager.connect(websocket, session_id)
+        await manager.connect(websocket, session.id)
 
-        if not user_id or not session_id:
+        if not user or not session:
             await manager.send_personal_message('{"message": "Invalid ID"}', websocket)
-            manager.disconnect(session_id, websocket)
+            manager.disconnect(session.id, websocket)
             return
         
         await manager.send_personal_message('{"message": "You have connected!!"}', websocket)
@@ -60,11 +64,11 @@ class SwipeSessionService:
         try:
             while True:
                 data = await websocket.receive_text()
-                await manager.broadcast(session_id, data)
+                await manager.broadcast(session.id, data)
 
         except WebSocketDisconnect:
-            manager.disconnect(session_id, websocket)
-            await manager.broadcast(session_id, '{"message": f"Client '+str(user_id)+' left the chat"}')
+            if manager.disconnect(session.id, websocket):
+                await manager.broadcast(session.id, '{"message": f"Client '+str(user_id)+' left the chat"}')
 
     async def get_swipe_session_list(self) -> List[SwipeSession]:
         query = (

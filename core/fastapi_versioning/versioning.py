@@ -90,14 +90,25 @@ def VersionedFastAPI(
         prefix = "/latest"
         major, minor = version
         semver = version_format.format(major=major, minor=minor)
+
         versioned_app = FastAPI(
             title=app.title,
             description=app.description,
             version=semver,
         )
         init_func(versioned_app)
+
         for route in unique_routes.values():
             versioned_app.router.routes.append(route)
         parent_app.mount(f"{app_prefix}{prefix}", versioned_app)
+        
+        @parent_app.get(
+            f"{app_prefix}{prefix}/openapi.json", name=semver, tags=["Versions"]
+        )
+        @parent_app.get(
+            f"{app_prefix}{prefix}/docs", name=semver, tags=["Documentations"]
+        )
+        def noop() -> None:
+            ...
 
     return parent_app
