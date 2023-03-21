@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 
 
 class BaseEnum(Enum):
@@ -7,6 +7,17 @@ class BaseEnum(Enum):
 
 class UserEnum(BaseEnum):
     pass
+
+
+class SwipeSessionActionEnum(str, BaseEnum):
+    REQUEST_SESSION_MESSAGE = "REQUEST_SESSION_MESSAGE"
+    REQUEST_GLOBAL_MESSAGE = "REQUEST_GLOBAL_MESSAGE"
+    REQUEST_RECIPE_LIKE = "REQUEST_RECIPE_LIKE"
+    
+    RESPONSE_CONNECTION_CODE = "RESPONSE_CONNECTION_CODE"
+    RESPONSE_SESSION_MESSAGE = "RESPONSE_SESSION_MESSAGE"
+    RESPONSE_GLOBAL_MESSAGE = "RESPONSE_GLOBAL_MESSAGE"
+    RESPONSE_RECIPE_MATCH = "RESPONSE_RECIPE_MATCH"
 
 
 class SwipeSessionEnum(str, BaseEnum):

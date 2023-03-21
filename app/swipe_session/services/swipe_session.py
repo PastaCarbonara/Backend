@@ -1,11 +1,19 @@
+import json
 from typing import List
 from fastapi import WebSocket, WebSocketDisconnect, WebSocketException, status
+from pydantic import ValidationError
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import joinedload
+from app.swipe.services.swipe import SwipeService
 from app.user.services.user import UserService
 from core.db import Transactional, session
 
-from app.swipe_session.schemas.swipe_session import CreateSwipeSessionSchema
+from app.swipe.schemas.swipe import CreateSwipeSchema
+from app.swipe_session.schemas.swipe_session import (
+    CreateSwipeSessionSchema,
+    PacketSchema,
+)
+from core.db.enums import SwipeSessionActionEnum as ACTIONS
 from core.db.models import SwipeSession
 from core.helpers.hashids import check_id, decode
 
@@ -25,26 +33,31 @@ class SwipeSessionConnectionManager:
     async def deny(self, websocket: WebSocket, msg: str = "Access denied"):
         """Denies access to the websocket"""
         await websocket.accept()
-        await websocket.send_text('{"message": "' + f"{msg}" + '"}')
+        await SwipeSessionService.handle_connection_code(websocket, 400, msg)
         await websocket.close(status.WS_1000_NORMAL_CLOSURE)
 
     def disconnect(self, session_id: str, websocket: WebSocket) -> bool:
         """Returns a bool wether or not there are still connections active"""
-        
+
         self.active_connections[session_id].remove(websocket)
 
         if len(self.active_connections[session_id]) == 0:
             del self.active_connections[session_id]
             return False
-        
+
         return True
 
-    async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
+    async def send_personal_message(self, websocket: WebSocket, packet: PacketSchema):
+        await websocket.send_json(packet.dict())
 
-    async def broadcast(self, session_id: str, message: str):
+    async def global_broadcast(self, packet: PacketSchema):
+        for session_id in self.active_connections.keys():
+            for connection in self.active_connections[session_id]:
+                await connection.send_json(packet.dict())
+
+    async def session_broadcast(self, session_id: str, packet: PacketSchema):
         for connection in self.active_connections[session_id]:
-            await connection.send_text(message)
+            await connection.send_json(packet.dict())
 
 
 class SwipeSessionService:
@@ -58,32 +71,90 @@ class SwipeSessionService:
         except:
             await manager.deny(websocket, "Invalid ID")
             return
-        
+
         await manager.connect(websocket, session.id)
 
         if not user or not session:
-            await manager.send_personal_message('{"message": "Invalid ID"}', websocket)
+            await self.handle_connection_code(websocket, 400, "Invalid ID!")
             manager.disconnect(session.id, websocket)
             return
-        
-        await manager.send_personal_message('{"message": "You have connected!!"}', websocket)
-        
+
+        await self.handle_connection_code(websocket, 200, "You have connected!!")
+
         try:
             while True:
                 data = await websocket.receive_text()
-                await manager.broadcast(session.id, data)
+
+                # Gate keepers/Guard clauses
+                try:
+                    data_json = json.loads(data)
+                except:
+                    message = "Data is not JSON serializable"
+                    await self.handle_connection_code(websocket, 400, message)
+                    continue
+
+                try:
+                    packet = PacketSchema(**data_json)
+                except ValidationError:
+                    message = "Action does not exist"
+                    await self.handle_connection_code(websocket, 400, message)
+                    continue
+
+                # Handlers
+                if packet.action == ACTIONS.REQUEST_GLOBAL_MESSAGE:
+                    # Add authorization check
+                    await self.handle_global_packet(packet)
+
+                elif packet.action == ACTIONS.REQUEST_RECIPE_LIKE:
+                    await self.handle_recipe_like(packet)
+                    continue
+
+                elif packet.action == ACTIONS.REQUEST_SESSION_MESSAGE:
+                    await self.handle_session_packet(session.id, packet)
+
+                else:
+                    message = "Action is not implemented or not available"
+                    await self.handle_connection_code(websocket, 501, message)
 
         except WebSocketDisconnect:
             if manager.disconnect(session.id, websocket):
-                await manager.broadcast(session.id, '{"message": f"Client '+str(user_id)+' left the chat"}')
+                await self.handle_session_message(
+                    session.id, f"Client {user_id} left the chat"
+                )
+
+    async def handle_global_message(self, message: str):
+        payload = {"message": message}
+        packet = PacketSchema(action=ACTIONS.RESPONSE_SESSION_MESSAGE, payload=payload)
+
+        await self.handle_global_packet(packet)
+
+    async def handle_global_packet(self, packet: PacketSchema):
+        await manager.global_broadcast(packet)
+
+    async def handle_session_message(self, session_id: int, message: str):
+        payload = {"message": message}
+        packet = PacketSchema(action=ACTIONS.RESPONSE_SESSION_MESSAGE, payload=payload)
+
+        await self.handle_session_packet(session_id, packet)
+
+    async def handle_session_packet(self, session_id: int, packet: PacketSchema):
+        await manager.session_broadcast(session_id, packet)
+
+    async def handle_connection_code(self, websocket, code: int, message: str):
+        payload = {"code": code, "message": message}
+        packet = PacketSchema(action=ACTIONS.RESPONSE_CONNECTION_CODE, payload=payload)
+
+        await manager.send_personal_message(websocket, packet)
+
+    async def handle_recipe_like(self, packet: PacketSchema):
+        try: 
+            SwipeService.create_swipe(CreateSwipeSchema(packet.payload))
+        except ValidationError as e:
+            print(e)
+        ...
 
     async def get_swipe_session_list(self) -> List[SwipeSession]:
-        query = (
-            select(SwipeSession)
-            .options(
-                joinedload(SwipeSession.swipes)
-            )
-        )
+        query = select(SwipeSession).options(joinedload(SwipeSession.swipes))
 
         result = await session.execute(query)
         return result.unique().scalars().all()

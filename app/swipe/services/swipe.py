@@ -1,4 +1,4 @@
-from app.swipe_session.schemas.swipe import CreateSwipeSchema
+from app.swipe.schemas.swipe import CreateSwipeSchema
 from core.db import session
 from core.db.models import Swipe
 from core.db.transactional import Transactional
