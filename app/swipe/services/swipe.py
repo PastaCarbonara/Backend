@@ -1,3 +1,4 @@
+from sqlalchemy import and_, select
 from app.swipe.schemas.swipe import CreateSwipeSchema
 from core.db import session
 from core.db.models import Swipe
@@ -13,3 +14,24 @@ class SwipeService:
         await session.flush()
 
         return db_swipe.id
+    
+    async def get_swipe_by_creds(self, swipe_session_id: int, user_id: int, recipe_id: int):
+        """Get swipe by SessionID, UserID and RecipeID"""
+
+        query = select(Swipe).where(and_(
+            Swipe.recipe_id==recipe_id,
+            Swipe.swipe_session_id==swipe_session_id,
+            Swipe.user_id==user_id
+        ))
+        result = await session.execute(query)
+        return result.scalars().first()
+
+    async def get_swipe_matches(self, swipe_session_id: int, recipe_id: int):
+        """Get swipes by SessionID and RecipeID"""
+        
+        query = select(Swipe).where(and_(
+            Swipe.recipe_id==recipe_id,
+            Swipe.swipe_session_id==swipe_session_id
+        ))
+        result = await session.execute(query)
+        return result.scalars().all()

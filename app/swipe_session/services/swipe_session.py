@@ -106,8 +106,7 @@ class SwipeSessionService:
                     await self.handle_global_packet(packet)
 
                 elif packet.action == ACTIONS.REQUEST_RECIPE_LIKE:
-                    await self.handle_recipe_like(packet)
-                    continue
+                    await self.handle_recipe_like(websocket, session.id, user.id, packet)
 
                 elif packet.action == ACTIONS.REQUEST_SESSION_MESSAGE:
                     await self.handle_session_packet(session.id, packet)
@@ -146,13 +145,45 @@ class SwipeSessionService:
 
         await manager.send_personal_message(websocket, packet)
 
-    async def handle_recipe_like(self, packet: PacketSchema):
-        try: 
-            SwipeService.create_swipe(CreateSwipeSchema(packet.payload))
-        except ValidationError as e:
-            print(e)
-        ...
+    async def handle_recipe_like(self, websocket: WebSocket, session_id: int, user_id: int, packet: PacketSchema):
+        # get swipe session
 
+        # if swipe session: 409 already exists
+
+        try:
+            swipe_schema = CreateSwipeSchema(
+                swipe_session_id=session_id, 
+                user_id=user_id, 
+                **packet.payload
+            )
+
+        except ValidationError as e:
+            await self.handle_connection_code(websocket, 400, e.json())
+            return
+        
+        # Commented out for frontend testing
+
+        # existing_swipe = await SwipeService().get_swipe_by_all_creds(
+        #     swipe_session_id=session_id, 
+        #     user_id=user_id, 
+        #     recipe_id=packet.payload["recipe_id"]
+        # )
+        
+        # if existing_swipe:
+        #     message = "This user has already swiped this recipe in this session"
+        #     await self.handle_connection_code(websocket, 409, message)
+        #     return
+
+        swipe_matches = await SwipeService().get_swipe_matches(
+            swipe_session_id=session_id,
+            recipe_id=packet.payload["recipe_id"]
+        )
+
+        print(swipe_matches)
+        print("AAAAAAAAAAAA")
+    
+        await SwipeService().create_swipe(swipe_schema)
+        
     async def get_swipe_session_list(self) -> List[SwipeSession]:
         query = select(SwipeSession).options(joinedload(SwipeSession.swipes))
 

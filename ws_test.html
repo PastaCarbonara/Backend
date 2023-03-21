@@ -48,7 +48,8 @@
                 var messages = document.getElementById('messages')
 
                 var message = document.createElement('li')
-                var content = document.createTextNode(data.message)
+                var content = document.createTextNode(data.payload.message)
+                console.log(data.payload.message)
                 message.appendChild(content)
                 messages.appendChild(message)
             };
@@ -72,10 +73,12 @@
         function sendMessage(event) {
             var input = document.getElementById("messageText")
             var payload = {
-                message: input.value
+                message: input.value,
+                like: true,
+                recipe_id: 1
             }
             var package = {
-                action: actions.REQUEST_GLOBAL_MESSAGE,
+                action: actions.REQUEST_RECIPE_LIKE,
                 payload: payload
             }
             ws.send(JSON.stringify(package))
