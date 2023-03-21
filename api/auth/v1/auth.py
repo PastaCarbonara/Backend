@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Response
-from core.exceptions.token import DecodeTokenException
+from core.exceptions import ExceptionResponseSchema, DecodeTokenException
 from core.fastapi_versioning import version
 
 from api.auth.v1.request.auth import RefreshTokenRequest, VerifyTokenRequest
 from api.auth.v1.response.auth import RefreshTokenResponse
 from app.auth.services.jwt import JwtService
-from app.user.schemas import ExceptionResponseSchema
 
 auth_v1_router = APIRouter()
 
@@ -31,10 +30,10 @@ async def verify_token(request: VerifyTokenRequest):
 
     except DecodeTokenException:
         return Response(status_code=400)
-    
+
     except Exception as e:
         print(e)
         return Response(status_code=500)
-        
+
     else:
         return Response(status_code=200)

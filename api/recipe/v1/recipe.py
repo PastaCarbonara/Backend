@@ -1,10 +1,10 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Query, Request
+from core.exceptions import ExceptionResponseSchema
 from core.fastapi_versioning import version
 
 from app.recipe.schemas import (
-    ExceptionResponseSchema,
     JudgeRecipeRequestSchema,
     GetRecipeListResponseSchema,
     GetFullRecipeResponseSchema,

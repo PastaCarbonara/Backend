@@ -1,6 +1,7 @@
 from typing import Optional, List
 
 from sqlalchemy import or_, select, and_
+from sqlalchemy.orm import joinedload
 
 from core.db.models import User, UserProfile
 from app.user.schemas.user import LoginResponseSchema
@@ -17,7 +18,7 @@ from passlib.context import CryptContext
 
 class UserService:
     def __init__(self):
-        self.pwd_context = pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     async def get_user_list(
         self,
@@ -35,6 +36,17 @@ class UserService:
         query = query.limit(limit)
         result = await session.execute(query)
         return result.scalars().all()
+    
+    async def get_user_by_id(self, user_id: int) -> User:
+        query = (
+            select(User)
+            .where(User.id == user_id)
+            .options(
+                joinedload(User.profile)
+            )
+        )
+        result = await session.execute(query)
+        return result.scalars().first()
 
     @Transactional()
     async def create_user(

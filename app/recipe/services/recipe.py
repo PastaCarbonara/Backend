@@ -7,8 +7,7 @@ from app.recipe.schemas import (
 )
 from core.db.models import RecipeJudgement, Recipe, RecipeTag, User
 from core.db import Transactional, session
-from core.exceptions.recipe import RecipeNotFoundException
-from core.exceptions.user import UserNotFoundException
+from core.exceptions import RecipeNotFoundException, UserNotFoundException
 
 
 class RecipeService:

@@ -1,5 +1,7 @@
 from contextvars import ContextVar, Token
+import enum
 from typing import Union
+import sqlalchemy
 
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -51,4 +53,9 @@ session: Union[AsyncSession, async_scoped_session] = async_scoped_session(
 
 
 class Base(DeclarativeBase):
-    pass
+    """Base class for SQLAlchemy"""
+
+    # type annotation map is for the enums to be represented as their value, not their key
+    type_annotation_map = {
+        enum.Enum: sqlalchemy.Enum(enum.Enum, values_callable=lambda x: [e.value for e in x]),
+    }
