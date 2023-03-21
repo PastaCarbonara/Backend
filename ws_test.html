@@ -50,8 +50,13 @@
             application_name = document.getElementById("application_name").value
             user_id = document.getElementById("user_id").value
             ws = new WebSocket(`${ws_url}/${application_name}/${user_id}`);
+            ws.onerror = function (event) {
+                console.log(":DD")
+                console.log(event)
+            }
 
             ws = setOnMessage(ws);
+            console.log(ws)
         }
 
         function sendMessage(event) {

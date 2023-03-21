@@ -38,16 +38,7 @@ def decode_single(hashed_ids) -> int:
 
 def check_id(hashed_ids, func):
     """Check if the id returns a value from the provided function"""
-    real_id = None
-    try:
-        real_id = decode_single(hashed_ids)
-    
-    except IncorrectHashIDException:
-        return False
-    
-    else:
-        obj = func(real_id)
-        if not obj:
-            return False
-        
-        return obj
+    real_id = decode_single(hashed_ids)
+    obj = func(real_id)
+
+    return obj

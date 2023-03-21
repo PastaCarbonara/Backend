@@ -1,6 +1,5 @@
-import json
 from typing import List
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket, WebSocketDisconnect, WebSocketException, status
 from app.swipe_session.schemas.swipe import CreateSwipeSchema
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import joinedload
@@ -24,6 +23,12 @@ class SwipeSessionConnectionManager:
 
         self.active_connections[session_id].append(websocket)
 
+    async def deny(self, websocket: WebSocket, msg: str = "Access denied"):
+        """Denies access to the websocket"""
+        await websocket.accept()
+        await websocket.send_text('{"message": "' + f"{msg}" + '"}')
+        await websocket.close(status.WS_1000_NORMAL_CLOSURE)
+
     def disconnect(self, session_id: str, websocket: WebSocket) -> bool:
         """Returns a bool wether or not there are still connections active"""
         
@@ -34,7 +39,6 @@ class SwipeSessionConnectionManager:
             return False
         
         return True
-
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
@@ -49,9 +53,13 @@ class SwipeSessionService:
         ...
 
     async def handler(self, websocket: WebSocket, session_id: str, user_id: int):
-        user = await check_id(user_id, UserService().get_user_by_id)
-        session = await check_id(session_id, self.get_swipe_session_by_id)
-
+        try:
+            user = await check_id(user_id, UserService().get_user_by_id)
+            session = await check_id(session_id, self.get_swipe_session_by_id)
+        except:
+            await manager.deny(websocket, "Invalid ID")
+            return
+        
         await manager.connect(websocket, session.id)
 
         if not user or not session:
