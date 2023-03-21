@@ -16,7 +16,7 @@ class Config(BaseSettings):
     READER_DB_URL: str = (
         f"postgresql+asyncpg://postgres:postgres@localhost:3301/mealmatch"
     )
-    JWT_SECRET_KEY: str = os.getenv('JWT_SECRET_KEY')
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY")
     JWT_ALGORITHM: str = "HS256"
     SENTRY_SDN: str = None
     CELERY_BROKER_URL: str = "amqp://user:bitnami@localhost:5672/"
@@ -26,8 +26,8 @@ class Config(BaseSettings):
 
 
 class DevelopmentConfig(Config):
-    WRITER_DB_URL: str = f"postgresql+asyncpg://fastapi:fastapi@localhost:3302/fastapi"
-    READER_DB_URL: str = f"postgresql+asyncpg://fastapi:fastapi@localhost:3302/fastapi"
+    WRITER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('DU')}:{os.getenv('DP')}@{os.getenv('H')}:{os.getenv('P')}/{os.getenv('DB')}"
+    READER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('DU')}:{os.getenv('DP')}@{os.getenv('H')}:{os.getenv('P')}/{os.getenv('DB')}"
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
 
