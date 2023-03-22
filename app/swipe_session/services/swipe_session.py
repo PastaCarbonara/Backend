@@ -63,18 +63,18 @@ class SwipeSessionConnectionManager:
 
     def get_connection_count(self, session_id: str | None = None) -> int:
         """Get total amount of WebSocket active connections
-        
+
         Provide a session_id to get the amount for one session
         """
         if session_id:
-            try: 
+            try:
                 connections = self.active_connections[session_id]
             except KeyError:
                 # Perhaps a better way to resolve this exists, as this might be unclear
                 return 0
-            
+
             return len(connections)
-        
+
         total = 0
         for session in self.active_connections:
             total += len(self.active_connections[session])
@@ -101,7 +101,7 @@ class SwipeSessionService:
             await self.handle_connection_code(websocket, 400, message)
             manager.disconnect(session.id, websocket)
             return
-        
+
         message = "You have connected"
         await self.handle_connection_code(websocket, 200, message)
 
@@ -130,7 +130,9 @@ class SwipeSessionService:
                     await self.handle_global_packet(packet)
 
                 elif packet.action == ACTIONS.REQUEST_RECIPE_LIKE:
-                    await self.handle_recipe_like(websocket, session.id, user.id, packet)
+                    await self.handle_recipe_like(
+                        websocket, session.id, user.id, packet
+                    )
 
                 elif packet.action == ACTIONS.REQUEST_SESSION_MESSAGE:
                     await self.handle_session_packet(session.id, packet)
@@ -169,36 +171,35 @@ class SwipeSessionService:
 
         await manager.send_personal_message(websocket, packet)
 
-    async def handle_recipe_like(self, websocket: WebSocket, session_id: int, user_id: int, packet: PacketSchema):
+    async def handle_recipe_like(
+        self, websocket: WebSocket, session_id: int, user_id: int, packet: PacketSchema
+    ):
         try:
             swipe_schema = CreateSwipeSchema(
-                swipe_session_id=session_id, 
-                user_id=user_id, 
-                **packet.payload
+                swipe_session_id=session_id, user_id=user_id, **packet.payload
             )
 
         except ValidationError as e:
             await self.handle_connection_code(websocket, 400, e.json())
             return
-        
+
         # Commented out for frontend testing
 
         # existing_swipe = await SwipeService().get_swipe_by_creds(
-        #     swipe_session_id=session_id, 
-        #     user_id=user_id, 
+        #     swipe_session_id=session_id,
+        #     user_id=user_id,
         #     recipe_id=packet.payload["recipe_id"]
         # )
-        
+
         # if existing_swipe:
         #     message = "This user has already swiped this recipe in this session"
         #     await self.handle_connection_code(websocket, 409, message)
         #     return
-    
+
         new_swipe_id = await SwipeService().create_swipe(swipe_schema)
 
         swipe_matches = await SwipeService().get_swipe_matches(
-            swipe_session_id=session_id,
-            recipe_id=packet.payload["recipe_id"]
+            swipe_session_id=session_id, recipe_id=packet.payload["recipe_id"]
         )
 
         # NOTE: Should check for amount of group members instead
@@ -210,15 +211,12 @@ class SwipeSessionService:
     async def handle_session_match(self, session_id, recipe_id):
         recipe = await RecipeService().get_recipe_by_id(recipe_id)
         full_recipe = GetFullRecipeResponseSchema(**recipe.__dict__)
-        
-        payload = {
-            "message": "A match has been found",
-            "recipe": full_recipe
-        }
+
+        payload = {"message": "A match has been found", "recipe": full_recipe}
         packet = PacketSchema(action=ACTIONS.RESPONSE_RECIPE_MATCH, payload=payload)
 
         await self.handle_session_packet(session_id, packet)
-        
+
     async def get_swipe_session_list(self) -> List[SwipeSession]:
         query = select(SwipeSession).options(joinedload(SwipeSession.swipes))
 

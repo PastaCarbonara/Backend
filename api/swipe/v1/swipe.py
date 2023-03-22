@@ -5,11 +5,17 @@ from app.swipe.schemas.swipe import CreateSwipeSchema, SwipeSchema
 from app.swipe.services.swipe import SwipeService
 
 from core.exceptions import ExceptionResponseSchema
-from core.fastapi.dependencies import AllowAll, IsAdmin, PermissionDependency, ProvidesUserID
+from core.fastapi.dependencies import (
+    AllowAll,
+    IsAdmin,
+    PermissionDependency,
+    ProvidesUserID,
+)
 from core.fastapi_versioning.versioning import version
 
 
 swipe_v1_router = APIRouter()
+
 
 @swipe_v1_router.post(
     "",
