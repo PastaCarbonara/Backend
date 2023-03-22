@@ -22,6 +22,17 @@
     <script>
         var ws_url = "ws://localhost:8000/api/latest/swipe_sessions"
 
+        const actions = {
+            REQUEST_SESSION_MESSAGE: "REQUEST_SESSION_MESSAGE",
+            REQUEST_GLOBAL_MESSAGE: "REQUEST_GLOBAL_MESSAGE",
+            REQUEST_RECIPE_LIKE: "REQUEST_RECIPE_LIKE",
+
+            RESPONSE_CONNECTION_CODE: "RESPONSE_CONNECTION_CODE",
+            RESPONSE_SESSION_MESSAGE: "RESPONSE_SESSION_MESSAGE",
+            RESPONSE_GLOBAL_MESSAGE: "RESPONSE_GLOBAL_MESSAGE",
+            RESPONSE_RECIPE_MATCH: "RESPONSE_RECIPE_MATCH"
+        }
+
         var client_id = Date.now()
         var application_name = ""
         var user_id = ""
@@ -37,7 +48,8 @@
                 var messages = document.getElementById('messages')
 
                 var message = document.createElement('li')
-                var content = document.createTextNode(data.message)
+                var content = document.createTextNode(data.payload.message)
+                console.log(data.payload.message)
                 message.appendChild(content)
                 messages.appendChild(message)
             };
@@ -50,16 +62,26 @@
             application_name = document.getElementById("application_name").value
             user_id = document.getElementById("user_id").value
             ws = new WebSocket(`${ws_url}/${application_name}/${user_id}`);
+            ws.onerror = function (event) {
+                reconnect()
+            }
 
             ws = setOnMessage(ws);
+            console.log(ws)
         }
 
         function sendMessage(event) {
             var input = document.getElementById("messageText")
-            var message = {
-                message: input.value
+            var payload = {
+                message: input.value,
+                like: true,
+                recipe_id: 1
             }
-            ws.send(JSON.stringify(message))
+            var package = {
+                action: actions.REQUEST_RECIPE_LIKE,
+                payload: payload
+            }
+            ws.send(JSON.stringify(package))
             input.value = ''
             event.preventDefault()
         }

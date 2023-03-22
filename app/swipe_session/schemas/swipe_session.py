@@ -3,8 +3,12 @@ from pydantic import BaseModel, validator
 from app.swipe_session.schemas.swipe import SwipeSchema
 from core.db import session
 
-from core.db.enums import SwipeSessionEnum
+from core.db.enums import SwipeSessionEnum, SwipeSessionActionEnum
 from core.helpers.hashids import encode
+
+
+class ActionDocsSchema(BaseModel):
+    actions: dict
 
 
 class CreateSwipeSessionSchema(BaseModel):
@@ -28,3 +32,8 @@ class SwipeSessionSchema(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class PacketSchema(BaseModel):
+    action: SwipeSessionActionEnum
+    payload: Any | None = None

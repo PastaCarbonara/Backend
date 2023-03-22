@@ -1,11 +1,20 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Query, Request, WebSocket
-from app.swipe_session.schemas.swipe_session import CreateSwipeSessionSchema, SwipeSessionSchema
+from app.swipe_session.schemas.swipe_session import (
+    ActionDocsSchema,
+    CreateSwipeSessionSchema,
+    SwipeSessionSchema,
+)
 from app.swipe_session.services.swipe_session import SwipeSessionService
 
 from core.exceptions import ExceptionResponseSchema
-from core.fastapi.dependencies import AllowAll, IsAdmin, PermissionDependency, ProvidesUserID
+from core.fastapi.dependencies import (
+    AllowAll,
+    IsAdmin,
+    PermissionDependency,
+    ProvidesUserID,
+)
 from core.fastapi_versioning.versioning import version
 
 
@@ -15,6 +24,16 @@ swipe_session_v1_router = APIRouter()
 @swipe_session_v1_router.websocket("/{session_id}/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, session_id: str, user_id: str):
     await SwipeSessionService().handler(websocket, session_id, user_id)
+
+
+@swipe_session_v1_router.get(
+    "/actions_docs",
+    response_model=ActionDocsSchema,
+    responses={"400": {"model": ExceptionResponseSchema}},
+)
+@version(1)
+async def get_swipe_session_actions():
+    return ActionDocsSchema(actions=await SwipeSessionService().get_swipe_session_actions())
 
 
 @swipe_session_v1_router.get(
