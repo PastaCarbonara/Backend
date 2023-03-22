@@ -26,6 +26,8 @@ def pytest_configure(config):
     file after command line options have been parsed.
     """
 
+    os.environ["env"] = "test"
+
     help_menu = config.getoption("-h")
     if help_menu:
         print("Options:")
@@ -82,8 +84,6 @@ def generate_database():
         pytest.exit(
             "test.db already exists, remove it to have unpolluted tests. \nor provide `--use-db True` to use the existing database\n\nNOTE! If you also did not provide `--no-db-del True` then `test.db` is now deleted!"
         )
-
-    os.environ["env"] = "test"
 
     # Using the shell command, because I could not (bother to)
     # figure out how to create the tables using an engine
