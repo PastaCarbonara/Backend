@@ -242,6 +242,10 @@ class SwipeSessionService:
         await session.flush()
 
         return db_swipe_session.id
+    
+    async def get_swipe_session_actions(self):
+        from .action_docs import actions
+        return actions
 
 
 manager = SwipeSessionConnectionManager()

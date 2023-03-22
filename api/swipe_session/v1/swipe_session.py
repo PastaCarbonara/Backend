@@ -2,6 +2,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, Query, Request, WebSocket
 from app.swipe_session.schemas.swipe_session import (
+    ActionDocsSchema,
     CreateSwipeSessionSchema,
     SwipeSessionSchema,
 )
@@ -23,6 +24,16 @@ swipe_session_v1_router = APIRouter()
 @swipe_session_v1_router.websocket("/{session_id}/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, session_id: str, user_id: str):
     await SwipeSessionService().handler(websocket, session_id, user_id)
+
+
+@swipe_session_v1_router.get(
+    "/actions_docs",
+    response_model=ActionDocsSchema,
+    responses={"400": {"model": ExceptionResponseSchema}},
+)
+@version(1)
+async def get_swipe_sessions():
+    return ActionDocsSchema(actions=await SwipeSessionService().get_swipe_session_actions())
 
 
 @swipe_session_v1_router.get(

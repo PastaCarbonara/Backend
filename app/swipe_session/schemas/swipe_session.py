@@ -7,6 +7,10 @@ from core.db.enums import SwipeSessionEnum, SwipeSessionActionEnum
 from core.helpers.hashids import encode
 
 
+class ActionDocsSchema(BaseModel):
+    actions: dict
+
+
 class CreateSwipeSessionSchema(BaseModel):
     status: SwipeSessionEnum = SwipeSessionEnum.IN_PROGRESS
     user_id: int = None
