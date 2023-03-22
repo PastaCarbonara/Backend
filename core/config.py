@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from pydantic import BaseSettings
 
 load_dotenv()
-
+print("We are HERE!")
 
 class Config(BaseSettings):
     ENV: str = "development"
