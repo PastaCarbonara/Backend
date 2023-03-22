@@ -4,6 +4,8 @@ from fastapi import WebSocket, WebSocketDisconnect, WebSocketException, status
 from pydantic import ValidationError
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import joinedload
+from app.recipe.schemas.recipe import GetFullRecipeResponseSchema
+from app.recipe.services.recipe import RecipeService
 from app.swipe.services.swipe import SwipeService
 from app.user.services.user import UserService
 from core.db import Transactional, session
@@ -59,27 +61,49 @@ class SwipeSessionConnectionManager:
         for connection in self.active_connections[session_id]:
             await connection.send_json(packet.dict())
 
+    def get_connection_count(self, session_id: str | None = None) -> int:
+        """Get total amount of WebSocket active connections
+        
+        Provide a session_id to get the amount for one session
+        """
+        if session_id:
+            try: 
+                connections = self.active_connections[session_id]
+            except KeyError:
+                # Perhaps a better way to resolve this exists, as this might be unclear
+                return 0
+            
+            return len(connections)
+        
+        total = 0
+        for session in self.active_connections:
+            total += len(self.active_connections[session])
+
+        return total
+
 
 class SwipeSessionService:
     def __init__(self) -> None:
         ...
 
     async def handler(self, websocket: WebSocket, session_id: str, user_id: int):
+        message = "Invalid ID"
         try:
             user = await check_id(user_id, UserService().get_user_by_id)
             session = await check_id(session_id, self.get_swipe_session_by_id)
         except:
-            await manager.deny(websocket, "Invalid ID")
+            await manager.deny(websocket, message)
             return
 
         await manager.connect(websocket, session.id)
 
         if not user or not session:
-            await self.handle_connection_code(websocket, 400, "Invalid ID!")
+            await self.handle_connection_code(websocket, 400, message)
             manager.disconnect(session.id, websocket)
             return
-
-        await self.handle_connection_code(websocket, 200, "You have connected!!")
+        
+        message = "You have connected"
+        await self.handle_connection_code(websocket, 200, message)
 
         try:
             while True:
@@ -146,10 +170,6 @@ class SwipeSessionService:
         await manager.send_personal_message(websocket, packet)
 
     async def handle_recipe_like(self, websocket: WebSocket, session_id: int, user_id: int, packet: PacketSchema):
-        # get swipe session
-
-        # if swipe session: 409 already exists
-
         try:
             swipe_schema = CreateSwipeSchema(
                 swipe_session_id=session_id, 
@@ -163,7 +183,7 @@ class SwipeSessionService:
         
         # Commented out for frontend testing
 
-        # existing_swipe = await SwipeService().get_swipe_by_all_creds(
+        # existing_swipe = await SwipeService().get_swipe_by_creds(
         #     swipe_session_id=session_id, 
         #     user_id=user_id, 
         #     recipe_id=packet.payload["recipe_id"]
@@ -173,16 +193,31 @@ class SwipeSessionService:
         #     message = "This user has already swiped this recipe in this session"
         #     await self.handle_connection_code(websocket, 409, message)
         #     return
+    
+        new_swipe_id = await SwipeService().create_swipe(swipe_schema)
 
         swipe_matches = await SwipeService().get_swipe_matches(
             swipe_session_id=session_id,
             recipe_id=packet.payload["recipe_id"]
         )
 
-        print(swipe_matches)
-        print("AAAAAAAAAAAA")
-    
-        await SwipeService().create_swipe(swipe_schema)
+        # NOTE: Should check for amount of group members instead
+        member_count = manager.get_connection_count(session_id)
+
+        if len(swipe_matches) + 1 >= member_count:
+            await self.handle_session_match(session_id, packet.payload["recipe_id"])
+
+    async def handle_session_match(self, session_id, recipe_id):
+        recipe = await RecipeService().get_recipe_by_id(recipe_id)
+        full_recipe = GetFullRecipeResponseSchema(**recipe.__dict__)
+        
+        payload = {
+            "message": "A match has been found",
+            "recipe": full_recipe
+        }
+        packet = PacketSchema(action=ACTIONS.RESPONSE_RECIPE_MATCH, payload=payload)
+
+        await self.handle_session_packet(session_id, packet)
         
     async def get_swipe_session_list(self) -> List[SwipeSession]:
         query = select(SwipeSession).options(joinedload(SwipeSession.swipes))
