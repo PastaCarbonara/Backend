@@ -19,7 +19,6 @@ from core.fastapi.middlewares import (
 )
 from core.helpers.cache import Cache, RedisBackend, CustomKeyMaker
 
-print("print")
 
 def init_routers(app_: FastAPI) -> None:
     app_.include_router(home_router)
