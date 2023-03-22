@@ -17,6 +17,7 @@ from app.swipe_session.schemas.swipe_session import (
 )
 from core.db.enums import SwipeSessionActionEnum as ACTIONS
 from core.db.models import SwipeSession
+from core.exceptions.recipe import RecipeNotFoundException
 from core.helpers.hashids import check_id, decode
 
 
@@ -182,6 +183,11 @@ class SwipeSessionService:
         except ValidationError as e:
             await self.handle_connection_code(websocket, 400, e.json())
             return
+        
+        recipe = await RecipeService().get_recipe_by_id(packet.payload["recipe_id"])
+        if not recipe:
+            await self.handle_connection_code(websocket, 404, RecipeNotFoundException.message)
+            return
 
         # Commented out for frontend testing
 
@@ -206,10 +212,14 @@ class SwipeSessionService:
         member_count = manager.get_connection_count(session_id)
 
         if len(swipe_matches) + 1 >= member_count:
-            await self.handle_session_match(session_id, packet.payload["recipe_id"])
+            await self.handle_session_match(websocket, session_id, packet.payload["recipe_id"])
 
-    async def handle_session_match(self, session_id, recipe_id) -> None:
+    async def handle_session_match(self, websocket: WebSocket, session_id: int, recipe_id: int) -> None:
         recipe = await RecipeService().get_recipe_by_id(recipe_id)
+        if not recipe:
+            await self.handle_connection_code(websocket, 404, RecipeNotFoundException.message)
+            return
+        
         full_recipe = GetFullRecipeResponseSchema(**recipe.__dict__)
 
         payload = {"message": "A match has been found", "recipe": full_recipe}
@@ -223,7 +233,7 @@ class SwipeSessionService:
         result = await session.execute(query)
         return result.unique().scalars().all()
 
-    async def get_swipe_session_by_id(self, session_id) -> SwipeSession:
+    async def get_swipe_session_by_id(self, session_id: int) -> SwipeSession:
         query = (
             select(SwipeSession)
             .where(SwipeSession.id == session_id)
