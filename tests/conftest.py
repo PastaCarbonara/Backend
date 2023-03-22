@@ -1,4 +1,5 @@
 import os
+import subprocess
 import pytest
 from dotenv import load_dotenv
 
@@ -83,4 +84,10 @@ def generate_database():
         )
 
     os.environ["env"] = "test"
-    os.system("alembic upgrade head")
+
+    # Using the shell command, because I could not (bother to)
+    # figure out how to create the tables using an engine
+    # context manager. Mostly because the session/database
+    # setup in this boilerplate is not written by me and I
+    # have no clue how to edit it.
+    subprocess.run("alembic upgrade head")
