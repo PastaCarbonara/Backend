@@ -1,12 +1,16 @@
-class STANDARDS:
+import enum
+
+
+class STANDARDS(str, enum.Enum):
     RESPONSE_NOT_IMPLEMENTED = "Response for this action is not implemented" 
     REQUEST_NOT_IMPLEMENTED = "Request for this action is not implemented" 
+
 
 actions = {
     "REQUEST_SESSION_MESSAGE": {
         "info": "Action for sending a message to all connected users within a session.",
         "expected_request": {
-            "paramaters": {
+            "parameters": {
                 "action": "string",
                 "payload": {
                     "message": "string"
@@ -21,7 +25,7 @@ actions = {
     "REQUEST_GLOBAL_MESSAGE": {
         "info": "Action for sending a message to all connected users within the whole application.",
         "expected_request": {
-            "paramaters": {
+            "parameters": {
                 "action": "string",
                 "payload": {
                     "message": "string"
@@ -36,7 +40,7 @@ actions = {
     "REQUEST_RECIPE_LIKE": {
         "info": "Action for liking a recipe",
         "expected_request": {
-            "paramaters": {
+            "parameters": {
                 "action": "string",
                 "payload": {
                     "like": "boolean",

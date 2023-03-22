@@ -24,7 +24,7 @@ class SwipeSessionConnectionManager:
     def __init__(self):
         self.active_connections: dict = {}
 
-    async def connect(self, websocket: WebSocket, session_id: str):
+    async def connect(self, websocket: WebSocket, session_id: str) -> None:
         await websocket.accept()
 
         if session_id not in self.active_connections:
@@ -32,7 +32,7 @@ class SwipeSessionConnectionManager:
 
         self.active_connections[session_id].append(websocket)
 
-    async def deny(self, websocket: WebSocket, msg: str = "Access denied"):
+    async def deny(self, websocket: WebSocket, msg: str = "Access denied") -> None:
         """Denies access to the websocket"""
         await websocket.accept()
         await SwipeSessionService.handle_connection_code(websocket, 400, msg)
@@ -49,15 +49,15 @@ class SwipeSessionConnectionManager:
 
         return True
 
-    async def send_personal_message(self, websocket: WebSocket, packet: PacketSchema):
+    async def send_personal_message(self, websocket: WebSocket, packet: PacketSchema) -> None:
         await websocket.send_json(packet.dict())
 
-    async def global_broadcast(self, packet: PacketSchema):
+    async def global_broadcast(self, packet: PacketSchema) -> None:
         for session_id in self.active_connections.keys():
             for connection in self.active_connections[session_id]:
                 await connection.send_json(packet.dict())
 
-    async def session_broadcast(self, session_id: str, packet: PacketSchema):
+    async def session_broadcast(self, session_id: str, packet: PacketSchema) -> None:
         for connection in self.active_connections[session_id]:
             await connection.send_json(packet.dict())
 
@@ -86,7 +86,7 @@ class SwipeSessionService:
     def __init__(self) -> None:
         ...
 
-    async def handler(self, websocket: WebSocket, session_id: str, user_id: int):
+    async def handler(self, websocket: WebSocket, session_id: str, user_id: int) -> None:
         message = "Invalid ID"
         try:
             user = await check_id(user_id, UserService().get_user_by_id)
@@ -147,25 +147,25 @@ class SwipeSessionService:
                     session.id, f"Client {user_id} left the chat"
                 )
 
-    async def handle_global_message(self, message: str):
+    async def handle_global_message(self, message: str) -> None:
         payload = {"message": message}
         packet = PacketSchema(action=ACTIONS.RESPONSE_SESSION_MESSAGE, payload=payload)
 
         await self.handle_global_packet(packet)
 
-    async def handle_global_packet(self, packet: PacketSchema):
+    async def handle_global_packet(self, packet: PacketSchema) -> None:
         await manager.global_broadcast(packet)
 
-    async def handle_session_message(self, session_id: int, message: str):
+    async def handle_session_message(self, session_id: int, message: str) -> None:
         payload = {"message": message}
         packet = PacketSchema(action=ACTIONS.RESPONSE_SESSION_MESSAGE, payload=payload)
 
         await self.handle_session_packet(session_id, packet)
 
-    async def handle_session_packet(self, session_id: int, packet: PacketSchema):
+    async def handle_session_packet(self, session_id: int, packet: PacketSchema) -> None:
         await manager.session_broadcast(session_id, packet)
 
-    async def handle_connection_code(self, websocket, code: int, message: str):
+    async def handle_connection_code(self, websocket, code: int, message: str) -> None:
         payload = {"code": code, "message": message}
         packet = PacketSchema(action=ACTIONS.RESPONSE_CONNECTION_CODE, payload=payload)
 
@@ -173,7 +173,7 @@ class SwipeSessionService:
 
     async def handle_recipe_like(
         self, websocket: WebSocket, session_id: int, user_id: int, packet: PacketSchema
-    ):
+    ) -> None:
         try:
             swipe_schema = CreateSwipeSchema(
                 swipe_session_id=session_id, user_id=user_id, **packet.payload
@@ -208,7 +208,7 @@ class SwipeSessionService:
         if len(swipe_matches) + 1 >= member_count:
             await self.handle_session_match(session_id, packet.payload["recipe_id"])
 
-    async def handle_session_match(self, session_id, recipe_id):
+    async def handle_session_match(self, session_id, recipe_id) -> None:
         recipe = await RecipeService().get_recipe_by_id(recipe_id)
         full_recipe = GetFullRecipeResponseSchema(**recipe.__dict__)
 
@@ -235,7 +235,7 @@ class SwipeSessionService:
         return result.scalars().first()
 
     @Transactional()
-    async def create_swipe_session(self, request: CreateSwipeSessionSchema):
+    async def create_swipe_session(self, request: CreateSwipeSessionSchema) -> int:
         db_swipe_session = SwipeSession(**request.dict())
 
         session.add(db_swipe_session)
@@ -243,7 +243,7 @@ class SwipeSessionService:
 
         return db_swipe_session.id
     
-    async def get_swipe_session_actions(self):
+    async def get_swipe_session_actions(self) -> dict:
         from .action_docs import actions
         return actions
 

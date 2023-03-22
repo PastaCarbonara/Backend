@@ -32,7 +32,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str, user_id: str
     responses={"400": {"model": ExceptionResponseSchema}},
 )
 @version(1)
-async def get_swipe_sessions():
+async def get_swipe_session_actions():
     return ActionDocsSchema(actions=await SwipeSessionService().get_swipe_session_actions())
 
 
