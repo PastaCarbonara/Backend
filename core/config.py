@@ -4,7 +4,6 @@ from pydantic import BaseSettings
 
 load_dotenv()
 
-
 class Config(BaseSettings):
     ENV: str = "development"
     DEBUG: bool = True
@@ -43,12 +42,18 @@ class ProductionConfig(Config):
     READER_DB_URL: str = f"postgresql+asyncpg://fastapi:fastapi@localhost:3303/prod"
 
 
+class TestConfig(Config):
+    WRITER_DB_URL: str = f"sqlite+aiosqlite:///./test.db"
+    READER_DB_URL: str = f"sqlite+aiosqlite:///./test.db"
+
+
 def get_config():
     env = os.getenv("ENV", "local")
     config_type = {
         "dev": DevelopmentConfig(),
         "local": LocalConfig(),
         "prod": ProductionConfig(),
+        "test": TestConfig(),
     }
     return config_type[env]
 
