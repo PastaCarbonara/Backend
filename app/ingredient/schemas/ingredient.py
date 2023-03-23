@@ -1,6 +1,18 @@
 from pydantic import BaseModel, Field
 
 
+class CreateIngredientSchema(BaseModel):
+    name: str
+
+
+class IngredientSchema(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        orm_mode = True
+
+
 class RecipeIngredientSchema(BaseModel):
     ingredient_id: int = Field(..., description="ID")
     name: str = Field(..., name="Ingredient")
