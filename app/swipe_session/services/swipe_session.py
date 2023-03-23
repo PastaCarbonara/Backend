@@ -50,7 +50,9 @@ class SwipeSessionConnectionManager:
 
         return True
 
-    async def send_personal_message(self, websocket: WebSocket, packet: PacketSchema) -> None:
+    async def personal_packet(
+        self, websocket: WebSocket, packet: PacketSchema
+    ) -> None:
         await websocket.send_json(packet.dict())
 
     async def global_broadcast(self, packet: PacketSchema) -> None:
@@ -87,7 +89,9 @@ class SwipeSessionService:
     def __init__(self) -> None:
         ...
 
-    async def handler(self, websocket: WebSocket, session_id: str, user_id: int) -> None:
+    async def handler(
+        self, websocket: WebSocket, session_id: str, user_id: int
+    ) -> None:
         message = "Invalid ID"
         try:
             user = await check_id(user_id, UserService().get_user_by_id)
@@ -128,7 +132,9 @@ class SwipeSessionService:
                 # Handlers
                 if packet.action == ACTIONS.REQUEST_GLOBAL_MESSAGE:
                     # Add authorization check
-                    await self.handle_global_packet(packet)
+                    await self.handle_global_packet(
+                        websocket, packet.payload.get("message")
+                    )
 
                 elif packet.action == ACTIONS.REQUEST_RECIPE_LIKE:
                     await self.handle_recipe_like(
@@ -136,7 +142,9 @@ class SwipeSessionService:
                     )
 
                 elif packet.action == ACTIONS.REQUEST_SESSION_MESSAGE:
-                    await self.handle_session_packet(session.id, packet)
+                    await self.handle_session_message(
+                        websocket, session.id, packet.payload.get("message")
+                    )
 
                 else:
                     message = "Action is not implemented or not available"
@@ -145,10 +153,14 @@ class SwipeSessionService:
         except WebSocketDisconnect:
             if manager.disconnect(session.id, websocket):
                 await self.handle_session_message(
-                    session.id, f"Client {user_id} left the chat"
+                    session.id, f"Client {user_id} left the session"
                 )
 
-    async def handle_global_message(self, message: str) -> None:
+    async def handle_global_message(self, websocket: WebSocket, message: str) -> None:
+        if not message:
+            await self.handle_connection_code(websocket, 400, "No message provided")
+            return
+
         payload = {"message": message}
         packet = PacketSchema(action=ACTIONS.RESPONSE_SESSION_MESSAGE, payload=payload)
 
@@ -157,20 +169,28 @@ class SwipeSessionService:
     async def handle_global_packet(self, packet: PacketSchema) -> None:
         await manager.global_broadcast(packet)
 
-    async def handle_session_message(self, session_id: int, message: str) -> None:
+    async def handle_session_message(
+        self, websocket: WebSocket, session_id: int, message: str
+    ) -> None:
+        if not message:
+            await self.handle_connection_code(websocket, 400, "No message provided")
+            return
+
         payload = {"message": message}
         packet = PacketSchema(action=ACTIONS.RESPONSE_SESSION_MESSAGE, payload=payload)
 
         await self.handle_session_packet(session_id, packet)
 
-    async def handle_session_packet(self, session_id: int, packet: PacketSchema) -> None:
+    async def handle_session_packet(
+        self, session_id: int, packet: PacketSchema
+    ) -> None:
         await manager.session_broadcast(session_id, packet)
 
     async def handle_connection_code(self, websocket, code: int, message: str) -> None:
-        payload = {"code": code, "message": message}
+        payload = {"status_code": code, "message": message}
         packet = PacketSchema(action=ACTIONS.RESPONSE_CONNECTION_CODE, payload=payload)
 
-        await manager.send_personal_message(websocket, packet)
+        await manager.personal_packet(websocket, packet)
 
     async def handle_recipe_like(
         self, websocket: WebSocket, session_id: int, user_id: int, packet: PacketSchema
@@ -183,10 +203,12 @@ class SwipeSessionService:
         except ValidationError as e:
             await self.handle_connection_code(websocket, 400, e.json())
             return
-        
+
         recipe = await RecipeService().get_recipe_by_id(packet.payload["recipe_id"])
         if not recipe:
-            await self.handle_connection_code(websocket, 404, RecipeNotFoundException.message)
+            await self.handle_connection_code(
+                websocket, 404, RecipeNotFoundException.message
+            )
             return
 
         # Commented out for frontend testing
@@ -211,15 +233,21 @@ class SwipeSessionService:
         # NOTE: Should check for amount of group members instead
         member_count = manager.get_connection_count(session_id)
 
-        if len(swipe_matches) + 1 >= member_count:
-            await self.handle_session_match(websocket, session_id, packet.payload["recipe_id"])
+        if len(swipe_matches) >= member_count:
+            await self.handle_session_match(
+                websocket, session_id, packet.payload["recipe_id"]
+            )
 
-    async def handle_session_match(self, websocket: WebSocket, session_id: int, recipe_id: int) -> None:
+    async def handle_session_match(
+        self, websocket: WebSocket, session_id: int, recipe_id: int
+    ) -> None:
         recipe = await RecipeService().get_recipe_by_id(recipe_id)
         if not recipe:
-            await self.handle_connection_code(websocket, 404, RecipeNotFoundException.message)
+            await self.handle_connection_code(
+                websocket, 404, RecipeNotFoundException.message
+            )
             return
-        
+
         full_recipe = GetFullRecipeResponseSchema(**recipe.__dict__)
 
         payload = {"message": "A match has been found", "recipe": full_recipe}
@@ -252,9 +280,10 @@ class SwipeSessionService:
         await session.flush()
 
         return db_swipe_session.id
-    
+
     async def get_swipe_session_actions(self) -> dict:
         from .action_docs import actions
+
         return actions
 
 

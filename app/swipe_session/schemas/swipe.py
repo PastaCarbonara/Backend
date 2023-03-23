@@ -6,3 +6,6 @@ class SwipeSchema(BaseModel):
     like: bool
     user_id: int
     recipe_id: int
+
+    class Config:
+        orm_mode = True
