@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from app.server import app
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def client():
     return TestClient(app)
 
