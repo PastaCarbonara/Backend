@@ -62,7 +62,7 @@ class UserService:
         session.add(user_profile)
 
     @Transactional()
-    async def set_admin(user_id: int, is_admin: bool):
+    async def set_admin(self, user_id: int, is_admin: bool):
         user_query = select(User).where(User.id == user_id)
         result = await session.execute(user_query)
         user = result.scalars().first()
