@@ -62,32 +62,13 @@ class UserService:
         session.add(user_profile)
 
     @Transactional()
-    async def create_admin(self, username: str, password: str) -> None:
-
-        query = select(User).where(or_(UserProfile.username == username))
-        result = await session.execute(query)
-        is_exist = result.scalars().first()
-        if is_exist:
-            raise DuplicateUsernameException
-        hashed_pwd = self.get_password_hash(password)
-
-        user = User()
-        session.add(user)
-        await session.flush()
-
-        user_profile = UserProfile(
-            user_id=user.id, username=username, password=hashed_pwd, is_admin=True
-        )
-        session.add(user_profile)
-
-    @Transactional()
-    async def add_admin_role(user_id: int):
+    async def set_admin(user_id: int, is_admin: bool):
         user_query = select(User).where(User.id == user_id)
         result = await session.execute(user_query)
         user = result.scalars().first()
         if not user:
             raise UserNotFoundException
-        user.is_admin = True
+        user.is_admin = is_admin
 
     async def is_admin(self, user_id: int) -> bool:
         result = await session.execute(
