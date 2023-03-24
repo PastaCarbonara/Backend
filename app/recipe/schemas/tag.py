@@ -14,7 +14,7 @@ class CreateRecipeTagSchema(BaseModel):
     id: int
 
 
-class FlattendRecipeTagSchema(BaseModel):
+class FlattenedRecipeTagSchema(BaseModel):
     id: int = Field(..., description="ID")
     name: str = Field(..., description="Tag name")
 

@@ -10,7 +10,7 @@ class CreateRecipeIngredientSchema(BaseModel):
     unit: str
 
 
-class FlattendRecipeIngredientSchema(BaseModel):
+class FlattenedRecipeIngredientSchema(BaseModel):
     id: int = Field(..., description="ID")
     name: str = Field(..., description="Tag name")
     amount: float
