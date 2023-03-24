@@ -1,11 +1,12 @@
 from typing import List
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import joinedload
+from app.ingredient.services.ingredient import IngredientService
 from app.recipe.schemas import (
     CreatorCreateRecipeRequestSchema,
     GetFullRecipeResponseSchema,
 )
-from core.db.models import RecipeJudgement, Recipe, RecipeTag, User
+from core.db.models import RecipeIngredient, RecipeJudgement, Recipe, RecipeTag, User
 from core.db import Transactional, session
 from core.exceptions import RecipeNotFoundException, UserNotFoundException
 
@@ -44,7 +45,18 @@ class RecipeService:
 
     @Transactional()
     async def create_recipe(self, request: CreatorCreateRecipeRequestSchema) -> int:
+        ingredients, request.ingredients = request.ingredients, []
+
         db_recipe = Recipe(**request.dict())
+
+        for i in ingredients:
+            db_recipe.ingredients.append(
+                RecipeIngredient(
+                    unit=i.unit,
+                    amount=i.amount,
+                    ingredient=await IngredientService().get_ingredient_by_id(i.id),
+                )
+            )
 
         session.add(db_recipe)
         await session.flush()
@@ -59,6 +71,7 @@ class RecipeService:
                 joinedload(Recipe.tags).joinedload(RecipeTag.tag),
                 joinedload(Recipe.creator),
                 joinedload(Recipe.judgements),
+                joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
             )
         )
         result = await session.execute(query)
@@ -66,17 +79,10 @@ class RecipeService:
 
     async def get_recipe_list(self) -> List[Recipe]:
         query = select(Recipe).options(
-            joinedload(Recipe.tags).joinedload(RecipeTag.tag)
-        )
-        result = await session.execute(query)
-        return result.unique().scalars().all()
-
-    async def get_full_recipe_list(self) -> List[Recipe]:
-        query = (
-            select(Recipe)
-            .options(joinedload(Recipe.tags).joinedload(RecipeTag.tag))
-            .options(joinedload(Recipe.creator))
-            .options(joinedload(Recipe.judgements))
+            joinedload(Recipe.tags).joinedload(RecipeTag.tag),
+            joinedload(Recipe.creator),
+            joinedload(Recipe.judgements),
+            joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
         )
         result = await session.execute(query)
         return result.unique().scalars().all()

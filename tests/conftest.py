@@ -32,12 +32,8 @@ def pytest_configure(config):
     if help_menu:
         print("Options:")
         print("\t-h\t\t: Show this menu")
-        print(
-            "\t--use-db\t: Accepts 'True' or 'False'; 'False' by default;  Use the existing database for testing."
-        )
-        print(
-            "\t--no-db-del\t: Accepts 'True' or 'False'; 'False' by default;  Deletes database after it finishes the tests."
-        )
+        print("\t--use-db\t: Accepts 'True' or 'False'; 'False' by default;  Use the existing database for testing.")
+        print("\t--no-db-del\t: Accepts 'True' or 'False'; 'False' by default;  Deletes database after it finishes the tests.")
         print()
         print("dont worry about this error :), its made to make this menu look good :D")
         pytest.exit()

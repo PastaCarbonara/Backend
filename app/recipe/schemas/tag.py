@@ -10,6 +10,10 @@ class RecipeTagSchema(BaseModel):
         orm_mode = True
 
 
+class CreateRecipeTagSchema(BaseModel):
+    id: int
+
+
 class FlattendRecipeTagSchema(BaseModel):
     id: int = Field(..., description="ID")
     name: str = Field(..., description="Tag name")

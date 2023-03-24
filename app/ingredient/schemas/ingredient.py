@@ -15,7 +15,6 @@ class IngredientSchema(BaseModel):
 
 class RecipeIngredientSchema(BaseModel):
     ingredient_id: int = Field(..., description="ID")
-    name: str = Field(..., name="Ingredient")
     amount: int = Field(..., name="Hoeveelheid")
     unit: str = Field
 

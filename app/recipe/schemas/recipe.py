@@ -3,10 +3,9 @@ from pydantic import BaseModel, Field
 
 from .judgement import JudgementSchema
 
-# from .instruction import InstructionItemSchema
-# from .ingredient import GetIngredientSchema, IngredientSchema
 from .user import UserSchema
-from .tag import RecipeTagSchema, FlattendRecipeTagSchema
+from .tag import CreateRecipeTagSchema, RecipeTagSchema, FlattendRecipeTagSchema
+from .ingredient import CreateRecipeIngredientSchema, FlattendRecipeIngredientSchema
 
 
 class GetRecipeListResponseSchema(BaseModel):
@@ -29,7 +28,7 @@ class GetFullRecipeResponseSchema(BaseModel):
 
     tags: List[FlattendRecipeTagSchema] = Field(..., description="Tags of the recipe")
     instructions: List[str] = Field(..., description="Instructions for the recipe")
-    ingredients: List[str] = Field(..., description="Ingridients for the recipe")
+    ingredients: List[FlattendRecipeIngredientSchema] = Field(..., description="Ingridients for the recipe")
     judgements: List[JudgementSchema] = Field(
         ..., description="Judgements of the recipe"
     )
@@ -44,9 +43,9 @@ class CreateRecipeBaseRequestSchema(BaseModel):
     image: str = Field(..., description="Url of image")
     preparing_time: int = Field(..., description="Time in minutes")
 
-    tags: List[RecipeTagSchema] = Field(..., description="Tags of the recipe")
+    tags: List[CreateRecipeTagSchema] = Field(..., description="Tags of the recipe")
     instructions: List[str] = Field(..., description="Instructions for the recipe")
-    ingredients: List[str] = Field(..., description="Ingridients for the recipe")
+    ingredients: List[CreateRecipeIngredientSchema] = Field(..., description="Ingredients for the recipe")
 
 
 class UserCreateRecipeRequestSchema(CreateRecipeBaseRequestSchema):

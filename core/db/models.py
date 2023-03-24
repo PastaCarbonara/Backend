@@ -90,7 +90,15 @@ class Recipe(Base, TimestampMixin):
     judgements: Mapped[RecipeJudgement] = relationship(back_populates="recipe")
 
     def __repr__(self) -> str:
-        return self.name
+        return (
+            f"id='{self.id}' "
+            + f"name='{self.name}' "
+            + f"description='{self.description}' "
+            + f"instructions='{self.instructions}' "
+            + f"preparing_time='{self.preparing_time}' "
+            + f"image='{self.image}' "
+            + f"creator_id='{self.creator_id}' "
+        )
 
 
 class Tag(Base):
