@@ -127,7 +127,9 @@ class SwipeSession(Base):
     )
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
 
-    swipes: Mapped[List["Swipe"]] = relationship(back_populates="swipe_session", uselist=True)
+    swipes: Mapped[List["Swipe"]] = relationship(
+        back_populates="swipe_session", uselist=True
+    )
 
 
 class Swipe(Base):
