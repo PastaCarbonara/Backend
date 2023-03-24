@@ -30,7 +30,7 @@ recipe_v1_router = APIRouter()
 )
 @version(1)
 async def get_recipe_list():
-    return await RecipeService().get_full_recipe_list()
+    return await RecipeService().get_recipe_list()
 
 
 @recipe_v1_router.get(

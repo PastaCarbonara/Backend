@@ -73,12 +73,12 @@
         function sendMessage(event) {
             var input = document.getElementById("messageText")
             var payload = {
-                message: input.value,
+                // message: input.value,
                 like: true,
                 recipe_id: 1
             }
             var package = {
-                action: actions.REQUEST_RECIPE_LIKE,
+                action: actions.REQUEST_SESSION_MESSAGE,
                 payload: payload
             }
             ws.send(JSON.stringify(package))

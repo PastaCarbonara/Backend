@@ -45,3 +45,13 @@ class DuplicateValueException(CustomException):
     code = HTTPStatus.UNPROCESSABLE_ENTITY
     error_code = HTTPStatus.UNPROCESSABLE_ENTITY
     message = HTTPStatus.UNPROCESSABLE_ENTITY.description
+
+
+class UniqueColumnViolation(CustomException):
+    def __init__(self, column: str, entry: str):
+        super().__init__()
+        self.message = f"Unique column violation on column '{column}': '{entry}'"
+
+    code = HTTPStatus.CONFLICT
+    error_code = HTTPStatus.CONFLICT
+    message = "Unique column violation"

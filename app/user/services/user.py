@@ -20,20 +20,8 @@ class UserService:
     def __init__(self):
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-    async def get_user_list(
-        self,
-        limit: int = 12,
-        prev: Optional[int] = None,
-    ) -> List[UserProfile]:
+    async def get_user_list(self) -> List[UserProfile]:
         query = select(UserProfile)
-
-        if prev:
-            query = query.where(UserProfile.user_id < prev)
-
-        if limit > 12:
-            limit = 12
-
-        query = query.limit(limit)
         result = await session.execute(query)
         return result.scalars().all()
     

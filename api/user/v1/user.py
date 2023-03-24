@@ -28,11 +28,8 @@ user_v1_router = APIRouter()
     dependencies=[Depends(PermissionDependency([IsAdmin]))],
 )
 @version(1)
-async def get_user_list(
-    limit: int = Query(10, description="Limit"),
-    prev: int = Query(None, description="Previous ID"),
-):
-    return await UserService().get_user_list(limit=limit, prev=prev)
+async def get_user_list():
+    return await UserService().get_user_list()
 
 
 @user_v1_router.post(
