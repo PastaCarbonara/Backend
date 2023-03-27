@@ -7,7 +7,6 @@ from core.db.models import User, UserProfile
 from app.user.schemas.user import LoginResponseSchema
 from core.db import Transactional, session
 from core.exceptions import (
-    PasswordDoesNotMatchException,
     DuplicateUsernameException,
     UserNotFoundException,
     IncorrectPasswordException,
@@ -24,22 +23,14 @@ class UserService:
         query = select(UserProfile)
         result = await session.execute(query)
         return result.scalars().all()
-    
+
     async def get_user_by_id(self, user_id: int) -> User:
-        query = (
-            select(User)
-            .where(User.id == user_id)
-            .options(
-                joinedload(User.profile)
-            )
-        )
+        query = select(User).where(User.id == user_id).options(joinedload(User.profile))
         result = await session.execute(query)
         return result.scalars().first()
 
     @Transactional()
-    async def create_user(
-        self, username: str, password: str
-    ) -> None:
+    async def create_user(self, username: str, password: str) -> None:
 
         query = select(User).where(or_(UserProfile.username == username))
         result = await session.execute(query)
@@ -47,16 +38,20 @@ class UserService:
         if is_exist:
             raise DuplicateUsernameException
         hashed_pwd = self.get_password_hash(password)
-        
+
         user = User()
         session.add(user)
         await session.flush()
 
-        user_profile = UserProfile(user_id=user.id, username=username, password=hashed_pwd)
+        user_profile = UserProfile(
+            user_id=user.id, username=username, password=hashed_pwd
+        )
         session.add(user_profile)
 
     async def is_admin(self, user_id: int) -> bool:
-        result = await session.execute(select(UserProfile).where(UserProfile.user_id == user_id))
+        result = await session.execute(
+            select(UserProfile).where(UserProfile.user_id == user_id)
+        )
         user = result.scalars().first()
         if not user:
             return False
@@ -73,7 +68,7 @@ class UserService:
         user = result.scalars().first()
         if not user:
             raise UserNotFoundException
-        
+
         if not self.verify_password(password, user.password):
             raise IncorrectPasswordException
 
@@ -85,6 +80,6 @@ class UserService:
 
     def get_password_hash(self, password):
         return self.pwd_context.hash(password)
-    
+
     def verify_password(self, plain_password, hashed_password):
         return self.pwd_context.verify(plain_password, hashed_password)
