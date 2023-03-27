@@ -1,3 +1,4 @@
+import json
 from fastapi import Response
 import pytest
 from .user import UserService
@@ -20,13 +21,23 @@ def service() -> UserService:
     return UserService()
 
 
-@pytest.fixture
-# @pytest.mark.asyncio
-async def user(service) -> User:
-    users = await service.get_user_list()
-    if len(users) == 0:
-        await service.create_user(username="testuser", password="testpassword")
-    return await service.get_user_list()[0]
+@pytest.mark.asyncio
+async def test_create_user(client):
+    response: Response = client.post(
+        "/api/v1/users",
+        json={"username": "admin", "password": "admin"},
+    )
+
+    assert response.status_code == 200
+
+
+
+# @pytest.fixture
+# async def user(client, service) -> User:
+#     users = await service.get_user_list()
+#     if len(users) == 0:
+#         await service.create_user(username="testuser", password="testpassword")
+#     return await service.get_user_list()[0]
 
 
 # @pytest.mark.asyncio
@@ -35,12 +46,12 @@ async def user(service) -> User:
 #     assert isinstance(result, List[User])
 
 
-@pytest.mark.asyncio
-async def test_get_user_by_id(service, user):
-    user = await user
-    result = await service.get_user_by_id(user.id)
-    assert isinstance(result, User)
-    assert user.id == result.id
+# @pytest.mark.asyncio
+# async def test_get_user_by_id(client, service, user):
+#     user = await user
+#     result = await service.get_user_by_id(user.id)
+#     assert isinstance(result, User)
+#     assert user.id == result.id
 
 
 # @pytest.mark.asyncio

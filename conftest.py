@@ -4,14 +4,17 @@ import pytest
 from dotenv import load_dotenv
 
 load_dotenv()
+os.environ["ENV"] = "test"
 
 from fastapi.testclient import TestClient
 from app.server import app
 
+test_client = TestClient(app)
+
 
 @pytest.fixture(scope="session")
 def client():
-    return TestClient(app)
+    return test_client
 
 
 def pytest_addoption(parser):
@@ -25,8 +28,6 @@ def pytest_configure(config):
     This hook is called for every plugin and initial conftest
     file after command line options have been parsed.
     """
-
-    os.environ["env"] = "test"
 
     help_menu = config.getoption("-h")
     if help_menu:
