@@ -32,9 +32,7 @@ class User(Base, TimestampMixin):
     profile: Mapped["UserProfile"] = relationship(back_populates="user", lazy="joined")
     recipes: Mapped[List["Recipe"]] = relationship(back_populates="creator")
     judged_recipes: Mapped[List[RecipeJudgement]] = relationship(back_populates="user")
-
-    def __repr__(self):
-        return f"{self.username} {self.id}"
+    groups: Mapped[List["GroupMember"]] = relationship(back_populates="user")
 
 
 class UserProfile(Base, TimestampMixin):
@@ -143,3 +141,23 @@ class Swipe(Base):
     recipe_id: Mapped[int] = mapped_column(ForeignKey("recipe.id"))
 
     swipe_session: Mapped[SwipeSession] = relationship(back_populates="swipes")
+
+
+class Group(Base, TimestampMixin):
+    __tablename__ = "group"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String())
+
+    users: Mapped[List["GroupMember"]] = relationship(back_populates="group")
+
+
+class GroupMember(Base):
+    __tablename__ = "group_member"
+
+    group_id: Mapped[int] = mapped_column(ForeignKey("group.id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), primary_key=True)
+    is_admin: Mapped[bool] = mapped_column(default=False)
+
+    group: Mapped[Group] = relationship(back_populates="users")
+    user: Mapped[User] = relationship(back_populates="groups")
