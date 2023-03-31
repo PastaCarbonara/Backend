@@ -14,6 +14,8 @@ from core.exceptions import (
     UserNotFoundException,
     IncorrectPasswordException,
 )
+from app.server import app
+from httpx import AsyncClient
 
 
 @pytest.fixture
@@ -21,19 +23,22 @@ def service() -> UserService:
     return UserService()
 
 
-def test_create__existing_user(client):
+@pytest.mark.asyncio
+async def test_create__existing_user():
     # response should be 400 since admin exists
-    response: Response = client.post(
-        "/api/v1/users",
-        json={"username": "admin1", "password": "admin1"},
-    )
+    async with AsyncClient(app=app) as ac:
+        response: Response = await ac.post(
+            "/api/v1/users",
+            json={"username": "admin1", "password": "admin1"},
+        )
 
     assert response.status_code == 200
 
 
-# def test_create_user(client):
+# @pytest.mark.asyncio
+# async def test_create_user():
 #     # response should be 400 since admin exists
-#     response: Response = client.post(
+#     response: Response = await async_client.post(
 #         "/api/v1/users",
 #         json={"username": "admin", "password": "admin"},
 #     )

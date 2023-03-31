@@ -7,6 +7,7 @@ load_dotenv()
 os.environ["ENV"] = "test"
 
 from fastapi.testclient import TestClient
+from httpx import AsyncClient
 from app.server import app
 from core.db.seed_db import seed_db
 
