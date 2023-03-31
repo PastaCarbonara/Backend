@@ -25,4 +25,6 @@ def seed_db():
         )
         session.add(user)
         session.commit()
-    # closes the session
+
+    # needed to call this because test.db couldnt be deleted anymore
+    engine.dispose()

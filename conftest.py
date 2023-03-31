@@ -7,7 +7,6 @@ load_dotenv()
 os.environ["ENV"] = "test"
 
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
 from app.server import app
 from core.db.seed_db import seed_db
 
@@ -56,8 +55,7 @@ def pytest_sessionstart(session):
     Called after the Session object has been created and
     before performing collection and entering the run test loop.
     """
-    print("Starting Session")
-    seed_db()
+    ...
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -95,3 +93,4 @@ def generate_database():
     # setup in this boilerplate is not written by me and I
     # have no clue how to edit it.
     subprocess.run("alembic upgrade head")
+    seed_db()
