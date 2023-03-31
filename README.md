@@ -19,4 +19,5 @@ Boilerplate from [teamhide](https://github.com/teamhide/fastapi-boilerplate).
 ## Testing code
 
 `coverage run -m pytest`
+
 `coverage html`
