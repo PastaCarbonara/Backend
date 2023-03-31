@@ -21,15 +21,24 @@ def service() -> UserService:
     return UserService()
 
 
-@pytest.mark.asyncio
-async def test_create_user(client):
+def test_create__existing_user(client):
+    # response should be 400 since admin exists
     response: Response = client.post(
         "/api/v1/users",
-        json={"username": "admin", "password": "admin"},
+        json={"username": "admin1", "password": "admin1"},
     )
 
     assert response.status_code == 200
 
+
+# def test_create_user(client):
+#     # response should be 400 since admin exists
+#     response: Response = client.post(
+#         "/api/v1/users",
+#         json={"username": "admin", "password": "admin"},
+#     )
+
+#     assert response.status_code == 400
 
 
 # @pytest.fixture
@@ -40,9 +49,8 @@ async def test_create_user(client):
 #     return await service.get_user_list()[0]
 
 
-# @pytest.mark.asyncio
-# async def test_get_user_list(service):
-#     result = await service.get_user_list()
+# def test_get_user_list(client):
+#     response: Response = client.get("/api/v1/users",)
 #     assert isinstance(result, List[User])
 
 

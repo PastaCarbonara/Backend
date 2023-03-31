@@ -48,6 +48,15 @@ class UserService:
         )
         session.add(user_profile)
 
+    @Transactional()
+    async def set_admin(self, user_id: int, is_admin: bool):
+        user_query = select(User).where(User.id == user_id)
+        result = await session.execute(user_query)
+        user = result.scalars().first()
+        if not user:
+            raise UserNotFoundException
+        user.is_admin = is_admin
+
     async def is_admin(self, user_id: int) -> bool:
         result = await session.execute(
             select(UserProfile).where(UserProfile.user_id == user_id)

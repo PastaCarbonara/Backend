@@ -20,7 +20,7 @@
     <ul id='messages'>
     </ul>
     <script>
-        var ws_url = "ws://localhost:8000/api/latest/swipe_sessions"
+        var ws_url = "wss://munchie.azurewebsites.net/api/latest/swipe_sessions"
 
         const actions = {
             REQUEST_SESSION_MESSAGE: "REQUEST_SESSION_MESSAGE",
@@ -73,7 +73,7 @@
         function sendMessage(event) {
             var input = document.getElementById("messageText")
             var payload = {
-                // message: input.value,
+                message: input.value,
                 like: true,
                 recipe_id: 1
             }
