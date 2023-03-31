@@ -22,8 +22,8 @@ def service() -> UserService:
 
 
 @pytest.mark.asyncio
-async def test_create__existing_user():
-    # response should be 400 since admin exists
+async def test_create_user():
+    # response should be 200  since user does not exists
     async with AsyncClient(app=app, base_url="http://test") as ac:
         response: Response = await ac.post(
             "/api/v1/users",
@@ -33,14 +33,14 @@ async def test_create__existing_user():
     assert response.status_code == 200
 
 
-# @pytest.mark.asyncio
-def test_create_user(client):
+@pytest.mark.asyncio
+async def test_create_existing_user(client):
     # response should be 400 since admin exists
-    response: Response = client.post(
-        "/api/v1/users",
-        json={"username": "admin", "password": "admin"},
-    )
-
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        response: Response = await ac.post(
+            "/api/v1/users",
+            json={"username": "admin", "password": "admin"},
+        )
     assert response.status_code == 400
 
 
