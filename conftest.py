@@ -10,7 +10,6 @@ from typing import Dict
 from app.server import app
 from core.db.seed_db import seed_db
 from httpx import AsyncClient
-from asgi_lifespan import LifespanManager
 import asyncio
 
 

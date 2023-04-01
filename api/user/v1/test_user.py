@@ -1,7 +1,5 @@
 from fastapi import Response
 import pytest
-import pytest
-from app.server import app
 from httpx import AsyncClient
 from typing import Dict
 
