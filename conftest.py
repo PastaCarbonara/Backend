@@ -6,16 +6,36 @@ from dotenv import load_dotenv
 load_dotenv()
 os.environ["ENV"] = "test"
 
-from fastapi.testclient import TestClient
+from typing import Dict
 from app.server import app
 from core.db.seed_db import seed_db
+from httpx import AsyncClient
+from asgi_lifespan import LifespanManager
+import asyncio
 
-test_client = TestClient(app)
 
-
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def client():
-    return test_client
+    return AsyncClient(app=app, base_url="http://test")
+
+
+@pytest.fixture()
+async def admin_token_headers(client: AsyncClient) -> Dict[str, str]:
+
+    login_data = {
+        "username": "admin",
+        "password": "admin",
+    }
+    response = await client.post("/api/latest/users/login", json=login_data)
+    response = response.json()
+    access_token = response["access_token"]
+
+    return {"Authorization": f"Bearer {access_token}"}
+
+
+@pytest.fixture()
+async def user_token_headers(client: AsyncClient) -> Dict[str, str]:
+    ...
 
 
 def pytest_addoption(parser):
@@ -94,3 +114,41 @@ def generate_database():
     # have no clue how to edit it.
     subprocess.run("alembic upgrade head")
     seed_db()
+
+
+print("hallo daar")
+
+
+async def ok():
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        response = await ac.get("/api/latest/users")
+    return response.json()
+
+
+async def headers():
+
+    login_data = {
+        "username": "admin",
+        "password": "admin",
+    }
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        response = await ac.post("/api/latest/users/login", json=login_data)
+    return {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+
+async def get_users(headers):
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        response = await ac.get("/api/latest/users", headers=headers)
+
+    return response.json()
+
+
+if __name__ == "__main__":
+    # very naughty test to try some functions out
+    subprocess.run("alembic upgrade head")
+    seed_db()
+    print(asyncio.run(ok()))
+    headers = asyncio.run(headers())
+    print(headers)
+    print(asyncio.run(get_users(headers)))
+    os.remove("test.db")
