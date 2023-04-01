@@ -34,6 +34,20 @@ async def admin_token_headers(client: AsyncClient) -> Dict[str, str]:
 
 
 @pytest.fixture()
+async def normal_user_token_headers(client: AsyncClient) -> Dict[str, str]:
+
+    login_data = {
+        "username": "normal_user",
+        "password": "normal_user",
+    }
+    response = await client.post("/api/latest/users/login", json=login_data)
+    response = response.json()
+    access_token = response["access_token"]
+
+    return {"Authorization": f"Bearer {access_token}"}
+
+
+@pytest.fixture()
 async def user_token_headers(client: AsyncClient) -> Dict[str, str]:
     ...
 
@@ -114,9 +128,6 @@ def generate_database():
     # have no clue how to edit it.
     subprocess.run("alembic upgrade head")
     seed_db()
-
-
-print("hallo daar")
 
 
 async def ok():

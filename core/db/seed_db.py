@@ -18,12 +18,15 @@ def seed_db():
     service = UserService()
 
     with Session() as session:
-        user = User()
-        session.add(user)
-        user.profile = UserProfile(
+        admin = User()
+        admin.profile = UserProfile(
             username="admin", password=service.get_password_hash("admin"), is_admin=True
         )
-        session.add(user)
+        normal_user = User()
+        normal_user.profile = UserProfile(
+            username="normal_user", password=service.get_password_hash("normal_user")
+        )
+        session.add_all([admin, normal_user])
         session.commit()
 
     # needed to call this because test.db couldnt be deleted anymore

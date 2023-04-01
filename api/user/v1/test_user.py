@@ -10,9 +10,8 @@ from typing import Dict
 async def test_create_user(client: AsyncClient):
     response: Response = await client.post(
         "/api/v1/users",
-        json={"username": "admin1", "password": "admin1"},
+        json={"username": "user3", "password": "user3"},
     )
-    print("porn")
     assert response.status_code == 200
 
 
@@ -32,8 +31,16 @@ async def test_get_user_list(client: AsyncClient, admin_token_headers: Dict[str,
     users = res.json()
 
     assert users[0]["username"] == "admin"
-    assert users[1]["username"] == "admin1"
+    assert users[1]["username"] == "normal_user"
     assert res.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_get_user_list_normal_user(
+    client: AsyncClient, normal_user_token_headers: Dict[str, str]
+):
+    res = await client.get("/api/latest/users", headers=await normal_user_token_headers)
+    assert res.status_code == 401
 
 
 @pytest.mark.asyncio
