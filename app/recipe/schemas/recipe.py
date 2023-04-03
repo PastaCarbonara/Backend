@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from .judgement import JudgementSchema
 
 from .user import UserSchema
-from .tag import CreateRecipeTagSchema, RecipeTagSchema, FlattenedRecipeTagSchema
+from .tag import RecipeTagSchema, FlattenedRecipeTagSchema
 from .ingredient import CreateRecipeIngredientSchema, FlattenedRecipeIngredientSchema
 
 
