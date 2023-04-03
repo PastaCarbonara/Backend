@@ -2,11 +2,12 @@ import json
 from typing import List
 
 from pydantic import ValidationError
-from app.group.schemas.group import GroupSchema, UserCreateGroupSchema
+from app.group.schemas.group import CreateGroupMemberSchema, GroupSchema, UserCreateGroupSchema
 from app.group.services.group import GroupService
 
 from fastapi import APIRouter, Depends, Query, Request
 from core.exceptions import ExceptionResponseSchema, GroupNotFoundException
+from core.exceptions.group import GroupJoinConflictException
 from core.fastapi_versioning import version
 
 
@@ -62,3 +63,16 @@ async def get_group(group_id: str):
         raise GroupNotFoundException
     
     return group
+
+
+@group_v1_router.get(
+    "/join/{group_id}",
+    responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(PermissionDependency([[ProvidesGroupID, IsAuthenticated]]))]
+)
+@version(1)
+async def join_group(group_id: str, request: Request):
+    group_id = int(group_id)
+    if await GroupService().is_member(group_id, request.user.id):
+        raise GroupJoinConflictException
+    return await GroupService().join_group(group_id, request.user.id)

@@ -1,10 +1,11 @@
 from typing import List
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import joinedload
-from app.group.schemas.group import CreateGroupSchema, UserCreateGroupSchema
+from app.group.schemas.group import CreateGroupMemberSchema, CreateGroupSchema, UserCreateGroupSchema
 from app.user.services.user import UserService
 from core.db.models import Group, GroupMember, User
 from core.db import Transactional, session
+from core.exceptions.group import GroupNotFoundException
 
 
 class GroupService:
@@ -60,3 +61,17 @@ class GroupService:
         )
         result = await session.execute(query)
         return result.unique().scalars().first()
+    
+    @Transactional()
+    async def join_group(self, group_id, user_id) -> None:
+        group = await self.get_group_by_id(group_id)
+
+        if not group:
+            raise GroupNotFoundException
+        
+        group.users.append(
+            GroupMember(
+                is_admin=False,
+                user=await UserService().get_user_by_id(user_id),
+            )
+        )

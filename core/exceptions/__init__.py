@@ -7,7 +7,7 @@ from .base import (
     DuplicateValueException,
     UnauthorizedException,
 )
-from .group import GroupNotFoundException
+from .group import GroupNotFoundException, GroupJoinConflictException
 from .token import DecodeTokenException, ExpiredTokenException
 from .user import (
     PasswordDoesNotMatchException,
@@ -33,6 +33,7 @@ __all__ = [
     "ExpiredTokenException",
     "ForbiddenException",
     "GroupNotFoundException",
+    "GroupJoinConflictException",
     "IncorrectHashIDException",
     "IncorrectPasswordException",
     "MissingGroupIDException",
