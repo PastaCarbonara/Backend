@@ -40,7 +40,7 @@ async def get_swipe_session_actions():
     "",
     response_model=List[SwipeSessionSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([IsAdmin]))],
+    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
 @version(1)
 async def get_swipe_sessions():
@@ -51,7 +51,7 @@ async def get_swipe_sessions():
     "",
     response_model=SwipeSessionSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([IsAdmin, ProvidesUserID]))],
+    dependencies=[Depends(PermissionDependency([[IsAdmin, ProvidesUserID]]))],
 )
 @version(1)
 async def create_swipe_session(request: CreateSwipeSessionSchema):

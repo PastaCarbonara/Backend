@@ -24,7 +24,7 @@ ingredient_v1_router = APIRouter()
     "",
     response_model=List[IngredientSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([AllowAll]))],
+    dependencies=[Depends(PermissionDependency([[AllowAll]]))],
 )
 @version(1)
 async def get_all_ingredients():
@@ -35,7 +35,7 @@ async def get_all_ingredients():
     "",
     response_model=IngredientSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([IsAdmin]))],
+    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
 @version(1)
 async def create_ingredient(request: CreateIngredientSchema):

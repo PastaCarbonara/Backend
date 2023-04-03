@@ -47,7 +47,7 @@ async def get_recipe_by_id(recipe_id: int):
     "/{recipe_id}/judge",
     response_model_exclude={"id"},
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([AllowAll, ProvidesUserID]))],
+    dependencies=[Depends(PermissionDependency([[AllowAll, ProvidesUserID]]))],
 )
 @version(1)
 async def judge_recipe(recipe_id: int, request: JudgeRecipeRequestSchema):
@@ -59,7 +59,7 @@ async def judge_recipe(recipe_id: int, request: JudgeRecipeRequestSchema):
     "",
     response_model=GetFullRecipeResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([IsAdmin, ProvidesUserID]))],
+    dependencies=[Depends(PermissionDependency([[IsAdmin, ProvidesUserID]]))],
 )
 @version(1)
 async def create_recipe(request: UserCreateRecipeRequestSchema):

@@ -127,7 +127,6 @@ class IsGroupMember(BasePermission):
                 + request.path_params["group_id"]
                 + "'. Did you forget to put 'ProvidesGroupID' in the permission dependencies?"
             )
-        print(group_id, user_id)
 
         return await GroupService().is_member(group_id=group_id, user_id=user_id)
 
@@ -144,13 +143,23 @@ class IsGroupAdmin(BasePermission):
 
 
 class PermissionDependency(SecurityBase):
-    def __init__(self, permissions: List[Type[BasePermission]]):
+    def __init__(self, permissions: List[List[Type[BasePermission]]]):
         self.permissions = permissions
         self.model: APIKey = APIKey(**{"in": APIKeyIn.header}, name="Authorization")
         self.scheme_name = self.__class__.__name__
 
     async def __call__(self, request: Request):
-        for permission in self.permissions:
-            cls = permission()
-            if not await cls.has_permission(request=request):
-                raise cls.exception
+        exceptions = {}
+        for i, permission_combo in enumerate(self.permissions):
+            exceptions[i] = []
+            
+            for permission in permission_combo:
+                cls = permission()
+                if not await cls.has_permission(request=request):
+                    exceptions[i].append(cls.exception)
+
+        for i in exceptions:
+            if len(exceptions[i]) == 0:
+                return
+            else:
+                raise exceptions[i][0]

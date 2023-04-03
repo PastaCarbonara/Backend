@@ -28,7 +28,7 @@ group_v1_router = APIRouter()
     "",
     responses={"400": {"model": ExceptionResponseSchema}},
     response_model=List[GroupSchema],
-    dependencies=[Depends(PermissionDependency([IsAdmin]))]
+    dependencies=[Depends(PermissionDependency([[IsAdmin]]))]
 )
 @version(1)
 async def get_group_list():
@@ -39,7 +39,7 @@ async def get_group_list():
     "",
     responses={"400": {"model": ExceptionResponseSchema}},
     response_model=GroupSchema,
-    dependencies=[Depends(PermissionDependency([ProvidesUserID, IsAuthenticated]))]
+    dependencies=[Depends(PermissionDependency([[ProvidesUserID, IsAuthenticated]]))]
 )
 @version(1)
 async def create_group(request: UserCreateGroupSchema):
@@ -51,7 +51,7 @@ async def create_group(request: UserCreateGroupSchema):
     "/{group_id}",
     responses={"400": {"model": ExceptionResponseSchema}},
     response_model=GroupSchema,
-    dependencies=[Depends(PermissionDependency([ProvidesGroupID, IsAuthenticated, IsGroupMember]))]
+    dependencies=[Depends(PermissionDependency([[IsAdmin], [ProvidesGroupID, IsAuthenticated, IsGroupMember]]))]
 )
 @version(1)
 async def get_group(group_id: str):
