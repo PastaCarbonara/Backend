@@ -2,6 +2,7 @@ from typing import List
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import joinedload
 from app.ingredient.services.ingredient import IngredientService
+from app.tag.services.tag import TagService
 from app.recipe.schemas import (
     CreatorCreateRecipeRequestSchema,
     GetFullRecipeResponseSchema,
@@ -9,11 +10,14 @@ from app.recipe.schemas import (
 from core.db.models import RecipeIngredient, RecipeJudgement, Recipe, RecipeTag, User
 from core.db import Transactional, session
 from core.exceptions import RecipeNotFoundException, UserNotFoundException
+from core.exceptions.ingredient import IngredientNotFoundException
+from core.exceptions.tag import TagNotFoundException
 
 
 class RecipeService:
     def __init__(self):
-        ...
+        self.ingredient_service = IngredientService()
+        self.tag_service = TagService()
 
     @Transactional()
     async def judge_recipe(self, recipe_id: int, user_id: int, like: bool) -> None:
@@ -56,12 +60,23 @@ class RecipeService:
         )
 
         for i in recipe.ingredients:
-            db_recipe.ingredients.append(
-                RecipeIngredient(unit=i.unit, amount=i.amount, ingredient_id=i.id),
-            )
+            # check if ingredient exists:
+            ingredient = await self.ingredient_service.get_ingredient_by_id(i.id)
+            if ingredient:
+                db_recipe.ingredients.append(
+                    RecipeIngredient(
+                        unit=i.unit, amount=i.amount, ingredient=ingredient
+                    ),
+                )
+            else:
+                raise IngredientNotFoundException()
 
         for tag_id in recipe.tags:
-            db_recipe.tags.append(RecipeTag(tag_id=tag_id))
+            tag = await self.tag_service.get_tag_by_id(tag_id)
+            if tag:
+                db_recipe.tags.append(RecipeTag(tag=tag))
+            else:
+                raise TagNotFoundException()
         session.add(db_recipe)
         await session.flush()
 
