@@ -28,7 +28,9 @@ class GetFullRecipeResponseSchema(BaseModel):
 
     tags: List[FlattenedRecipeTagSchema] = Field(..., description="Tags of the recipe")
     instructions: List[str] = Field(..., description="Instructions for the recipe")
-    ingredients: List[FlattenedRecipeIngredientSchema] = Field(..., description="Ingridients for the recipe")
+    ingredients: List[FlattenedRecipeIngredientSchema] = Field(
+        ..., description="Ingridients for the recipe"
+    )
     judgements: List[JudgementSchema] = Field(
         ..., description="Judgements of the recipe"
     )
@@ -43,9 +45,11 @@ class CreateRecipeBaseRequestSchema(BaseModel):
     image: str = Field(..., description="Url of image")
     preparing_time: int = Field(..., description="Time in minutes")
 
-    tags: List[CreateRecipeTagSchema] = Field(..., description="Tags of the recipe")
+    tags: List[int] = Field(..., description="Tags of the recipe")
     instructions: List[str] = Field(..., description="Instructions for the recipe")
-    ingredients: List[CreateRecipeIngredientSchema] = Field(..., description="Ingredients for the recipe")
+    ingredients: List[CreateRecipeIngredientSchema] = Field(
+        ..., description="Ingredients for the recipe"
+    )
 
 
 class UserCreateRecipeRequestSchema(CreateRecipeBaseRequestSchema):

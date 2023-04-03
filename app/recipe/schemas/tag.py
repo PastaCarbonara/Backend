@@ -23,7 +23,7 @@ class FlattenedRecipeTagSchema(BaseModel):
         tag = values.get("tag")
         if tag is None:
             return values
-        tag = Tag.validate(tag)
+        tag = TagSchema.validate(tag)
         return {
             "id": tag.id,
             "name": tag.name,

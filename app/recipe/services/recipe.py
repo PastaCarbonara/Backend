@@ -44,20 +44,24 @@ class RecipeService:
             )
 
     @Transactional()
-    async def create_recipe(self, request: CreatorCreateRecipeRequestSchema) -> int:
-        ingredients, request.ingredients = request.ingredients, []
+    async def create_recipe(self, recipe: CreatorCreateRecipeRequestSchema) -> int:
 
-        db_recipe = Recipe(**request.dict())
+        db_recipe = Recipe(
+            name=recipe.name,
+            description=recipe.description,
+            image=recipe.image,
+            preparing_time=recipe.preparing_time,
+            instructions=recipe.instructions,
+            creator_id=recipe.creator_id,
+        )
 
-        for i in ingredients:
+        for i in recipe.ingredients:
             db_recipe.ingredients.append(
-                RecipeIngredient(
-                    unit=i.unit,
-                    amount=i.amount,
-                    ingredient=await IngredientService().get_ingredient_by_id(i.id),
-                )
+                RecipeIngredient(unit=i.unit, amount=i.amount, ingredient_id=i.id),
             )
 
+        for tag_id in recipe.tags:
+            db_recipe.tags.append(RecipeTag(tag_id=tag_id))
         session.add(db_recipe)
         await session.flush()
 
