@@ -4,14 +4,46 @@ import pytest
 from dotenv import load_dotenv
 
 load_dotenv()
+os.environ["ENV"] = "test"
 
-from fastapi.testclient import TestClient
+from typing import Dict
 from app.server import app
+from tests.seed_test_db import seed_db
+from httpx import AsyncClient
+import asyncio
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def client():
-    return TestClient(app)
+    return AsyncClient(app=app, base_url="http://test")
+
+
+@pytest.fixture()
+async def admin_token_headers(client: AsyncClient) -> Dict[str, str]:
+
+    login_data = {
+        "username": "admin",
+        "password": "admin",
+    }
+    response = await client.post("/api/latest/users/login", json=login_data)
+    response = response.json()
+    access_token = response["access_token"]
+
+    return {"Authorization": f"Bearer {access_token}"}
+
+
+@pytest.fixture()
+async def normal_user_token_headers(client: AsyncClient) -> Dict[str, str]:
+
+    login_data = {
+        "username": "normal_user",
+        "password": "normal_user",
+    }
+    response = await client.post("/api/latest/users/login", json=login_data)
+    response = response.json()
+    access_token = response["access_token"]
+
+    return {"Authorization": f"Bearer {access_token}"}
 
 
 def pytest_addoption(parser):
@@ -26,14 +58,16 @@ def pytest_configure(config):
     file after command line options have been parsed.
     """
 
-    os.environ["env"] = "test"
-
     help_menu = config.getoption("-h")
     if help_menu:
         print("Options:")
         print("\t-h\t\t: Show this menu")
-        print("\t--use-db\t: Accepts 'True' or 'False'; 'False' by default;  Use the existing database for testing.")
-        print("\t--no-db-del\t: Accepts 'True' or 'False'; 'False' by default;  Deletes database after it finishes the tests.")
+        print(
+            "\t--use-db\t: Accepts 'True' or 'False'; 'False' by default;  Use the existing database for testing."
+        )
+        print(
+            "\t--no-db-del\t: Accepts 'True' or 'False'; 'False' by default;  Deletes database after it finishes the tests."
+        )
         print()
         print("dont worry about this error :), its made to make this menu look good :D")
         pytest.exit()
@@ -87,3 +121,4 @@ def generate_database():
     # setup in this boilerplate is not written by me and I
     # have no clue how to edit it.
     subprocess.run("alembic upgrade head")
+    seed_db()

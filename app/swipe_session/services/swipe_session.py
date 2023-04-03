@@ -36,7 +36,7 @@ class SwipeSessionConnectionManager:
     async def deny(self, websocket: WebSocket, msg: str = "Access denied") -> None:
         """Denies access to the websocket"""
         await websocket.accept()
-        await SwipeSessionService.handle_connection_code(websocket, 400, msg)
+        await SwipeSessionService().handle_connection_code(websocket, 400, msg)
         await websocket.close(status.WS_1000_NORMAL_CLOSURE)
 
     def disconnect(self, session_id: str, websocket: WebSocket) -> bool:

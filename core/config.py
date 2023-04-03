@@ -4,6 +4,7 @@ from pydantic import BaseSettings
 
 load_dotenv()
 
+
 class Config(BaseSettings):
     ENV: str = "development"
     DEBUG: bool = True

@@ -15,3 +15,9 @@ Boilerplate from [teamhide](https://github.com/teamhide/fastapi-boilerplate).
 `alembic revision -m "REVISION NAME" --autogenerate`
 
 `alembic upgrade head`
+
+## Testing code
+
+`coverage run -m pytest`
+
+`coverage html`

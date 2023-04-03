@@ -7,7 +7,6 @@ from core.db.models import User, UserProfile
 from app.user.schemas.user import LoginResponseSchema
 from core.db import Transactional, session
 from core.exceptions import (
-    PasswordDoesNotMatchException,
     DuplicateUsernameException,
     UserNotFoundException,
     IncorrectPasswordException,
