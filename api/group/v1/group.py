@@ -6,16 +6,18 @@ from app.group.schemas.group import GroupSchema, UserCreateGroupSchema
 from app.group.services.group import GroupService
 
 from fastapi import APIRouter, Depends, Query, Request
-from core.exceptions import ExceptionResponseSchema
+from core.exceptions import ExceptionResponseSchema, GroupNotFoundException
 from core.fastapi_versioning import version
 
 
 from core.fastapi.dependencies.permission import (
     AllowAll,
     PermissionDependency,
+    ProvidesGroupID,
     ProvidesUserID,
     IsAdmin,
     IsAuthenticated,
+    IsGroupMember,
 )
 
 
@@ -43,3 +45,20 @@ async def get_group_list():
 async def create_group(request: UserCreateGroupSchema):
     group_id = await GroupService().create_group(request)
     return await GroupService().get_group_by_id(group_id)
+
+
+@group_v1_router.get(
+    "/{group_id}",
+    responses={"400": {"model": ExceptionResponseSchema}},
+    response_model=GroupSchema,
+    dependencies=[Depends(PermissionDependency([ProvidesGroupID, IsAuthenticated, IsGroupMember]))]
+)
+@version(1)
+async def get_group(group_id: str):
+    group_id = int(group_id)
+
+    group = await GroupService().get_group_by_id(group_id)
+    if not group:
+        raise GroupNotFoundException
+    
+    return group

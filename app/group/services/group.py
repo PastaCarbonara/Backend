@@ -11,6 +11,16 @@ class GroupService:
     def __init__(self):
         ...
 
+    async def is_member(self, group_id: int, user_id: int) -> bool:
+        result = await session.execute(
+            select(GroupMember).where(and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id))
+        )
+        user = result.scalars().first()
+        if not user:
+            return False
+        
+        return True
+
     async def get_group_list(self) -> List[Group]:
         query = select(Group).options(
             joinedload(Group.users)
@@ -44,8 +54,8 @@ class GroupService:
             .where(Group.id == group_id)
             .options(
                 joinedload(Group.users)
-            #     .joinedload(GroupMember.user)
-            #     .joinedload(User.profile)
+                .joinedload(GroupMember.user)
+                .joinedload(User.profile)
             )
         )
         result = await session.execute(query)

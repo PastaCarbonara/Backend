@@ -7,12 +7,14 @@ from .base import (
     DuplicateValueException,
     UnauthorizedException,
 )
+from .group import GroupNotFoundException
 from .token import DecodeTokenException, ExpiredTokenException
 from .user import (
     PasswordDoesNotMatchException,
     DuplicateUsernameException,
     UserNotFoundException,
     MissingUserIDException,
+    MissingGroupIDException,
     IncorrectPasswordException,
 )
 from .recipe import RecipeNotFoundException
@@ -30,8 +32,10 @@ __all__ = [
     "ExceptionResponseSchema",
     "ExpiredTokenException",
     "ForbiddenException",
+    "GroupNotFoundException",
     "IncorrectHashIDException",
     "IncorrectPasswordException",
+    "MissingGroupIDException",
     "MissingUserIDException",
     "NotFoundException",
     "PasswordDoesNotMatchException",
