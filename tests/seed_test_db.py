@@ -1,6 +1,3 @@
-from sqlalchemy import or_, select, and_
-
-from core.db import Transactional, session
 from core.db.models import *
 from app.user.services import UserService
 from sqlalchemy import create_engine

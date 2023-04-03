@@ -8,7 +8,7 @@ os.environ["ENV"] = "test"
 
 from typing import Dict
 from app.server import app
-from core.db.seed_db import seed_db
+from tests.seed_test_db import seed_db
 from httpx import AsyncClient
 import asyncio
 
