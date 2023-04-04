@@ -17,6 +17,12 @@ class CreateSwipeSessionSchema(BaseModel):
     group_id: str | None = None
 
 
+class UpdateSwipeSessionSchema(BaseModel):
+    id: str
+    status: SwipeSessionEnum
+    user_id: int = None
+
+
 class SwipeSessionSchema(BaseModel):
     id: str
     status: SwipeSessionEnum

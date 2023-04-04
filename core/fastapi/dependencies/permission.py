@@ -6,6 +6,7 @@ from fastapi import Request
 from fastapi.openapi.models import APIKey, APIKeyIn
 from fastapi.security.base import SecurityBase
 from app.group.services.group import GroupService
+from app.swipe_session.services.swipe_session import SwipeSessionService
 
 from app.user.services import UserService
 from core.exceptions import (

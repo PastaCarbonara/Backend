@@ -26,12 +26,12 @@ class UserNotFoundException(CustomException):
 
 
 class MissingUserIDException(CustomException):
-    code = 400
+    code = 401
     error_code = "USER__NO_ID"
     message = "no id was provided, or was not logged in"
 
 
 class MissingGroupIDException(CustomException):
-    code = 400
+    code = 401
     error_code = "GROUP__NO_ID"
     message = "no group id was provided"
