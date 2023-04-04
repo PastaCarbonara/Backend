@@ -1,10 +1,10 @@
 from pydantic import BaseModel, Field, root_validator
 from pydantic.utils import GetterDict
-from app.tag.schemas.tag import Tag
+from app.tag.schemas.tag import TagSchema
 
 
 class RecipeTagSchema(BaseModel):
-    tag: Tag = Field(..., description="Tag information object")
+    tag: TagSchema = Field(..., description="Tag information object")
 
     class Config:
         orm_mode = True
@@ -23,7 +23,7 @@ class FlattenedRecipeTagSchema(BaseModel):
         tag = values.get("tag")
         if tag is None:
             return values
-        tag = Tag.validate(tag)
+        tag = TagSchema.validate(tag)
         return {
             "id": tag.id,
             "name": tag.name,
