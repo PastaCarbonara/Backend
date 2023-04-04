@@ -9,6 +9,7 @@ from app.image.exceptions.image import (
 )
 from app.image.interfaces.AzureBlobInterface import AzureBlobInterface
 from app.image.repository.image import ImageRepository
+import sys
 
 
 class ImageService:
@@ -23,14 +24,14 @@ class ImageService:
         return images
 
     async def upload_images(self, images: List[UploadFile]) -> List[File]:
-        images: List[File] = []
+        new_images: List[File] = []
         for image in images:
-            await self.validate_image()
+            await self.validate_image(image)
         for image in images:
             filename = await self.object_storage_interface.upload_image(image)
             image = await self.image_repository.store_image(filename)
-            images.append(image)
-        return images
+            new_images.append(image)
+        return new_images
 
     async def validate_image(self, file: UploadFile):
         # Check if file is an image
@@ -47,5 +48,8 @@ class ImageService:
 
         # Check if file is too large
         max_size = 10 * 1024 * 1024  # 10 MB
-        if file.content_length > max_size:
+        f = await file.read()
+        print(sys.getsizeof(f))
+        if sys.getsizeof(f) > max_size:
             raise ImageTooLargeException()
+        await file.seek(0)

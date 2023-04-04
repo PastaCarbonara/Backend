@@ -1,3 +1,4 @@
+import sys
 from typing import List
 from fastapi import UploadFile
 
@@ -6,9 +7,6 @@ from azure.storage.blob.aio import BlobServiceClient, BlobClient
 from core.config import config
 from app.image.utils import generate_unique_filename
 from app.image.exceptions.image import AzureImageUploadException
-
-print(config.AZURE_BLOB_CONNECTION_STRING)
-print(config.AZURE_IMAGE_URL_BASE)
 
 
 class AzureBlobInterface:
@@ -19,7 +17,6 @@ class AzureBlobInterface:
 
     @classmethod
     async def upload_image(cls, image: UploadFile) -> str:
-
         unique_filename = generate_unique_filename(image.filename)
 
         async with cls.blob_service_client:
@@ -27,10 +24,11 @@ class AzureBlobInterface:
                 cls.container_name
             )
             blob_client = container_client.get_blob_client(unique_filename)
-            f = await image.read()
+            f = image.file.read()
             try:
                 await blob_client.upload_blob(f)
-            except:
+            except Exception as e:
+                print(e)
                 raise AzureImageUploadException()
 
         return unique_filename
