@@ -14,6 +14,7 @@ class ActionDocsSchema(BaseModel):
 class CreateSwipeSessionSchema(BaseModel):
     status: SwipeSessionEnum = SwipeSessionEnum.IN_PROGRESS
     user_id: int = None
+    group_id: str | None = None
 
 
 class SwipeSessionSchema(BaseModel):
