@@ -5,7 +5,6 @@ from app.ingredient.services.ingredient import IngredientService
 from app.tag.services.tag import TagService
 from app.recipe.schemas import (
     CreatorCreateRecipeRequestSchema,
-    GetFullRecipeResponseSchema,
 )
 from core.db.models import RecipeIngredient, RecipeJudgement, Recipe, RecipeTag, User
 from core.db import Transactional, session
