@@ -1,7 +1,7 @@
 from typing import List
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import joinedload
-from app.group.schemas.group import CreateGroupMemberSchema, CreateGroupSchema, UserCreateGroupSchema
+from app.group.schemas.group import CreateGroupSchema, UserCreateGroupSchema
 from app.user.services.user import UserService
 from core.db.models import Group, GroupMember, User
 from core.db import Transactional, session

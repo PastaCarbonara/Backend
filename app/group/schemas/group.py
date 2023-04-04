@@ -51,8 +51,3 @@ class GroupSchema(BaseModel):
 
     class Config:
         orm_mode = True
-
-
-class CreateGroupMemberSchema(BaseModel):
-    group_id: int
-    user_id: int

@@ -2,7 +2,7 @@ import json
 from typing import List
 
 from pydantic import ValidationError
-from app.group.schemas.group import CreateGroupMemberSchema, GroupSchema, UserCreateGroupSchema
+from app.group.schemas.group import GroupSchema, UserCreateGroupSchema
 from app.group.services.group import GroupService
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -73,6 +73,5 @@ async def get_group(group_id: str):
 @version(1)
 async def join_group(group_id: str, request: Request):
     group_id = int(group_id)
-    if await GroupService().is_member(group_id, request.user.id):
-        raise GroupJoinConflictException
-    return await GroupService().join_group(group_id, request.user.id)
+    if not await GroupService().is_member(group_id, request.user.id):
+        return await GroupService().join_group(group_id, request.user.id)
