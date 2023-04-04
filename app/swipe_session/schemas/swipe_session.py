@@ -12,23 +12,30 @@ class ActionDocsSchema(BaseModel):
 
 
 class CreateSwipeSessionSchema(BaseModel):
-    status: SwipeSessionEnum = SwipeSessionEnum.IN_PROGRESS
+    status: SwipeSessionEnum = SwipeSessionEnum.READY
+    user_id: int = None
+    group_id: str | None = None
+
+
+class UpdateSwipeSessionSchema(BaseModel):
+    id: str
+    status: SwipeSessionEnum
     user_id: int = None
 
 
 class SwipeSessionSchema(BaseModel):
-    id: int
-    hashed_id: str = None
+    id: str
     status: SwipeSessionEnum
-    user_id: int
+    user_id: str
     swipes: List[SwipeSchema]
 
-    @validator('hashed_id', always=True)
-    def validate_hashed_id(cls, v: str, values: dict[str, Any]) -> str:
-        assert "id" in values, "sanity check"
-        if not v:
-            return encode(values["id"])
-        return v
+    @validator('id')
+    def hash_id(cls, v):
+        return encode(int(v))
+
+    @validator('user_id')
+    def hash_user_id(cls, v):
+        return encode(int(v))
 
     class Config:
         orm_mode = True

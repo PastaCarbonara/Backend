@@ -5,6 +5,8 @@ from .permission import (
     IsAdmin,
     AllowAll,
     ProvidesUserID,
+    ProvidesGroupID,
+    IsGroupAdmin,
 )
 
 __all__ = [
@@ -14,4 +16,5 @@ __all__ = [
     "IsAdmin",
     "AllowAll",
     "ProvidesUserID",
+    "ProvidesGroupID",
 ]

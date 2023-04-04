@@ -16,8 +16,12 @@ from core.db.enums import SwipeSessionEnum
 class RecipeJudgement(Base, TimestampMixin):
     __tablename__ = "recipe_judgement"
 
-    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipe.id"), primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), primary_key=True)
+    recipe_id: Mapped[int] = mapped_column(
+        ForeignKey("recipe.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"), primary_key=True
+    )
     like: Mapped[bool] = mapped_column(default=False)
 
     user: Mapped["User"] = relationship(back_populates="judged_recipes")
@@ -49,7 +53,9 @@ class UserProfile(Base, TimestampMixin):
 class RecipeIngredient(Base):
     __tablename__ = "recipe_ingredient"
 
-    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipe.id"), primary_key=True)
+    recipe_id: Mapped[int] = mapped_column(
+        ForeignKey("recipe.id", ondelete="CASCADE"), primary_key=True
+    )
     ingredient_id: Mapped[int] = mapped_column(
         ForeignKey("ingredient.id"), primary_key=True
     )
@@ -63,11 +69,21 @@ class RecipeIngredient(Base):
 class RecipeTag(Base):
     __tablename__ = "recipe_tag"
 
-    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipe.id"), primary_key=True)
-    tag_id: Mapped[int] = mapped_column(ForeignKey("tag.id"), primary_key=True)
+    recipe_id: Mapped[int] = mapped_column(
+        ForeignKey("recipe.id", ondelete="CASCADE"), primary_key=True
+    )
+    tag_id: Mapped[int] = mapped_column(
+        ForeignKey("tag.id", ondelete="CASCADE"), primary_key=True
+    )
 
     recipe: Mapped["Recipe"] = relationship(back_populates="tags")
     tag: Mapped["Tag"] = relationship(back_populates="recipes")
+
+
+class File(Base):
+    __tablename__ = "file"
+
+    filename: Mapped[str] = mapped_column(String(), primary_key=True)
 
 
 class Recipe(Base, TimestampMixin):
@@ -78,7 +94,7 @@ class Recipe(Base, TimestampMixin):
     description: Mapped[str] = mapped_column()
     instructions = Column(JSON, nullable=False)
     preparing_time: Mapped[int | None] = mapped_column()
-    image: Mapped[str] = mapped_column()
+    image: Mapped[str] = mapped_column(ForeignKey("file.filename", ondelete="CASCADE"))
     creator_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"))
 
     # ingredients = Column(JSON, nullable=False)
@@ -117,14 +133,15 @@ class Ingredient(Base):
     recipes: Mapped[RecipeIngredient] = relationship(back_populates="ingredient")
 
 
-class SwipeSession(Base):
+class SwipeSession(Base, TimestampMixin):
     __tablename__ = "swipe_session"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     status: Mapped[SwipeSessionEnum] = mapped_column(
-        default=SwipeSessionEnum.IN_PROGRESS
+        default=SwipeSessionEnum.READY
     )
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    group_id: Mapped[int] = mapped_column(ForeignKey("group.id"), nullable=True)
 
     swipes: Mapped[List["Swipe"]] = relationship(
         back_populates="swipe_session", uselist=True

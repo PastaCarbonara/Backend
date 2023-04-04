@@ -35,10 +35,9 @@ class SwipeService:
         result = await session.execute(query)
         return result.scalars().first()
 
-    async def get_swipe_matches(
+    async def get_swipes_by_session_id_and_recipe_id(
         self, swipe_session_id: int, recipe_id: int
     ) -> list[Swipe]:
-        """Get swipes by SessionID and RecipeID"""
 
         query = select(Swipe).where(
             and_(

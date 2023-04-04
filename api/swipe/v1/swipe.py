@@ -21,7 +21,7 @@ swipe_v1_router = APIRouter()
     "",
     response_model=SwipeSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([IsAdmin, ProvidesUserID]))],
+    dependencies=[Depends(PermissionDependency([[IsAdmin, ProvidesUserID]]))],
 )
 @version(1)
 async def create_swipe(request: CreateSwipeSchema):

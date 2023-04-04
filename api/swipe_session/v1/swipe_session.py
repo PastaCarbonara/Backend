@@ -5,6 +5,7 @@ from app.swipe_session.schemas.swipe_session import (
     ActionDocsSchema,
     CreateSwipeSessionSchema,
     SwipeSessionSchema,
+    UpdateSwipeSessionSchema,
 )
 from app.swipe_session.services.swipe_session import SwipeSessionService
 
@@ -14,6 +15,8 @@ from core.fastapi.dependencies import (
     IsAdmin,
     PermissionDependency,
     ProvidesUserID,
+    ProvidesGroupID,
+    IsGroupAdmin,
 )
 from core.fastapi_versioning.versioning import version
 
@@ -40,7 +43,7 @@ async def get_swipe_session_actions():
     "",
     response_model=List[SwipeSessionSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([IsAdmin]))],
+    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
 @version(1)
 async def get_swipe_sessions():
@@ -51,9 +54,21 @@ async def get_swipe_sessions():
     "",
     response_model=SwipeSessionSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([IsAdmin, ProvidesUserID]))],
+    dependencies=[Depends(PermissionDependency([[ProvidesUserID, ProvidesGroupID, IsGroupAdmin]]))],
 )
 @version(1)
 async def create_swipe_session(request: CreateSwipeSessionSchema):
     session_id = await SwipeSessionService().create_swipe_session(request)
+    return await SwipeSessionService().get_swipe_session_by_id(session_id)
+
+
+@swipe_session_v1_router.patch(
+    "",
+    response_model=SwipeSessionSchema,
+    responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(PermissionDependency([[ProvidesUserID]]))],
+)
+@version(1)
+async def update_swipe_session(request: UpdateSwipeSessionSchema):
+    session_id = await SwipeSessionService().update_swipe_session(request)
     return await SwipeSessionService().get_swipe_session_by_id(session_id)

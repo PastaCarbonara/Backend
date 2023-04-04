@@ -1,9 +1,11 @@
 from dataclasses import Field
 from typing import Any
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, root_validator, validator
 from pydantic.utils import GetterDict
 
+
 from app.user.schemas.user import GetUserListResponseSchema
+from core.helpers.hashids import encode
 
 
 class CreateGroupSchema(BaseModel):
@@ -14,22 +16,22 @@ class UserCreateGroupSchema(CreateGroupSchema):
 
 
 class FlattenedGroupMemberSchema(BaseModel):
-    id: int
+    id: str
     username: str
     is_admin: bool
 
     @root_validator(pre=True)
-    def flatten_group_member(clas, values: GetterDict) -> GetterDict | dict[str, object]:
+    def flatten_group_member(cls, values: GetterDict) -> GetterDict | dict[str, object]:
         user = values.get("user")
 
         if user is None:
             return values
         
-        print("WARNING: Currently 'Unknown' is used as default fallback when the user is not logged in.")
+        # NOTE: Currently 'Unknown' is used as default fallback when the user is not logged in.
         username = "Unknown" if user.profile is None else user.profile.username
 
         return {
-            "id": values["user_id"],
+            "id": encode(values["user_id"]),
             "username": username,
             "is_admin": values["is_admin"]
         } | dict(values)
@@ -39,9 +41,13 @@ class FlattenedGroupMemberSchema(BaseModel):
 
 
 class GroupSchema(BaseModel):
-    id: int
+    id: str
     name: str
     users: list[FlattenedGroupMemberSchema]
+
+    @validator('id')
+    def hash_id(cls, v):
+        return encode(int(v))
 
     class Config:
         orm_mode = True

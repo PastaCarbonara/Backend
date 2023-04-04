@@ -7,53 +7,7 @@ class STANDARDS(str, enum.Enum):
 
 
 actions = {
-    "REQUEST_SESSION_MESSAGE": {
-        "info": "Action for sending a message to all connected users within a session.",
-        "expected_request": {
-            "parameters": {
-                "action": "string",
-                "payload": {
-                    "message": "string"
-                }
-            }
-        },
-        "expected_response": {
-            "info": STANDARDS.RESPONSE_NOT_IMPLEMENTED,
-            "parameters": {}
-        }
-    },
-    "REQUEST_GLOBAL_MESSAGE": {
-        "info": "Action for sending a message to all connected users within the whole application.",
-        "expected_request": {
-            "parameters": {
-                "action": "string",
-                "payload": {
-                    "message": "string"
-                }
-            }
-        },
-        "expected_response": {
-            "info": STANDARDS.RESPONSE_NOT_IMPLEMENTED,
-            "parameters": {}
-        }
-    },
-    "REQUEST_RECIPE_LIKE": {
-        "info": "Action for liking a recipe",
-        "expected_request": {
-            "parameters": {
-                "action": "string",
-                "payload": {
-                    "like": "boolean",
-                    "recipe_id": "integer"
-                }
-            }
-        },
-        "expected_response": {
-            "info": STANDARDS.RESPONSE_NOT_IMPLEMENTED,
-            "parameters": {}
-        }
-    },
-    "RESPONSE_CONNECTION_CODE": {
+    "CONNECTION_CODE": {
         "info": "Action for responding with a HTTP status code",
         "expected_request": {
             "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,
@@ -70,11 +24,15 @@ actions = {
             }
         }
     },
-    "RESPONSE_SESSION_MESSAGE": {
-        "info": "Action where a message was sent to all connections within the session",
+    "GLOBAL_MESSAGE": {
+        "info": "Action for sending a message to all connected users within the whole application.",
         "expected_request": {
-            "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,
-            "parameters": {}
+            "parameters": {
+                "action": "string",
+                "payload": {
+                    "message": "string"
+                }
+            }
         },
         "expected_response": {
             "parameters": {
@@ -85,22 +43,7 @@ actions = {
             }
         }
     },
-    "RESPONSE_GLOBAL_MESSAGE": {
-        "info": "Action where a message was sent to all connections within the whole application",
-        "expected_request": {
-            "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,
-            "parameters": {}
-        },
-        "expected_response": {
-            "parameters": {
-                "action": "string",
-                "payload": {
-                    "message": "string"
-                }
-            }
-        }
-    },
-    "RESPONSE_RECIPE_MATCH": {
+    "RECIPE_MATCH": {
         "info": "Action where a match is received",
         "expected_request": {
             "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,
@@ -113,6 +56,41 @@ actions = {
                 "payload": {
                     "message": "string",
                     "recipe": "json"
+                }
+            }
+        }
+    },
+    "RECIPE_SWIPE": {
+        "info": "Action for liking a recipe",
+        "expected_request": {
+            "parameters": {
+                "action": "string",
+                "payload": {
+                    "like": "boolean",
+                    "recipe_id": "integer"
+                }
+            }
+        },
+        "expected_response": {
+            "info": STANDARDS.RESPONSE_NOT_IMPLEMENTED,
+            "parameters": {}
+        }
+    },
+    "SESSION_MESSAGE": {
+        "info": "Action for sending a message to all connected users within a session.",
+        "expected_request": {
+            "parameters": {
+                "action": "string",
+                "payload": {
+                    "message": "string"
+                }
+            }
+        },
+        "expected_response": {
+            "parameters": {
+                "action": "string",
+                "payload": {
+                    "message": "string"
                 }
             }
         }
