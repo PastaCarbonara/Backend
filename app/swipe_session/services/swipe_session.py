@@ -130,18 +130,18 @@ class SwipeSessionService:
                     continue
 
                 # Handlers
-                if packet.action == ACTIONS.REQUEST_GLOBAL_MESSAGE:
+                if packet.action == ACTIONS.GLOBAL_MESSAGE:
                     # Add authorization check
                     await self.handle_global_packet(
                         websocket, packet.payload.get("message")
                     )
 
-                elif packet.action == ACTIONS.REQUEST_RECIPE_LIKE:
-                    await self.handle_recipe_like(
+                elif packet.action == ACTIONS.RECIPE_SWIPE:
+                    await self.handle_recipe_swipe(
                         websocket, session.id, user.id, packet
                     )
 
-                elif packet.action == ACTIONS.REQUEST_SESSION_MESSAGE:
+                elif packet.action == ACTIONS.SESSION_MESSAGE:
                     await self.handle_session_message(
                         websocket, session.id, packet.payload.get("message")
                     )
@@ -162,7 +162,7 @@ class SwipeSessionService:
             return
 
         payload = {"message": message}
-        packet = PacketSchema(action=ACTIONS.RESPONSE_SESSION_MESSAGE, payload=payload)
+        packet = PacketSchema(action=ACTIONS.SESSION_MESSAGE, payload=payload)
 
         await self.handle_global_packet(packet)
 
@@ -177,7 +177,7 @@ class SwipeSessionService:
             return
 
         payload = {"message": message}
-        packet = PacketSchema(action=ACTIONS.RESPONSE_SESSION_MESSAGE, payload=payload)
+        packet = PacketSchema(action=ACTIONS.SESSION_MESSAGE, payload=payload)
 
         await self.handle_session_packet(session_id, packet)
 
@@ -188,11 +188,11 @@ class SwipeSessionService:
 
     async def handle_connection_code(self, websocket, code: int, message: str) -> None:
         payload = {"status_code": code, "message": message}
-        packet = PacketSchema(action=ACTIONS.RESPONSE_CONNECTION_CODE, payload=payload)
+        packet = PacketSchema(action=ACTIONS.CONNECTION_CODE, payload=payload)
 
         await manager.personal_packet(websocket, packet)
 
-    async def handle_recipe_like(
+    async def handle_recipe_swipe(
         self, websocket: WebSocket, session_id: int, user_id: int, packet: PacketSchema
     ) -> None:
         try:
@@ -213,16 +213,16 @@ class SwipeSessionService:
 
         # Commented out for frontend testing
 
-        # existing_swipe = await SwipeService().get_swipe_by_creds(
-        #     swipe_session_id=session_id,
-        #     user_id=user_id,
-        #     recipe_id=packet.payload["recipe_id"]
-        # )
+        existing_swipe = await SwipeService().get_swipe_by_creds(
+            swipe_session_id=session_id,
+            user_id=user_id,
+            recipe_id=packet.payload["recipe_id"]
+        )
 
-        # if existing_swipe:
-        #     message = "This user has already swiped this recipe in this session"
-        #     await self.handle_connection_code(websocket, 409, message)
-        #     return
+        if existing_swipe:
+            message = "This user has already swiped this recipe in this session"
+            await self.handle_connection_code(websocket, 409, message)
+            return
 
         new_swipe_id = await SwipeService().create_swipe(swipe_schema)
 
@@ -251,7 +251,7 @@ class SwipeSessionService:
         full_recipe = GetFullRecipeResponseSchema(**recipe.__dict__)
 
         payload = {"message": "A match has been found", "recipe": full_recipe}
-        packet = PacketSchema(action=ACTIONS.RESPONSE_RECIPE_MATCH, payload=payload)
+        packet = PacketSchema(action=ACTIONS.RECIPE_MATCH, payload=payload)
 
         await self.handle_session_packet(session_id, packet)
 

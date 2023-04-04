@@ -7,7 +7,7 @@ class STANDARDS(str, enum.Enum):
 
 
 actions = {
-    "REQUEST_SESSION_MESSAGE": {
+    "SESSION_MESSAGE": {
         "info": "Action for sending a message to all connected users within a session.",
         "expected_request": {
             "parameters": {
@@ -18,11 +18,15 @@ actions = {
             }
         },
         "expected_response": {
-            "info": STANDARDS.RESPONSE_NOT_IMPLEMENTED,
-            "parameters": {}
+            "parameters": {
+                "action": "string",
+                "payload": {
+                    "message": "string"
+                }
+            }
         }
     },
-    "REQUEST_GLOBAL_MESSAGE": {
+    "GLOBAL_MESSAGE": {
         "info": "Action for sending a message to all connected users within the whole application.",
         "expected_request": {
             "parameters": {
@@ -33,11 +37,15 @@ actions = {
             }
         },
         "expected_response": {
-            "info": STANDARDS.RESPONSE_NOT_IMPLEMENTED,
-            "parameters": {}
+            "parameters": {
+                "action": "string",
+                "payload": {
+                    "message": "string"
+                }
+            }
         }
     },
-    "REQUEST_RECIPE_LIKE": {
+    "RECIPE_SWIPE": {
         "info": "Action for liking a recipe",
         "expected_request": {
             "parameters": {
@@ -53,7 +61,7 @@ actions = {
             "parameters": {}
         }
     },
-    "RESPONSE_CONNECTION_CODE": {
+    "CONNECTION_CODE": {
         "info": "Action for responding with a HTTP status code",
         "expected_request": {
             "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,
@@ -70,37 +78,7 @@ actions = {
             }
         }
     },
-    "RESPONSE_SESSION_MESSAGE": {
-        "info": "Action where a message was sent to all connections within the session",
-        "expected_request": {
-            "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,
-            "parameters": {}
-        },
-        "expected_response": {
-            "parameters": {
-                "action": "string",
-                "payload": {
-                    "message": "string"
-                }
-            }
-        }
-    },
-    "RESPONSE_GLOBAL_MESSAGE": {
-        "info": "Action where a message was sent to all connections within the whole application",
-        "expected_request": {
-            "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,
-            "parameters": {}
-        },
-        "expected_response": {
-            "parameters": {
-                "action": "string",
-                "payload": {
-                    "message": "string"
-                }
-            }
-        }
-    },
-    "RESPONSE_RECIPE_MATCH": {
+    "RECIPE_MATCH": {
         "info": "Action where a match is received",
         "expected_request": {
             "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,

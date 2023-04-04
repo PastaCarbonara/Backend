@@ -9,12 +9,19 @@ on:
     types: [opened, reopened, synchronize]
 
 jobs:
-  test:
+  code-review:
     runs-on: ubuntu-latest
     steps:
-      - uses: anc95/ChatGPT-CodeReview@main
+      - name: app token
+        id: my-app
+        uses: getsentry/action-github-app-token@v2
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+      - name: cr
+        uses: sloep/ChatGPT-CodeReview@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.my-app.outputs.token }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           # Optional
           LANGUAGE: English

@@ -125,6 +125,7 @@ class SwipeSession(Base):
         default=SwipeSessionEnum.IN_PROGRESS
     )
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    group_id: Mapped[int] = mapped_column(ForeignKey("group.id"), nullable=True)
 
     swipes: Mapped[List["Swipe"]] = relationship(
         back_populates="swipe_session", uselist=True
