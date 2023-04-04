@@ -117,7 +117,7 @@ class Ingredient(Base):
     recipes: Mapped[RecipeIngredient] = relationship(back_populates="ingredient")
 
 
-class SwipeSession(Base):
+class SwipeSession(Base, TimestampMixin):
     __tablename__ = "swipe_session"
 
     id: Mapped[int] = mapped_column(primary_key=True)

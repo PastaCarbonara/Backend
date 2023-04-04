@@ -43,6 +43,22 @@ async def provides_hashed_id(request, param_name):
     return True
 
 
+async def get_x_from_request(request, x) -> any:
+        x_value = request.path_params.get(x)
+        if not x_value:
+            try:
+                data = await request.json()
+
+            except json.JSONDecodeError:
+                return None
+            
+            x_value = data.get(x)
+            if not x_value:
+                return None
+        
+        return x_value
+
+
 class BasePermission(ABC):
     exception = CustomException
 
@@ -115,12 +131,10 @@ class IsGroupMember(BasePermission):
 
         if not user_id:
             return False
-
-        if "group_id" not in request.path_params:
-            return False
+            
 
         try:
-            group_id = int(request.path_params["group_id"])
+            group_id = int(group_id)
         except ValueError:
             raise ValueError(
                 "invalid literal for int() with base 10: '"
