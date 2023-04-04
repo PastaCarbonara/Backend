@@ -64,18 +64,16 @@ class AzureBlobInterface:
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 
     @classmethod
-    async def upload_images(images: List[UploadFile]):
-        image_urls = []
+    async def upload_image(image: UploadFile) -> str:
+
+        unique_filename = generate_unique_filename(image.filename)
+
         async with blob_service_client:
             container_client = blob_service_client.get_container_client(container_name)
-            for image in images:
-                try:
-                    blob_client = container_client.get_blob_client(
-                        generate_unique_filename(image.filename)
-                    )
-                    f = await image.read()
-                    await blob_client.upload_blob(f)
-                    image_urls.append[blob_client.url]
-
-                except Exception as e:
-                    return AzureImageUploadException
+            try:
+                blob_client = container_client.get_blob_client(unique_filename)
+                f = await image.read()
+                await blob_client.upload_blob(f)
+            except Exception as e:
+                return AzureImageUploadException
+        return unique_filename

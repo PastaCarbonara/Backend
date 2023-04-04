@@ -25,7 +25,7 @@ class Config(BaseSettings):
     REDIS_PORT: int = 6379
     AZURE_BLOB_ACCOUNT_URL: str = os.getenv("AZURE_BLOB_ACCOUNT_URL")
     IMAGE_CONTAINER_NAME: str = os.getenv("IMAGE_CONTAINER_NAME")
-    AZURE_BLOB_CONNECTION_STRING = os.getenv("AZURE_BLOB_CONNECTION_STRING")
+    AZURE_BLOB_CONNECTION_STRING: str = os.getenv("AZURE_BLOB_CONNECTION_STRING")
 
 
 class DevelopmentConfig(Config):
@@ -33,7 +33,7 @@ class DevelopmentConfig(Config):
     READER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('DU')}:{os.getenv('DP')}@{os.getenv('H')}:{os.getenv('P')}/{os.getenv('DB')}"
     AZURE_BLOB_ACCOUNT_URL: str = os.getenv("AZURE_BLOB_ACCOUNT_URL")
     IMAGE_CONTAINER_NAME: str = os.getenv("IMAGE_CONTAINER_NAME")
-    AZURE_BLOB_CONNECTION_STRING = os.getenv("AZURE_BLOB_CONNECTION_STRING")
+    AZURE_BLOB_CONNECTION_STRING: str = os.getenv("AZURE_BLOB_CONNECTION_STRING")
 
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
@@ -44,7 +44,7 @@ class LocalConfig(Config):
     READER_DB_URL: str = f"postgresql+asyncpg://{os.getenv('DU')}:{os.getenv('DP')}@{os.getenv('H')}:{os.getenv('P')}/{os.getenv('DB')}"
     AZURE_BLOB_ACCOUNT_URL: str = os.getenv("AZURE_BLOB_ACCOUNT_URL")
     IMAGE_CONTAINER_NAME: str = os.getenv("IMAGE_CONTAINER_NAME")
-    AZURE_BLOB_CONNECTION_STRING = os.getenv("AZURE_BLOB_CONNECTION_STRING")
+    AZURE_BLOB_CONNECTION_STRING: str = os.getenv("AZURE_BLOB_CONNECTION_STRING")
 
 
 class ProductionConfig(Config):
