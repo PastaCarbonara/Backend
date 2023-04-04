@@ -74,10 +74,11 @@
             var payload = {
                 message: input.value,
                 like: true,
-                recipe_id: 2
+                recipe_id: 2,
+                status: "Is bezig"
             }
             var package = {
-                action: actions.RECIPE_SWIPE,
+                action: actions.SESSION_STATUS_UPDATE,
                 payload: payload
             }
             ws.send(JSON.stringify(package))
