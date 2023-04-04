@@ -4,6 +4,7 @@ from fastapi import WebSocket, WebSocketDisconnect, WebSocketException, status
 from pydantic import ValidationError
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import joinedload
+from app.group.services.group import GroupService
 from app.recipe.schemas.recipe import GetFullRecipeResponseSchema
 from app.recipe.services.recipe import RecipeService
 from app.swipe.services.swipe import SwipeService
@@ -15,7 +16,7 @@ from app.swipe_session.schemas.swipe_session import (
     CreateSwipeSessionSchema,
     PacketSchema,
 )
-from core.db.enums import SwipeSessionActionEnum as ACTIONS
+from core.db.enums import SwipeSessionActionEnum as ACTIONS, SwipeSessionEnum
 from core.db.models import SwipeSession
 from core.exceptions.recipe import RecipeNotFoundException
 from core.helpers.hashids import check_id, decode
@@ -99,6 +100,11 @@ class SwipeSessionService:
         except:
             await manager.deny(websocket, message)
             return
+        
+        if session.group_id:
+            if not await GroupService().is_member(session.group_id, user.id):
+                await manager.deny(websocket, message)
+                return
 
         await manager.connect(websocket, session.id)
 
@@ -131,20 +137,31 @@ class SwipeSessionService:
 
                 # Handlers
                 if packet.action == ACTIONS.GLOBAL_MESSAGE:
-                    # Add authorization check
-                    await self.handle_global_packet(
+                    if not await UserService().is_admin(user.id):
+                        message = "Unauthorized"
+                        await self.handle_connection_code(websocket, 400, message)
+                        return
+                    
+                    await self.handle_global_message(
                         websocket, packet.payload.get("message")
                     )
 
                 elif packet.action == ACTIONS.RECIPE_SWIPE:
                     await self.handle_recipe_swipe(
-                        websocket, session.id, user.id, packet
+                        websocket, session, user.id, packet
                     )
 
                 elif packet.action == ACTIONS.SESSION_MESSAGE:
                     await self.handle_session_message(
                         websocket, session.id, packet.payload.get("message")
                     )
+
+                elif packet.action == ACTIONS.SESSION_STATUS_UPDATE:
+                    if not await GroupService().is_admin(session.group_id, user.id):
+                        message = "Unauthorized"
+                        await self.handle_connection_code(websocket, 400, message)
+                        return
+                    await self.handle_session_status_update(websocket, session.id, packet.payload.get("status"))
 
                 else:
                     message = "Action is not implemented or not available"
@@ -153,8 +170,18 @@ class SwipeSessionService:
         except WebSocketDisconnect:
             if manager.disconnect(session.id, websocket):
                 await self.handle_session_message(
-                    session.id, f"Client {user_id} left the session"
+                    websocket, session.id, f"Client {user_id} left the session"
                 )
+
+    async def handle_session_status_update(self, websocket: WebSocket, session_id: int, status: str):
+        if not hasattr(SwipeSessionEnum, status):
+            await self.handle_connection_code(websocket, 400, "Incorrect status")
+            return
+        
+        payload = {"status": status}
+        packet = PacketSchema(action=ACTIONS.SESSION_MESSAGE, payload=payload)
+
+        await self.handle_session_packet(session_id, packet)
 
     async def handle_global_message(self, websocket: WebSocket, message: str) -> None:
         if not message:
@@ -193,11 +220,11 @@ class SwipeSessionService:
         await manager.personal_packet(websocket, packet)
 
     async def handle_recipe_swipe(
-        self, websocket: WebSocket, session_id: int, user_id: int, packet: PacketSchema
+        self, websocket: WebSocket, session: SwipeSession, user_id: int, packet: PacketSchema
     ) -> None:
         try:
             swipe_schema = CreateSwipeSchema(
-                swipe_session_id=session_id, user_id=user_id, **packet.payload
+                swipe_session_id=session.id, user_id=user_id, **packet.payload
             )
 
         except ValidationError as e:
@@ -211,10 +238,8 @@ class SwipeSessionService:
             )
             return
 
-        # Commented out for frontend testing
-
         existing_swipe = await SwipeService().get_swipe_by_creds(
-            swipe_session_id=session_id,
+            swipe_session_id=session.id,
             user_id=user_id,
             recipe_id=packet.payload["recipe_id"]
         )
@@ -226,16 +251,15 @@ class SwipeSessionService:
 
         new_swipe_id = await SwipeService().create_swipe(swipe_schema)
 
-        swipe_matches = await SwipeService().get_swipe_matches(
-            swipe_session_id=session_id, recipe_id=packet.payload["recipe_id"]
+        matching_swipes = await SwipeService().get_swipes_by_session_id_and_recipe_id(
+            swipe_session_id=session.id, recipe_id=packet.payload["recipe_id"]
         )
 
-        # NOTE: Should check for amount of group members instead
-        member_count = manager.get_connection_count(session_id)
+        group = await GroupService().get_group_by_id(session.group_id)
 
-        if len(swipe_matches) >= member_count:
+        if len(matching_swipes) >= len(group.users):
             await self.handle_session_match(
-                websocket, session_id, packet.payload["recipe_id"]
+                websocket, session.id, packet.payload["recipe_id"]
             )
 
     async def handle_session_match(
@@ -274,6 +298,7 @@ class SwipeSessionService:
 
     @Transactional()
     async def create_swipe_session(self, request: CreateSwipeSessionSchema) -> int:
+        request.group_id = int(request.group_id)
         db_swipe_session = SwipeSession(**request.dict())
 
         session.add(db_swipe_session)

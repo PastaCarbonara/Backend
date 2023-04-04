@@ -12,14 +12,16 @@ class UserEnum(BaseEnum):
 class SwipeSessionActionEnum(str, BaseEnum):
     # When editing this, edit app\swipe_session\services\action_docs.py too
     CONNECTION_CODE = "CONNECTION_CODE"
-    SESSION_MESSAGE = "SESSION_MESSAGE"
     GLOBAL_MESSAGE = "GLOBAL_MESSAGE"
-    RECIPE_SWIPE = "RECIPE_SWIPE"
     RECIPE_MATCH = "RECIPE_MATCH"
+    RECIPE_SWIPE = "RECIPE_SWIPE"
+    SESSION_MESSAGE = "SESSION_MESSAGE"
+    SESSION_STATUS_UPDATE = "SESSION_STATUS_UPDATE"
 
 
 class SwipeSessionEnum(str, BaseEnum):
-    PAUSED = "Gepauzeerd"
     CANCELLED = "Gestopt"
-    IN_PROGRESS = "Is bezig"
     COMPLETED = "Voltooid"
+    IN_PROGRESS = "Is bezig"
+    PAUSED = "Gepauzeerd"
+    READY = "Staat klaar"

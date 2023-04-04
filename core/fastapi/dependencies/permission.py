@@ -132,7 +132,10 @@ class IsGroupMember(BasePermission):
         if not user_id:
             return False
             
-
+        group_id = await get_x_from_request(request, "group_id")
+        if not group_id:
+            return False
+        
         try:
             group_id = int(group_id)
         except ValueError:
@@ -152,8 +155,21 @@ class IsGroupAdmin(BasePermission):
         user_id = request.user.id
         if not user_id:
             return False
+            
+        group_id = await get_x_from_request(request, "group_id")
+        if not group_id:
+            return False
+        
+        try:
+            group_id = int(group_id)
+        except ValueError:
+            raise ValueError(
+                "invalid literal for int() with base 10: '"
+                + request.path_params["group_id"]
+                + "'. Did you forget to put 'ProvidesGroupID' in the permission dependencies?"
+            )
 
-        return True
+        return await GroupService().is_admin(group_id=group_id, user_id=user_id)
 
 
 class PermissionDependency(SecurityBase):

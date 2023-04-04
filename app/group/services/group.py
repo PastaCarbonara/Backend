@@ -22,6 +22,16 @@ class GroupService:
         
         return True
 
+    async def is_admin(self, group_id: int, user_id: int) -> bool:
+        result = await session.execute(
+            select(GroupMember).where(and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id))
+        )
+        user = result.scalars().first()
+        if not user:
+            return False
+        
+        return user.is_admin
+
     async def get_group_list(self) -> List[Group]:
         query = select(Group).options(
             joinedload(Group.users)

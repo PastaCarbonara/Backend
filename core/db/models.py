@@ -138,7 +138,7 @@ class SwipeSession(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     status: Mapped[SwipeSessionEnum] = mapped_column(
-        default=SwipeSessionEnum.IN_PROGRESS
+        default=SwipeSessionEnum.READY
     )
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     group_id: Mapped[int] = mapped_column(ForeignKey("group.id"), nullable=True)

@@ -15,6 +15,7 @@ from core.fastapi.dependencies import (
     PermissionDependency,
     ProvidesUserID,
     ProvidesGroupID,
+    IsGroupAdmin,
 )
 from core.fastapi_versioning.versioning import version
 
@@ -52,7 +53,7 @@ async def get_swipe_sessions():
     "",
     response_model=SwipeSessionSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAdmin, ProvidesUserID, ProvidesGroupID]]))],
+    dependencies=[Depends(PermissionDependency([[ProvidesUserID, ProvidesGroupID, IsGroupAdmin]]))],
 )
 @version(1)
 async def create_swipe_session(request: CreateSwipeSessionSchema):

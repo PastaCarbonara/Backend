@@ -20,17 +20,16 @@
     <ul id='messages'>
     </ul>
     <script>
-        var ws_url = "wss://munchie.azurewebsites.net/api/latest/swipe_sessions"
+        // var ws_url = "wss://munchie.azurewebsites.net/api/latest/swipe_sessions"
+        var ws_url = "ws://localhost:8000/api/latest/swipe_sessions"
 
         const actions = {
-            SEND_SESSION_MESSAGE: "SEND_SESSION_MESSAGE",
-            SEND_GLOBAL_MESSAGE: "SEND_GLOBAL_MESSAGE",
-            SEND_RECIPE_SWIPE: "SEND_RECIPE_SWIPE",
-
-            RESPONSE_CONNECTION_CODE: "RESPONSE_CONNECTION_CODE",
-            RESPONSE_SESSION_MESSAGE: "RESPONSE_SESSION_MESSAGE",
-            RESPONSE_GLOBAL_MESSAGE: "RESPONSE_GLOBAL_MESSAGE",
-            RESPONSE_RECIPE_MATCH: "RESPONSE_RECIPE_MATCH"
+            CONNECTION_CODE: "CONNECTION_CODE",
+            GLOBAL_MESSAGE: "GLOBAL_MESSAGE",
+            RECIPE_MATCH: "RECIPE_MATCH",
+            RECIPE_SWIPE: "RECIPE_SWIPE",
+            SESSION_MESSAGE: "SESSION_MESSAGE",
+            SESSION_STATUS_UPDATE: "SESSION_STATUS_UPDATE",
         }
 
         var client_id = Date.now()
@@ -75,10 +74,10 @@
             var payload = {
                 message: input.value,
                 like: true,
-                recipe_id: 1
+                recipe_id: 2
             }
             var package = {
-                action: actions.REQUEST_SESSION_MESSAGE,
+                action: actions.RECIPE_SWIPE,
                 payload: payload
             }
             ws.send(JSON.stringify(package))

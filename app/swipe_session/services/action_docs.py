@@ -7,20 +7,18 @@ class STANDARDS(str, enum.Enum):
 
 
 actions = {
-    "SESSION_MESSAGE": {
-        "info": "Action for sending a message to all connected users within a session.",
+    "CONNECTION_CODE": {
+        "info": "Action for responding with a HTTP status code",
         "expected_request": {
-            "parameters": {
-                "action": "string",
-                "payload": {
-                    "message": "string"
-                }
-            }
+            "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,
+            "parameters": {}
         },
         "expected_response": {
+            "info": "The code parameter will use HTTP status codes",
             "parameters": {
                 "action": "string",
                 "payload": {
+                    "code": "integer",
                     "message": "string"
                 }
             }
@@ -45,6 +43,23 @@ actions = {
             }
         }
     },
+    "RECIPE_MATCH": {
+        "info": "Action where a match is received",
+        "expected_request": {
+            "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,
+            "parameters": {}
+        },
+        "expected_response": {
+            "info": "payload -> recipe is the same response object as when getting a recipe",
+            "parameters": {
+                "action": "string",
+                "payload": {
+                    "message": "string",
+                    "recipe": "json"
+                }
+            }
+        }
+    },
     "RECIPE_SWIPE": {
         "info": "Action for liking a recipe",
         "expected_request": {
@@ -61,36 +76,21 @@ actions = {
             "parameters": {}
         }
     },
-    "CONNECTION_CODE": {
-        "info": "Action for responding with a HTTP status code",
+    "SESSION_MESSAGE": {
+        "info": "Action for sending a message to all connected users within a session.",
         "expected_request": {
-            "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,
-            "parameters": {}
-        },
-        "expected_response": {
-            "info": "The code parameter will use HTTP status codes",
             "parameters": {
                 "action": "string",
                 "payload": {
-                    "code": "integer",
                     "message": "string"
                 }
             }
-        }
-    },
-    "RECIPE_MATCH": {
-        "info": "Action where a match is received",
-        "expected_request": {
-            "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,
-            "parameters": {}
         },
         "expected_response": {
-            "info": "payload -> recipe is the same response object as when getting a recipe",
             "parameters": {
                 "action": "string",
                 "payload": {
-                    "message": "string",
-                    "recipe": "json"
+                    "message": "string"
                 }
             }
         }
