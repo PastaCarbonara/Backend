@@ -8,6 +8,7 @@ from api.swipe.v1.swipe import swipe_v1_router
 from api.ingredient.v1.ingredient import ingredient_v1_router
 from api.tag.v1.tag import tag_v1_router
 from api.group.v1.group import group_v1_router
+from api.image.v1.image import image_v1_router
 
 router = APIRouter()
 router.include_router(user_v1_router, prefix="/users", tags=["User"])
@@ -21,6 +22,7 @@ router.include_router(ingredient_v1_router, prefix="/ingredients", tags=["Ingred
 router.include_router(tag_v1_router, prefix="/tags", tags=["Tag"])
 
 router.include_router(group_v1_router, prefix="/groups", tags=["Groups"])
+router.include_router(image_v1_router, prefix="/images", tags=["Image"])
 
 
 __all__ = ["router"]

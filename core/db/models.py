@@ -7,10 +7,11 @@ from sqlalchemy import (
 )
 
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-
+from sqlalchemy.ext.hybrid import hybrid_property
 from core.db import Base
 from core.db.mixins import TimestampMixin
 from core.db.enums import SwipeSessionEnum
+from core.config import config
 
 
 class RecipeJudgement(Base, TimestampMixin):
@@ -84,6 +85,10 @@ class File(Base):
     __tablename__ = "file"
 
     filename: Mapped[str] = mapped_column(String(), primary_key=True)
+
+    @hybrid_property
+    def file_url(self):
+        return config.AZURE_IMAGE_URL_BASE + self.filename
 
 
 class Recipe(Base, TimestampMixin):

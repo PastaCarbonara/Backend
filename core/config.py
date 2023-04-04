@@ -26,6 +26,7 @@ class Config(BaseSettings):
     AZURE_BLOB_ACCOUNT_URL: str = os.getenv("AZURE_BLOB_ACCOUNT_URL")
     IMAGE_CONTAINER_NAME: str = os.getenv("IMAGE_CONTAINER_NAME")
     AZURE_BLOB_CONNECTION_STRING: str = os.getenv("AZURE_BLOB_CONNECTION_STRING")
+    AZURE_IMAGE_URL_BASE: str = os.getenv("AZURE_IMAGE_URL_BASE")
 
 
 class DevelopmentConfig(Config):
