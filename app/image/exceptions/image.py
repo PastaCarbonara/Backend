@@ -35,3 +35,9 @@ class DuplicateFileNameException(CustomException):
     code = 400
     error_code = "DUPLICATE_FILENAME"
     message = "THIS_FILE_ALREADY_EXISTS"
+
+
+class FileNotFoundException(CustomException):
+    code = 400
+    error_code = "FILE_NOT_FOUND"
+    message = "THIS_FILE_NOT_FOUND"

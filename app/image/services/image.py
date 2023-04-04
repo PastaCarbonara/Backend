@@ -19,6 +19,9 @@ class ImageService:
         self.object_storage_interface = object_storage
         self.image_repository = image_repository
 
+    async def get_image_by_name(self, filename) -> File:
+        return self.image_repository.get_image_by_name(filename)
+
     async def get_images(self) -> List[File]:
         images = await self.image_repository.get_images()
         return images

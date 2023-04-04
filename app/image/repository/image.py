@@ -25,3 +25,8 @@ class ImageRepository:
         query = select(File)
         result = await session.execute(query)
         return result.scalars().all()
+
+    async def get_image_by_name(self, filename: str) -> File:
+        query = select(File).where(File.filename == filename)
+        result = await session.execute(query)
+        return result.scalars().first()
