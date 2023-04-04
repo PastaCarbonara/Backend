@@ -160,7 +160,7 @@ class SwipeSessionService:
                         await self.handle_connection_code(websocket, 400, message)
                         return
                     await self.handle_session_status_update(
-                        websocket, session.id, packet.payload.get("status")
+                        websocket, session.id, user.id, packet.payload.get("status")
                     )
 
                 else:
@@ -174,15 +174,21 @@ class SwipeSessionService:
                 )
 
     async def handle_session_status_update(
-        self, websocket: WebSocket, session_id: int, status: str
+        self, websocket: WebSocket, session_id: int, user_id: int, status: str
     ):
-        if not hasattr(SwipeSessionEnum, status):
+        if not status in [e.value for e in SwipeSessionEnum]:
             await self.handle_connection_code(websocket, 400, "Incorrect status")
             return
+        
+        await self.update_swipe_session(
+            UpdateSwipeSessionSchema(
+                id=session_id, status=SwipeSessionEnum.COMPLETED, user_id=user_id
+            )
+        )
 
         payload = {"status": status}
-        packet = PacketSchema(action=ACTIONS.SESSION_MESSAGE, payload=payload)
-
+        packet = PacketSchema(action=ACTIONS.SESSION_STATUS_UPDATE, payload=payload)
+        
         await self.handle_session_packet(session_id, packet)
 
     async def handle_global_message(self, websocket: WebSocket, message: str) -> None:
@@ -267,11 +273,7 @@ class SwipeSessionService:
             await self.handle_session_match(
                 websocket, session.id, packet.payload["recipe_id"]
             )
-            await self.update_swipe_session(
-                UpdateSwipeSessionSchema(
-                    id=session.id, status=SwipeSessionEnum.COMPLETED, user_id=user_id
-                )
-            )
+            await self.handle_session_status_update(websocket, session.id, user_id, SwipeSessionEnum.COMPLETED)
 
     async def handle_session_match(
         self, websocket: WebSocket, session_id: int, recipe_id: int
@@ -309,7 +311,11 @@ class SwipeSessionService:
 
     @Transactional()
     async def update_swipe_session(self, request: UpdateSwipeSessionSchema) -> int:
-        request.id = decode_single(request.id)
+        try:
+            request.id = int(request.id)
+        except:
+            request.id = decode_single(request.id)
+        
         swipe_session = await SwipeSessionService().get_swipe_session_by_id(request.id)
 
         if not await GroupService().is_admin(swipe_session.group_id, request.user_id):

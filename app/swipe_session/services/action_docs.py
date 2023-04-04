@@ -95,4 +95,23 @@ actions = {
             }
         }
     },
+    "SESSION_STATUS_UPDATE": {
+        "info": "Action for updating the session status.",
+        "expected_request": {
+            "parameters": {
+                "action": "string",
+                "payload": {
+                    "status": "string"
+                }
+            }
+        },
+        "expected_response": {
+            "parameters": {
+                "action": "string",
+                "payload": {
+                    "status": "string"
+                }
+            }
+        }
+    },
 }
