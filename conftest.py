@@ -2,6 +2,7 @@ import os
 import subprocess
 import pytest
 from dotenv import load_dotenv
+from fastapi.testclient import TestClient
 
 load_dotenv()
 os.environ["ENV"] = "test"
@@ -10,7 +11,11 @@ from typing import Dict
 from app.server import app
 from tests.seed_test_db import seed_db
 from httpx import AsyncClient
-import asyncio
+
+
+@pytest.fixture()
+def fastapi_client():
+    return TestClient(app)
 
 
 @pytest.fixture()

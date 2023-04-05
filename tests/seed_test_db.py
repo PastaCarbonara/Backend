@@ -23,7 +23,18 @@ def seed_db():
         normal_user.profile = UserProfile(
             username="normal_user", password=service.get_password_hash("normal_user")
         )
-        session.add_all([admin, normal_user])
+
+        group_1 = Group(name="group_1")
+        group_1.users.append(GroupMember(user=admin, is_admin=True))
+
+        group_2 = Group(name="group_2")
+        group_2.users.append(GroupMember(user=admin, is_admin=True))
+        group_2.users.append(GroupMember(user=normal_user, is_admin=False))
+
+        group_3 = Group(name="group_3")
+        group_3.users.append(GroupMember(user=admin, is_admin=True))
+
+        session.add_all([admin, normal_user, group_1, group_2, group_3])
         session.commit()
 
     # needed to call this because test.db couldnt be deleted anymore
