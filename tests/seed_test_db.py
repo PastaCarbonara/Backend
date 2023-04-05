@@ -41,6 +41,7 @@ def seed_db():
         session_3 = SwipeSession(user_id=1, group_id=2)
 
         image_1 = File(filename="image_1")
+        image_2 = File(filename="image_2")
 
         recipe_1 = Recipe(
             name="Union pie",
@@ -53,6 +54,15 @@ def seed_db():
         # recipe_1.ingredients.append()
         # recipe_1.tags.append()
 
+        recipe_2 = Recipe(
+            name="Guacamole",
+            description="Green sauce.",
+            instructions=["Peel the avocado", "Peel the garlic", "Add ALL the pepper"],
+            preparing_time=15,
+            image="image_2",
+            creator=admin,
+        )
+
         session.add_all(
             [
                 admin,
@@ -64,7 +74,9 @@ def seed_db():
                 session_2,
                 session_3,
                 image_1,
+                image_2,
                 recipe_1,
+                recipe_2,
             ]
         )
         session.commit()

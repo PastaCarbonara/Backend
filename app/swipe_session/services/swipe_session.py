@@ -157,7 +157,7 @@ class SwipeSessionService:
                 elif packet.action == ACTIONS.SESSION_STATUS_UPDATE:
                     if not await GroupService().is_admin(session.group_id, user.id):
                         message = "Unauthorized"
-                        await self.handle_connection_code(websocket, 400, message)
+                        await self.handle_connection_code(websocket, 401, message)
                         return
                     await self.handle_session_status_update(
                         websocket, session.id, user.id, packet.payload.get("status")
@@ -235,14 +235,16 @@ class SwipeSessionService:
         packet: PacketSchema,
     ) -> None:
         try:
+            print(packet.payload)
             swipe_schema = CreateSwipeSchema(
                 swipe_session_id=session.id, user_id=user_id, **packet.payload
             )
+            print(swipe_schema)
 
         except ValidationError as e:
             await self.handle_connection_code(websocket, 400, e.json())
             return
-
+        print("1")
         recipe = await RecipeService().get_recipe_by_id(packet.payload["recipe_id"])
         if not recipe:
             await self.handle_connection_code(
@@ -250,29 +252,38 @@ class SwipeSessionService:
             )
             return
 
+        print("2")
         existing_swipe = await SwipeService().get_swipe_by_creds(
             swipe_session_id=session.id,
             user_id=user_id,
             recipe_id=packet.payload["recipe_id"],
         )
 
+        print("3")
         if existing_swipe:
             message = "This user has already swiped this recipe in this session"
             await self.handle_connection_code(websocket, 409, message)
             return
 
+        print("4")
         new_swipe_id = await SwipeService().create_swipe(swipe_schema)
 
+        print("5")
         matching_swipes = await SwipeService().get_swipes_by_session_id_and_recipe_id_and_like(
             swipe_session_id=session.id, recipe_id=packet.payload["recipe_id"], like=True
         )
 
+        print("6")
         group = await GroupService().get_group_by_id(session.group_id)
 
+        print(len(matching_swipes), len(group.users))
+
         if len(matching_swipes) >= len(group.users):
+            print("7")
             await self.handle_session_match(
                 websocket, session.id, packet.payload["recipe_id"]
             )
+            print("8")
             await self.handle_session_status_update(websocket, session.id, user_id, SwipeSessionEnum.COMPLETED)
 
     async def handle_session_match(

@@ -153,15 +153,20 @@ async def test_swipe_session(
         "payload": {"status_code": 200, "message": "You have connected"},
     }
 
-    def send_swipe(ws: WebSocketTestSession, recipe_id: int, like: bool):
+    async def send_swipe(ws: WebSocketTestSession, recipe_id: int, like: bool):
         packet = {
-            'action': ssae.RECIPE_SWIPE,
-            'payload': {
-                'recipe_id': recipe_id,
-                'like': like
-            }
+            "action": ssae.RECIPE_SWIPE,
+            "payload": {"recipe_id": recipe_id, "like": like},
         }
-        ws.send_json(packet)
+        await ws.send_json(packet)
+
+    async def send_message(ws: WebSocketTestSession, message: str):
+        packet = {"action": ssae.SESSION_MESSAGE, "payload": {"message": message}}
+        await ws.send_json(packet)
+
+    async def send_status_update(ws: WebSocketTestSession, status: str):
+        packet = {"action": ssae.SESSION_STATUS_UPDATE, "payload": {"status": status}}
+        await ws.send_json(packet)
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -178,10 +183,76 @@ async def test_swipe_session(
         assert data_1 == valid_connection
         assert data_2 == valid_connection
 
+        await send_swipe(ws_admin, 1, False)
+        await send_swipe(ws_normal_user, 1, True)
 
-        send_swipe(ws_admin, 1, False)
+        await send_swipe(ws_admin, 1, False)
+        data_1 = ws_admin.receive_json()
 
-        send_swipe(ws_normal_user, 1, True)
-        print("tryin' na get it")
+        assert data_1.get("action") == ssae.CONNECTION_CODE
+        assert data_1.get("payload").get("status_code") == 409
+
+        await send_swipe(ws_admin, 3, False)
+        data_1 = ws_admin.receive_json()
+
+        assert data_1.get("action") == ssae.CONNECTION_CODE
+        assert data_1.get("payload").get("status_code") == 404
+
+        # Session message
+        await send_message(ws_admin, "Message!")
+
+        data_1 = ws_admin.receive_json()
         data_2 = ws_normal_user.receive_json()
-        print(data_2)
+
+        assert data_1.get("action") == ssae.SESSION_MESSAGE
+        assert data_1.get("payload").get("message") == "Message!"
+
+        assert data_2.get("action") == ssae.SESSION_MESSAGE
+        assert data_2.get("payload").get("message") == "Message!"
+
+        await send_message(ws_normal_user, "Message!")
+
+        data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
+
+        assert data_1.get("action") == ssae.SESSION_MESSAGE
+        assert data_1.get("payload").get("message") == "Message!"
+
+        assert data_2.get("action") == ssae.SESSION_MESSAGE
+        assert data_2.get("payload").get("message") == "Message!"
+
+        # Status update
+        await send_status_update(ws_admin, sse.PAUSED)
+
+        data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
+
+        assert data_1.get("action") == ssae.SESSION_STATUS_UPDATE
+        assert data_1.get("payload").get("status") == sse.PAUSED
+
+        assert data_2.get("action") == ssae.SESSION_STATUS_UPDATE
+        assert data_2.get("payload").get("status") == sse.PAUSED
+
+        await send_status_update(ws_normal_user, sse.IN_PROGRESS)
+
+        data_2 = ws_normal_user.receive_json()
+
+        assert data_2.get("action") == ssae.CONNECTION_CODE
+        assert data_2.get("payload").get("status_code") == 401
+
+        # Swipe match
+        await send_swipe(ws_admin, 2, True)
+        await send_swipe(ws_normal_user, 2, True)
+
+        print("???")
+
+        data_2 = ws_normal_user.receive_json()
+        print("???")
+        data_1 = ws_admin.receive_json()
+
+        print("???")
+        assert data_1.get("action") == ssae.RECIPE_MATCH
+        assert data_1.get("payload").get("recipe").get("id") == 2
+
+        assert data_2.get("action") == ssae.RECIPE_MATCH
+        assert data_2.get("payload").get("recipe").get("id") == 2
