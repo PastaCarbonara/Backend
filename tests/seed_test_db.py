@@ -34,7 +34,24 @@ def seed_db():
         group_3 = Group(name="group_3")
         group_3.users.append(GroupMember(user=admin, is_admin=True))
 
-        session.add_all([admin, normal_user, group_1, group_2, group_3])
+        # done like this because session.flush() did not work.
+        # user id 1 should be admin, group id 1 and 2 should be group_1 and .._2 respectivly
+        session_1 = SwipeSession(user_id=1, group_id=1)
+        session_2 = SwipeSession(user_id=1, group_id=2)
+        session_3 = SwipeSession(user_id=1, group_id=2)
+
+        session.add_all(
+            [
+                admin,
+                normal_user,
+                group_1,
+                group_2,
+                group_3,
+                session_1,
+                session_2,
+                session_3,
+            ]
+        )
         session.commit()
 
     # needed to call this because test.db couldnt be deleted anymore

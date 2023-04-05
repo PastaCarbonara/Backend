@@ -27,6 +27,7 @@ class SwipeSessionSchema(BaseModel):
     id: str
     status: SwipeSessionEnum
     user_id: str
+    group_id: str
     swipes: List[SwipeSchema]
 
     @validator('id')
@@ -35,6 +36,10 @@ class SwipeSessionSchema(BaseModel):
 
     @validator('user_id')
     def hash_user_id(cls, v):
+        return encode(int(v))
+
+    @validator('group_id')
+    def hash_group_id(cls, v):
         return encode(int(v))
 
     class Config:

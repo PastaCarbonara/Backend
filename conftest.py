@@ -51,6 +51,14 @@ async def normal_user_token_headers(client: AsyncClient) -> Dict[str, str]:
     return {"Authorization": f"Bearer {access_token}"}
 
 
+@pytest.fixture()
+async def users(
+    client: AsyncClient, admin_token_headers: Dict[str, str]
+) -> list[Dict[str, str]]:
+    res = await client.get("/api/v1/users", headers=await admin_token_headers)
+    return res.json()
+
+
 def pytest_addoption(parser):
     parser.addoption("--use-db", action="store", default="False")
     parser.addoption("--no-db-del", action="store", default="False")

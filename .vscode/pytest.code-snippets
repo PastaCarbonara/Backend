@@ -16,7 +16,7 @@
 	},
 	"Add fastapi client fixture": {
 		"scope": "python",
-		"prefix": "client",
+		"prefix": "fastapi_client",
 		"body": [
 			"fastapi_client: TestClient, "
 		],
@@ -38,13 +38,29 @@
 		],
 		"description": "Add normal user fixture"
 	},
-	"Add group fixture": {
+	"Add groups fixture": {
 		"scope": "python",
 		"prefix": "groups",
 		"body": [
 			"groups: list[Dict[str, str]], "
 		],
-		"description": "Add group fixture"
+		"description": "Add groups fixture"
+	},
+	"Add sessions fixture": {
+		"scope": "python",
+		"prefix": "sessions",
+		"body": [
+			"sessions: list[Dict[str, str]], "
+		],
+		"description": "Add sessions fixture"
+	},
+	"Add users fixture": {
+		"scope": "python",
+		"prefix": "users",
+		"body": [
+			"users: list[Dict[str, str]], "
+		],
+		"description": "Add users fixture"
 	},
 	"Add async pytest": {
 		"scope": "python",
