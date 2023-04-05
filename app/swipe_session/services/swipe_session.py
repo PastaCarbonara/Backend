@@ -263,7 +263,7 @@ class SwipeSessionService:
 
         new_swipe_id = await SwipeService().create_swipe(swipe_schema)
 
-        matching_swipes = await SwipeService().get_swipes_by_session_id_and_recipe_id(
+        matching_swipes = await SwipeService().get_swipes_by_session_id_and_recipe_id_and_like(
             swipe_session_id=session.id, recipe_id=packet.payload["recipe_id"], like=True
         )
 
