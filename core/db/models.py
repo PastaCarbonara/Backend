@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import List
 from sqlalchemy import (
     Column,
@@ -148,7 +148,7 @@ class SwipeSession(Base, TimestampMixin):
     __tablename__ = "swipe_session"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    session_date: Mapped[date] = mapped_column(
+    session_date: Mapped[datetime] = mapped_column(
         default=func.now(), server_default=func.now()
     )
     status: Mapped[SwipeSessionEnum] = mapped_column(

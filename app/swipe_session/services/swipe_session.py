@@ -1,3 +1,4 @@
+from datetime import date, datetime
 import json
 from typing import List
 from fastapi import WebSocket, WebSocketDisconnect, WebSocketException, status
@@ -21,6 +22,7 @@ from core.db.enums import SwipeSessionActionEnum as ACTIONS, SwipeSessionEnum
 from core.db.models import SwipeSession
 from core.exceptions.base import UnauthorizedException
 from core.exceptions.recipe import RecipeNotFoundException
+from core.exceptions.swipe_session import SwipeSessionNotFoundException
 from core.helpers.hashids import check_id, decode, decode_single
 
 
@@ -324,7 +326,23 @@ class SwipeSessionService:
         except:
             request.id = decode_single(request.id)
 
+        if type(request.session_date) == date:
+            request.session_date = datetime.combine(request.session_date, datetime.min.time())
+        else:
+            if not request.session_date:
+                request.session_date = datetime.now()
+
+            request.session_date = request.session_date.replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+
         swipe_session = await SwipeSessionService().get_swipe_session_by_id(request.id)
+
+        if not request.status:
+            request.status = swipe_session.status
+
+        if not swipe_session:
+            raise SwipeSessionNotFoundException
 
         if not await GroupService().is_admin(swipe_session.group_id, request.user_id):
             raise UnauthorizedException
@@ -344,6 +362,13 @@ class SwipeSessionService:
     async def create_swipe_session(self, request: CreateSwipeSessionSchema) -> int:
         request.group_id = int(request.group_id)
         db_swipe_session = SwipeSession(**request.dict())
+
+        if not request.session_date:
+            request.session_date = datetime.now()
+
+        request.session_date = request.session_date.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
 
         session.add(db_swipe_session)
         await session.flush()

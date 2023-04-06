@@ -48,7 +48,7 @@ def seed_db():
             description="The greatest union pie in the west.",
             instructions=["Lay it down", "Slice it", "Cook it", "Wait for it to cool", "Add topping", "Enjoy"],
             preparing_time=30,
-            image="image_1",
+            filename="image_1",
             creator=admin,
         )
         # recipe_1.ingredients.append()
@@ -59,7 +59,7 @@ def seed_db():
             description="Green sauce.",
             instructions=["Peel the avocado", "Peel the garlic", "Add ALL the pepper"],
             preparing_time=15,
-            image="image_2",
+            filename="image_2",
             creator=admin,
         )
 
