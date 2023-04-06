@@ -6,12 +6,13 @@ from .judgement import JudgementSchema
 from .user import UserSchema
 from .tag import RecipeTagSchema, FlattenedRecipeTagSchema
 from .ingredient import CreateRecipeIngredientSchema, FlattenedRecipeIngredientSchema
+from app.image.schemas import ImageSchema
 
 
 class GetRecipeListResponseSchema(BaseModel):
     id: int = Field(..., description="ID")
     name: str = Field(..., description="Recipe name")
-    image: str = Field(..., description="Image url")
+    image: ImageSchema = Field(..., description="Image ")
     tags: List[RecipeTagSchema] = Field(..., description="Recipe tags")
 
     class Config:
@@ -22,7 +23,7 @@ class GetFullRecipeResponseSchema(BaseModel):
     id: int = Field(..., description="ID")
     name: str = Field(..., description="Recipe name")
     description: str | None = Field(None, description="Recipe description")
-    image: str = Field(..., description="Url of image")
+    image: ImageSchema = Field(..., description="image")
     creator: UserSchema = Field(..., description="Creator of the recipe")
     preparing_time: int = Field(..., description="Time in minutes")
 
@@ -42,7 +43,7 @@ class GetFullRecipeResponseSchema(BaseModel):
 class CreateRecipeBaseRequestSchema(BaseModel):
     name: str = Field(..., description="Recipe name")
     description: str | None = Field(None, description="Recipe description")
-    image: str = Field(..., description="Url of image")
+    filename: str = Field(..., description="image")
     preparing_time: int = Field(..., description="Time in minutes")
 
     tags: List[int] = Field(..., description="Tags of the recipe")

@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, UploadFile
 from core.exceptions import ExceptionResponseSchema
 from core.fastapi_versioning import version
 
@@ -9,37 +9,41 @@ from app.ingredient.schemas import (
     IngredientSchema,
 )
 from app.tag.schemas import TagSchema, CreateTagSchema
+from app.image.schemas import ImageSchema
 from app.ingredient.services import IngredientService
-from app.tag.services import TagService
+from app.image.services import ImageService
 from core.fastapi.dependencies.permission import (
     AllowAll,
     PermissionDependency,
     ProvidesUserID,
     IsAdmin,
 )
+from app.image.interfaces import AzureBlobInterface
+from app.image.repository import ImageRepository
 
 
-tag_v1_router = APIRouter()
+image_v1_router = APIRouter()
 
 
-@tag_v1_router.get(
+@image_v1_router.get(
     "",
-    response_model=List[TagSchema],
+    response_model=List[ImageSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([[AllowAll]]))],
 )
 @version(1)
-async def get_all_tags():
-    return await TagService().get_tags()
+async def get_images():
+    return await ImageService(AzureBlobInterface, ImageRepository()).get_images()
 
 
-@tag_v1_router.post(
+@image_v1_router.post(
     "",
-    response_model=IngredientSchema,
+    response_model=List[ImageSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
 @version(1)
-async def create_tag(request: CreateTagSchema):
-    tag_id = await TagService().create_tag(request)
-    return await TagService().get_tag_by_id(tag_id)
+async def create_image(images: list[UploadFile]):
+    return await ImageService(AzureBlobInterface, ImageRepository()).upload_images(
+        images
+    )

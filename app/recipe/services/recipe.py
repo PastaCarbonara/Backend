@@ -6,6 +6,8 @@ from app.tag.services.tag import TagService
 from app.recipe.schemas import (
     CreatorCreateRecipeRequestSchema,
 )
+from app.image.repository.image import ImageRepository
+from app.image.exceptions.image import FileNotFoundException
 from core.db.models import RecipeIngredient, RecipeJudgement, Recipe, RecipeTag, User
 from core.db import Transactional, session
 from core.exceptions import RecipeNotFoundException, UserNotFoundException
@@ -17,6 +19,7 @@ class RecipeService:
     def __init__(self):
         self.ingredient_service = IngredientService()
         self.tag_service = TagService()
+        self.image_repository = ImageRepository()
 
     @Transactional()
     async def judge_recipe(self, recipe_id: int, user_id: int, like: bool) -> None:
@@ -49,15 +52,18 @@ class RecipeService:
     @Transactional()
     async def create_recipe(self, recipe: CreatorCreateRecipeRequestSchema) -> int:
 
+        image = await self.image_repository.get_image_by_name(recipe.filename)
+        if not image:
+            raise FileNotFoundException()
+
         db_recipe = Recipe(
             name=recipe.name,
+            filename=recipe.filename,
             description=recipe.description,
-            image=recipe.image,
             preparing_time=recipe.preparing_time,
             instructions=recipe.instructions,
             creator_id=recipe.creator_id,
         )
-
         for i in recipe.ingredients:
             # check if ingredient exists:
             ingredient = await self.ingredient_service.get_ingredient_by_id(i.id)
@@ -90,6 +96,7 @@ class RecipeService:
                 joinedload(Recipe.creator),
                 joinedload(Recipe.judgements),
                 joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
+                joinedload(Recipe.image),
             )
         )
         result = await session.execute(query)
