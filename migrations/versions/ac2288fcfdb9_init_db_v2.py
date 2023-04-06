@@ -5,6 +5,7 @@ Revises:
 Create Date: 2023-04-06 13:36:18.140899
 
 """
+from datetime import date, datetime
 from alembic import op
 import sqlalchemy as sa
 
@@ -25,8 +26,8 @@ def upgrade():
     op.create_table('group',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_at', sa.DateTime(), default=datetime.utcnow, nullable=False),
+    sa.Column('updated_at', sa.DateTime(), default=datetime.utcnow, nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('ingredient',
@@ -42,8 +43,8 @@ def upgrade():
     )
     op.create_table('user',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_at', sa.DateTime(), default=datetime.utcnow, nullable=False),
+    sa.Column('updated_at', sa.DateTime(), default=datetime.utcnow, nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('group_member',
@@ -62,20 +63,20 @@ def upgrade():
     sa.Column('preparing_time', sa.Integer(), nullable=True),
     sa.Column('filename', sa.String(), nullable=False),
     sa.Column('creator_id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_at', sa.DateTime(), default=datetime.utcnow, nullable=False),
+    sa.Column('updated_at', sa.DateTime(), default=datetime.utcnow, nullable=True),
     sa.ForeignKeyConstraint(['creator_id'], ['user.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['filename'], ['file.filename'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('swipe_session',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('session_date', sa.Date(), server_default=sa.text('now()'), nullable=False),
+    sa.Column('session_date', sa.DateTime(), default=date, nullable=False),
     sa.Column('status', sa.Enum('Gestopt', 'Voltooid', 'Is bezig', 'Gepauzeerd', 'Staat klaar', name='swipesessionenum'), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('group_id', sa.Integer(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_at', sa.DateTime(), default=datetime.utcnow, nullable=False),
+    sa.Column('updated_at', sa.DateTime(), default=datetime.utcnow, nullable=True),
     sa.ForeignKeyConstraint(['group_id'], ['group.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -85,8 +86,8 @@ def upgrade():
     sa.Column('username', sa.String(length=50), nullable=False),
     sa.Column('password', sa.String(), nullable=False),
     sa.Column('is_admin', sa.Boolean(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_at', sa.DateTime(), default=datetime.utcnow, nullable=False),
+    sa.Column('updated_at', sa.DateTime(), default=datetime.utcnow, nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('user_id')
     )
@@ -103,8 +104,8 @@ def upgrade():
     sa.Column('recipe_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('like', sa.Boolean(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_at', sa.DateTime(), default=datetime.utcnow, nullable=False),
+    sa.Column('updated_at', sa.DateTime(), default=datetime.utcnow, nullable=True),
     sa.ForeignKeyConstraint(['recipe_id'], ['recipe.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('recipe_id', 'user_id')
@@ -145,4 +146,7 @@ def downgrade():
     op.drop_table('ingredient')
     op.drop_table('group')
     op.drop_table('file')
+    
+    # if op.get_context().dialect.name == "postgresql":
+    op.execute("DROP TYPE IF EXISTS swipesessionenum")
     # ### end Alembic commands ###
