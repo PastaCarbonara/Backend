@@ -47,7 +47,7 @@ class SwipeSessionConnectionManager:
 
         self.active_connections[session_id].remove(websocket)
 
-        if len(self.active_connections[session_id]) == 0:
+        if self.get_connection_count(session_id) == 0:
             del self.active_connections[session_id]
             return False
 
