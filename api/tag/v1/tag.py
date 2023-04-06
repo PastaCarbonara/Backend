@@ -1,20 +1,17 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends
 from core.exceptions import ExceptionResponseSchema
 from core.fastapi_versioning import version
 
 from app.ingredient.schemas import (
-    CreateIngredientSchema,
     IngredientSchema,
 )
 from app.tag.schemas import TagSchema, CreateTagSchema
-from app.ingredient.services import IngredientService
 from app.tag.services import TagService
 from core.fastapi.dependencies.permission import (
     AllowAll,
     PermissionDependency,
-    ProvidesUserID,
     IsAdmin,
 )
 
