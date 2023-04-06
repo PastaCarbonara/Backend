@@ -5,7 +5,7 @@ Revises:
 Create Date: 2023-04-06 13:36:18.140899
 
 """
-from datetime import date, datetime
+from datetime import datetime
 from alembic import op
 import sqlalchemy as sa
 
@@ -71,7 +71,7 @@ def upgrade():
     )
     op.create_table('swipe_session',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('session_date', sa.DateTime(), default=date, nullable=False),
+    sa.Column('session_date', sa.DateTime(), default=datetime.utcnow, nullable=False),
     sa.Column('status', sa.Enum('Gestopt', 'Voltooid', 'Is bezig', 'Gepauzeerd', 'Staat klaar', name='swipesessionenum'), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('group_id', sa.Integer(), nullable=True),

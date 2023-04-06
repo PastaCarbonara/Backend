@@ -50,7 +50,7 @@ class GroupService:
         db_group.users.append(
             GroupMember(
                 is_admin=True,
-                user_id=await UserService().get_user_by_id(request.user_id),
+                user_id=request.user_id,
             )
         )
 

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Any, List
 from pydantic import BaseModel, validator
 from app.swipe_session.schemas.swipe import SwipeSchema
@@ -14,7 +14,7 @@ class ActionDocsSchema(BaseModel):
 
 class CreateSwipeSessionSchema(BaseModel):
     status: SwipeSessionEnum = SwipeSessionEnum.READY
-    session_date: date = None
+    session_date: date | datetime | None = None
     user_id: int = None
     group_id: str | None = None
 
@@ -22,12 +22,13 @@ class CreateSwipeSessionSchema(BaseModel):
 class UpdateSwipeSessionSchema(BaseModel):
     id: str
     session_date: date = None
-    status: SwipeSessionEnum
+    status: SwipeSessionEnum = None
     user_id: int = None
 
 
 class SwipeSessionSchema(BaseModel):
     id: str
+    session_date: date
     status: SwipeSessionEnum
     user_id: str
     group_id: str
