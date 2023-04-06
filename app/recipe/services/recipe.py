@@ -108,6 +108,7 @@ class RecipeService:
             joinedload(Recipe.creator),
             joinedload(Recipe.judgements),
             joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
+            joinedload(Recipe.image),
         )
         result = await session.execute(query)
         return result.unique().scalars().all()
