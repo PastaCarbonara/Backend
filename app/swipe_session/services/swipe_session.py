@@ -47,7 +47,7 @@ class SwipeSessionConnectionManager:
 
         self.active_connections[session_id].remove(websocket)
 
-        if len(self.active_connections[session_id]) == 0:
+        if self.get_connection_count(session_id) == 0:
             del self.active_connections[session_id]
             return False
 
@@ -118,6 +118,9 @@ class SwipeSessionService:
 
         try:
             while True:
+                # NOTE NOTE NOTE NOTE!!!! DO NOTTTTT 'RETURN' IF YOU WISH TO 'CONTINUE'
+                # Learned it the hard way, took me a day.
+
                 data = await websocket.receive_text()
 
                 # Gate keepers/Guard clauses
@@ -139,9 +142,8 @@ class SwipeSessionService:
                 if packet.action == ACTIONS.GLOBAL_MESSAGE:
                     if not await UserService().is_admin(user.id):
                         message = "Unauthorized"
-                        await self.handle_connection_code(websocket, 400, message)
-                        return
-
+                        await self.handle_connection_code(websocket, 401, message)
+                        continue
                     await self.handle_global_message(
                         websocket, packet.payload.get("message")
                     )
@@ -157,8 +159,8 @@ class SwipeSessionService:
                 elif packet.action == ACTIONS.SESSION_STATUS_UPDATE:
                     if not await GroupService().is_admin(session.group_id, user.id):
                         message = "Unauthorized"
-                        await self.handle_connection_code(websocket, 400, message)
-                        return
+                        await self.handle_connection_code(websocket, 401, message)
+                        continue
                     await self.handle_session_status_update(
                         websocket, session.id, user.id, packet.payload.get("status")
                     )
@@ -179,7 +181,7 @@ class SwipeSessionService:
         if not status in [e.value for e in SwipeSessionEnum]:
             await self.handle_connection_code(websocket, 400, "Incorrect status")
             return
-        
+
         await self.update_swipe_session(
             UpdateSwipeSessionSchema(
                 id=session_id, status=SwipeSessionEnum.COMPLETED, user_id=user_id
@@ -188,7 +190,7 @@ class SwipeSessionService:
 
         payload = {"status": status}
         packet = PacketSchema(action=ACTIONS.SESSION_STATUS_UPDATE, payload=payload)
-        
+
         await self.handle_session_packet(session_id, packet)
 
     async def handle_global_message(self, websocket: WebSocket, message: str) -> None:
@@ -197,7 +199,7 @@ class SwipeSessionService:
             return
 
         payload = {"message": message}
-        packet = PacketSchema(action=ACTIONS.SESSION_MESSAGE, payload=payload)
+        packet = PacketSchema(action=ACTIONS.GLOBAL_MESSAGE, payload=payload)
 
         await self.handle_global_packet(packet)
 
@@ -263,8 +265,12 @@ class SwipeSessionService:
 
         new_swipe_id = await SwipeService().create_swipe(swipe_schema)
 
-        matching_swipes = await SwipeService().get_swipes_by_session_id_and_recipe_id(
-            swipe_session_id=session.id, recipe_id=packet.payload["recipe_id"]
+        matching_swipes = (
+            await SwipeService().get_swipes_by_session_id_and_recipe_id_and_like(
+                swipe_session_id=session.id,
+                recipe_id=packet.payload["recipe_id"],
+                like=True,
+            )
         )
 
         group = await GroupService().get_group_by_id(session.group_id)
@@ -273,7 +279,9 @@ class SwipeSessionService:
             await self.handle_session_match(
                 websocket, session.id, packet.payload["recipe_id"]
             )
-            await self.handle_session_status_update(websocket, session.id, user_id, SwipeSessionEnum.COMPLETED)
+            await self.handle_session_status_update(
+                websocket, session.id, user_id, SwipeSessionEnum.COMPLETED
+            )
 
     async def handle_session_match(
         self, websocket: WebSocket, session_id: int, recipe_id: int
@@ -315,7 +323,7 @@ class SwipeSessionService:
             request.id = int(request.id)
         except:
             request.id = decode_single(request.id)
-        
+
         swipe_session = await SwipeSessionService().get_swipe_session_by_id(request.id)
 
         if not await GroupService().is_admin(swipe_session.group_id, request.user_id):

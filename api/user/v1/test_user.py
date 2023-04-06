@@ -25,7 +25,7 @@ async def test_create_existing_user(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_get_user_list(client: AsyncClient, admin_token_headers: Dict[str, str]):
-    res = await client.get("/api/latest/users", headers=await admin_token_headers)
+    res = await client.get("/api/v1/users", headers=await admin_token_headers)
     users = res.json()
 
     assert users[0]["username"] == "admin"
@@ -37,11 +37,11 @@ async def test_get_user_list(client: AsyncClient, admin_token_headers: Dict[str,
 async def test_get_user_list_normal_user(
     client: AsyncClient, normal_user_token_headers: Dict[str, str]
 ):
-    res = await client.get("/api/latest/users", headers=await normal_user_token_headers)
+    res = await client.get("/api/v1/users", headers=await normal_user_token_headers)
     assert res.status_code == 401
 
 
 @pytest.mark.asyncio
 async def test_get_user_list_no_auth(client: AsyncClient):
-    res = await client.get("/api/latest/users")
+    res = await client.get("/api/v1/users")
     assert res.status_code == 401

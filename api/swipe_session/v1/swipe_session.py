@@ -66,7 +66,7 @@ async def create_swipe_session(request: CreateSwipeSessionSchema):
     "",
     response_model=SwipeSessionSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[ProvidesUserID]]))],
+    dependencies=[Depends(PermissionDependency([[IsAdmin, ProvidesUserID]]))],
 )
 @version(1)
 async def update_swipe_session(request: UpdateSwipeSessionSchema):

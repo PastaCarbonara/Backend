@@ -2,6 +2,7 @@ import os
 import subprocess
 import pytest
 from dotenv import load_dotenv
+from fastapi.testclient import TestClient
 
 load_dotenv()
 os.environ["ENV"] = "test"
@@ -10,7 +11,11 @@ from typing import Dict
 from app.server import app
 from tests.seed_test_db import seed_db
 from httpx import AsyncClient
-import asyncio
+
+
+@pytest.fixture()
+def fastapi_client():
+    return TestClient(app)
 
 
 @pytest.fixture()
@@ -44,6 +49,14 @@ async def normal_user_token_headers(client: AsyncClient) -> Dict[str, str]:
     access_token = response["access_token"]
 
     return {"Authorization": f"Bearer {access_token}"}
+
+
+@pytest.fixture()
+async def users(
+    client: AsyncClient, admin_token_headers: Dict[str, str]
+) -> list[Dict[str, str]]:
+    res = await client.get("/api/v1/users", headers=await admin_token_headers)
+    return res.json()
 
 
 def pytest_addoption(parser):
