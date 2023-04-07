@@ -103,3 +103,4 @@ class TagRepository:
             The tag to delete.
         """
         await session.delete(tag)
+        await session.flush()

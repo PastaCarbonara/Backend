@@ -11,7 +11,11 @@ from sqlalchemy.exc import IntegrityError
 from core.db.models import Tag
 from core.db import Transactional
 from app.tag.schema import CreateTagSchema
-from app.tag.exception.tag import TagAlreadyExistsException, TagNotFoundException
+from app.tag.exception.tag import (
+    TagAlreadyExistsException,
+    TagNotFoundException,
+    TagDependecyException,
+)
 from app.tag.repository.tag import TagRepository
 
 
@@ -87,22 +91,6 @@ class TagService:
         """
         return await self.tag_repository.get_tag_by_id(tag_id)
 
-    async def get_tag_by_name(self, tag_name: str) -> Tag:
-        """
-        Returns the tag with the given name.
-
-        Parameters
-        ----------
-        tag_name : str
-            The name of the tag.
-
-        Returns
-        -------
-        tag : Tag
-            The tag with the given name.
-        """
-        return await self.tag_repository.get_tag_by_name(tag_name)
-
     @Transactional()
     async def update_tag(self, tag_id: int, request: CreateTagSchema) -> Tag:
         """
@@ -147,4 +135,7 @@ class TagService:
         tag = await self.tag_repository.get_tag_by_id(tag_id)
         if not tag:
             raise TagNotFoundException
-        await self.tag_repository.delete_tag(tag)
+        try:
+            await self.tag_repository.delete_tag(tag)
+        except AssertionError as exc:
+            raise TagDependecyException from exc

@@ -85,6 +85,7 @@ async def update_tag(tag_id: int, request: CreateTagSchema):
 @tag_v1_router.delete(
     "/{tag_id}",
     responses={"400": {"model": ExceptionResponseSchema}},
+    status_code=204,
     dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
 async def delete_tag(tag_id: int):
@@ -95,3 +96,4 @@ async def delete_tag(tag_id: int):
     - tag_id (int): The ID of the tag to delete.
     """
     await TagService().delete_tag(tag_id)
+    return {"message": "Tag deleted successfully."}
