@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, root_validator
 from pydantic.utils import GetterDict
-from app.tag.schemas.tag import TagSchema
+from app.tag.schema.tag import TagSchema
 
 
 class RecipeTagSchema(BaseModel):
