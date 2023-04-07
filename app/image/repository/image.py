@@ -6,12 +6,8 @@ from app.image.exceptions.image import DuplicateFileNameException
 
 
 class ImageRepository:
-    def __init__(self) -> None:
-        ...
-
     @Transactional()
     async def store_image(self, filename: str) -> File:
-
         query = select(File).where(File.filename == filename)
         result = await session.execute(query)
         is_exist = result.scalars().first()

@@ -7,14 +7,14 @@ from app.image.exceptions.image import (
     FileIsNotImageException,
     ImageTooLargeException,
 )
-from app.image.interfaces.AzureBlobInterface import AzureBlobInterface
+from app.image.interfaces.image import ObjectStorageInterface
 from app.image.repository.image import ImageRepository
 import sys
 
 
 class ImageService:
     def __init__(
-        self, object_storage: AzureBlobInterface, image_repository: ImageRepository
+        self, object_storage: ObjectStorageInterface, image_repository: ImageRepository
     ):
         self.object_storage_interface = object_storage
         self.image_repository = image_repository

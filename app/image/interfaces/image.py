@@ -1,5 +1,5 @@
 import sys
-from typing import List
+from typing import List, Protocol
 from fastapi import UploadFile
 
 from azure.identity import DefaultAzureCredential
@@ -7,6 +7,14 @@ from azure.storage.blob.aio import BlobServiceClient, BlobClient
 from core.config import config
 from app.image.utils import generate_unique_filename
 from app.image.exceptions.image import AzureImageUploadException
+
+
+class ObjectStorageInterface(Protocol):
+    async def upload_image(self, image: UploadFile) -> str:
+        ...
+
+    async def delete_image(self, filename: str) -> None:
+        ...
 
 
 class AzureBlobInterface:
@@ -32,3 +40,27 @@ class AzureBlobInterface:
                 raise AzureImageUploadException()
 
         return unique_filename
+
+    @classmethod
+    async def delete_image(cls, filename: str) -> None:
+        ...
+
+
+class GCoreInterface:
+    @classmethod
+    async def upload_image(cls, image: UploadFile) -> str:
+        ...
+
+    @classmethod
+    async def delete_image(cls, filename: str) -> None:
+        ...
+
+
+class GoogleBucketInterface:
+    @classmethod
+    async def upload_image(cls, image: UploadFile) -> str:
+        ...
+
+    @classmethod
+    async def delete_image(cls, filename: str) -> None:
+        ...
