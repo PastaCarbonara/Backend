@@ -10,6 +10,7 @@ from app.image.exceptions.image import (
 from app.image.interfaces.image import ObjectStorageInterface
 from app.image.repository.image import ImageRepository
 import sys
+from app.image.utils import generate_unique_filename
 
 
 class ImageService:
@@ -31,8 +32,9 @@ class ImageService:
         for image in images:
             await self.validate_image(image)
         for image in images:
-            filename = await self.object_storage_interface.upload_image(image)
-            image = await self.image_repository.store_image(filename)
+            unique_filename = generate_unique_filename(image.filename)
+            await self.object_storage_interface.upload_image(image, unique_filename)
+            image = await self.image_repository.store_image(unique_filename)
             new_images.append(image)
         return new_images
 
