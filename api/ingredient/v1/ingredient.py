@@ -43,14 +43,14 @@ async def get_all_ingredients():
     dependencies=[Depends(PermissionDependency([[AllowAll]]))],
 )
 @version(1)
-async def get_ingrdient_by_id(ingredient_id: int):
+async def get_ingredient_by_id(ingredient_id: int):
     """Get an ingredient by id.
 
     ## Parameters
-    - ingredient_id (int): The id of the ingredient to retrieve.
+        - ingredient_id (int): The id of the ingredient to retrieve.
 
     ## Returns
-    IngredientSchema: The ingredient with the given id.
+        IngredientSchema: The ingredient with the given id.
     """
     return await IngredientService().get_ingredient_by_id(ingredient_id)
 
@@ -65,10 +65,10 @@ async def get_ingrdient_by_id(ingredient_id: int):
 async def create_ingredient(request: CreateIngredientSchema):
     """Create a new ingredient.
     ## Parameters
-    - request (CreateIngredientSchema): The schema representing the new ingredient.
+        - request (CreateIngredientSchema): The schema representing the new ingredient.
 
     ## Returns
-    IngredientSchema: The newly created ingredient.
+        IngredientSchema: The newly created ingredient.
     """
 
     return await IngredientService().create_ingredient(request)
@@ -84,11 +84,11 @@ async def create_ingredient(request: CreateIngredientSchema):
 async def update_ingredient(ingredient_id: int, request: CreateIngredientSchema):
     """Update an existing ingredient.
     ## Parameters
-    - ingredient_id (int): The id of the ingredient to update.
-    - request (CreateIngredientSchema): The schema representing the updated ingredient.
+        - ingredient_id (int): The id of the ingredient to update.
+        - request (CreateIngredientSchema): The schema representing the updated ingredient.
 
     ## Returns
-    IngredientSchema: The updated ingredient.
+        IngredientSchema: The updated ingredient.
     """
 
     return await IngredientService().update_ingredient(ingredient_id, request)
@@ -104,7 +104,7 @@ async def update_ingredient(ingredient_id: int, request: CreateIngredientSchema)
 async def delete_ingredient(ingredient_id: int):
     """Delete an existing ingredient.
     ## Parameters
-    - ingredient_id (int): The id of the ingredient to delete.
+        - ingredient_id (int): The id of the ingredient to delete.
 
     ## Returns
         None
