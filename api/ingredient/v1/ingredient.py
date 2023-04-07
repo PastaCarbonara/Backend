@@ -41,3 +41,15 @@ async def get_all_ingredients():
 async def create_ingredient(request: CreateIngredientSchema):
     ingredient_id = await IngredientService().create_ingredient(request)
     return await IngredientService().get_ingredient_by_id(ingredient_id)
+
+
+@ingredient_v1_router.put(
+    "/{ingredient_id}",
+    response_model=IngredientSchema,
+    responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+)
+@version(1)
+async def update_ingredient(ingredient_id, request: CreateIngredientSchema):
+    ingredient_id = await IngredientService().create_ingredient(request)
+    return await IngredientService().get_ingredient_by_id(ingredient_id)
