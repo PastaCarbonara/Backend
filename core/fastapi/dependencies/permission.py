@@ -45,19 +45,19 @@ async def provides_hashed_id(request, param_name):
 
 
 async def get_x_from_request(request, x) -> any:
-        x_value = request.path_params.get(x)
-        if not x_value:
-            try:
-                data = await request.json()
+    x_value = request.path_params.get(x)
+    if not x_value:
+        try:
+            data = await request.json()
 
-            except json.JSONDecodeError:
-                return None
-            
-            x_value = data.get(x)
-            if not x_value:
-                return None
+        except json.JSONDecodeError:
+            return None
         
-        return x_value
+        x_value = data.get(x)
+        if not x_value:
+            return None
+    
+    return x_value
 
 
 class BasePermission(ABC):
@@ -139,12 +139,8 @@ class IsGroupMember(BasePermission):
         
         try:
             group_id = int(group_id)
-        except ValueError:
-            raise ValueError(
-                "invalid literal for int() with base 10: '"
-                + request.path_params["group_id"]
-                + "'. Did you forget to put 'ProvidesGroupID' in the permission dependencies?"
-            )
+        except ValueError as e:
+            raise ValueError(e + " did you forget to decode?")
 
         return await GroupService().is_member(group_id=group_id, user_id=user_id)
 
