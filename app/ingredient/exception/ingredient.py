@@ -1,3 +1,4 @@
+"""excepions related to ingredients"""
 from core.exceptions import CustomException
 
 
