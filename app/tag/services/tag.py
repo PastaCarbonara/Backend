@@ -7,12 +7,12 @@ fetching all tags, or fetching a tag by its ID or name.
 """
 
 from typing import List
-from app.tag.schema import CreateTagSchema
+from sqlalchemy.exc import IntegrityError
 from core.db.models import Tag
 from core.db import Transactional
+from app.tag.schema import CreateTagSchema
 from app.tag.exception.tag import TagAlreadyExistsException, TagNotFoundException
 from app.tag.repository.tag import TagRepository
-from sqlalchemy.exc import IntegrityError
 
 
 class TagService:
@@ -125,7 +125,26 @@ class TagService:
             raise TagNotFoundException
         try:
             tag = await self.tag_repository.update_tag(tag, request.name)
-        except IntegrityError as e:
-            print(e)
-            raise TagAlreadyExistsException
+        except IntegrityError as exc:
+            raise TagAlreadyExistsException from exc
         return tag
+
+    @Transactional()
+    async def delete_tag(self, tag_id: int) -> None:
+        """
+        Deletes the tag with the given ID.
+
+        Parameters
+        ----------
+        tag_id : int
+            The ID of the tag to delete.
+
+        Raises
+        ------
+        TagNotFoundException
+            If no tag with the given ID exists.
+        """
+        tag = await self.tag_repository.get_tag_by_id(tag_id)
+        if not tag:
+            raise TagNotFoundException
+        await self.tag_repository.delete_tag(tag)

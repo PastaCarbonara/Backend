@@ -93,6 +93,13 @@ class TagRepository:
         tag.name = name
         await session.flush()
 
-    def delete(self, tag):
-        self.db.session.delete(tag)
-        self.db.session.commit()
+    async def delete_tag(self, tag: Tag):
+        """
+        Deletes the given tag.
+
+        Parameters
+        ----------
+        tag : Tag
+            The tag to delete.
+        """
+        await session.delete(tag)
