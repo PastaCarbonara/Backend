@@ -1,12 +1,8 @@
+"""Tag API v1."""
 from typing import List
-
 from fastapi import APIRouter, Depends
 from core.exceptions import ExceptionResponseSchema
 from core.fastapi_versioning import version
-
-from app.ingredient.schemas import (
-    IngredientSchema,
-)
 from app.tag.schema import TagSchema, CreateTagSchema
 from app.tag.services import TagService
 from core.fastapi.dependencies.permission import (

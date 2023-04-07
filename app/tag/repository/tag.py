@@ -5,6 +5,8 @@ from core.db.models import Tag
 
 
 class TagRepository:
+    """Repository for tag related database operations"""
+
     async def create_tag(self, name: str) -> int:
         """
         Creates a new tag with the given data and returns the ID of the new tag.

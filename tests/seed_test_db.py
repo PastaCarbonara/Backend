@@ -68,6 +68,11 @@ def seed_db():
             creator=admin,
         )
         tags = [Tag(name="tag1"), Tag(name="tag2"), Tag(name="tag3")]
+        ingredients = [
+            Ingredient(name="ingredient1"),
+            Ingredient(name="ingredient2"),
+            Ingredient(name="ingredient3"),
+        ]
 
         session.add_all(
             [
@@ -84,6 +89,7 @@ def seed_db():
                 recipe_1,
                 recipe_2,
                 *tags,
+                *ingredients,
             ]
         )
         session.commit()
