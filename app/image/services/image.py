@@ -7,14 +7,15 @@ from app.image.exceptions.image import (
     FileIsNotImageException,
     ImageTooLargeException,
 )
-from app.image.interfaces.AzureBlobInterface import AzureBlobInterface
+from app.image.interfaces.image import ObjectStorageInterface
 from app.image.repository.image import ImageRepository
 import sys
+from app.image.utils import generate_unique_filename
 
 
 class ImageService:
     def __init__(
-        self, object_storage: AzureBlobInterface, image_repository: ImageRepository
+        self, object_storage: ObjectStorageInterface, image_repository: ImageRepository
     ):
         self.object_storage_interface = object_storage
         self.image_repository = image_repository
@@ -31,8 +32,9 @@ class ImageService:
         for image in images:
             await self.validate_image(image)
         for image in images:
-            filename = await self.object_storage_interface.upload_image(image)
-            image = await self.image_repository.store_image(filename)
+            unique_filename = generate_unique_filename(image.filename)
+            await self.object_storage_interface.upload_image(image, unique_filename)
+            image = await self.image_repository.store_image(unique_filename)
             new_images.append(image)
         return new_images
 

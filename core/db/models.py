@@ -87,6 +87,7 @@ class File(Base):
     __tablename__ = "file"
 
     filename: Mapped[str] = mapped_column(String(), primary_key=True)
+
     recipe: Mapped["Recipe"] = relationship(back_populates="image")
 
     @hybrid_property

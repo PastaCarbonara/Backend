@@ -1,1 +1,6 @@
-from .AzureBlobInterface import AzureBlobInterface
+from .image import (
+    AzureBlobInterface,
+    GCoreInterface,
+    GoogleBucketInterface,
+    ObjectStorageInterface,
+)
