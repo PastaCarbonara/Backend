@@ -3,7 +3,7 @@ from core.exceptions import CustomException
 
 class TagAlreadyExistsException(CustomException):
     code = 409
-    error_code = "TAG__ALREADY_EXISTS"
+    error_code = "TAG_ALREADY_EXISTS"
     message = "The submitted tag name is already taken."
 
 
@@ -15,5 +15,5 @@ class TagNotFoundException(CustomException):
 
 class TagDependecyException(CustomException):
     code = 409
-    error_code = "TAG__DEPENDENCY"
+    error_code = "TAG_DEPENDENCY"
     message = "The tag is used in a recipe."

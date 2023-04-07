@@ -18,7 +18,7 @@ from core.fastapi.dependencies.permission import (
     ProvidesUserID,
     IsAdmin,
 )
-from app.image.interfaces import AzureBlobInterface
+from app.image.interface import AzureBlobInterface
 from app.image.repository import ImageRepository
 
 
@@ -46,4 +46,16 @@ async def get_images():
 async def create_image(images: list[UploadFile]):
     return await ImageService(AzureBlobInterface, ImageRepository()).upload_images(
         images
+    )
+
+
+@image_v1_router.delete(
+    "/{filename}",
+    status_code=204,
+    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+)
+@version(1)
+async def delete_image(filename: str):
+    return await ImageService(AzureBlobInterface, ImageRepository()).delete_image(
+        filename
     )

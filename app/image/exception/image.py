@@ -31,6 +31,22 @@ class AzureImageUploadException(CustomException):
     message = "something went wrong with uploading the image to Azure"
 
 
+class AzureImageDeleteException(CustomException):
+    code = 400
+    error_code = "AZURE_DELETE_FAILURE"
+    message = "something went wrong with deleting the image from Azure"
+
+
+class AzureImageDeleteNotFoundException(AzureImageDeleteException):
+    message = "Azure image not found"
+
+
+class ImageDependecyException(CustomException):
+    code = 409
+    error_code = "IMAGE_DEPENDENCY"
+    message = "The image is used in a recipe."
+
+
 class DuplicateFileNameException(CustomException):
     code = 400
     error_code = "DUPLICATE_FILENAME"
