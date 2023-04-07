@@ -11,7 +11,6 @@ from app.image.exceptions.image import FileNotFoundException
 from core.db.models import RecipeIngredient, RecipeJudgement, Recipe, RecipeTag, User
 from core.db import Transactional, session
 from core.exceptions import RecipeNotFoundException, UserNotFoundException
-from core.exceptions.ingredient import IngredientNotFoundException
 from app.tag.exception.tag import TagNotFoundException
 
 

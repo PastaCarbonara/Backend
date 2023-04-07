@@ -139,7 +139,7 @@ class Ingredient(Base):
     __tablename__ = "ingredient"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50))
+    name: Mapped[str] = mapped_column(String(50), unique=True)
 
     recipes: Mapped[RecipeIngredient] = relationship(back_populates="ingredient")
 
@@ -151,9 +151,7 @@ class SwipeSession(Base, TimestampMixin):
     session_date: Mapped[datetime] = mapped_column(
         default=func.now(), server_default=func.now()
     )
-    status: Mapped[SwipeSessionEnum] = mapped_column(
-        default=SwipeSessionEnum.READY
-    )
+    status: Mapped[SwipeSessionEnum] = mapped_column(default=SwipeSessionEnum.READY)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     group_id: Mapped[int] = mapped_column(ForeignKey("group.id"), nullable=True)
 

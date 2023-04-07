@@ -5,11 +5,10 @@ from core.db.models import Ingredient
 
 
 class IngredientRepository:
-    async def create_ingredient(self, name: str):
+    async def create_ingredient(self, name: str) -> Ingredient:
         ingredient = Ingredient(name=name)
         session.add(ingredient)
-        await session.flush()
-        return ingredient.id
+        return ingredient
 
     async def get_ingredients(self) -> List[Ingredient]:
         query = select(Ingredient)
@@ -30,3 +29,8 @@ class IngredientRepository:
         ingredient.name = name
         await session.flush()
         return ingredient
+
+    async def delete_ingredient(self, ingredient: Ingredient) -> None:
+        print(f"Deleting ingredient {ingredient.name}")
+        await session.delete(ingredient)
+        await session.flush()
