@@ -8,7 +8,7 @@ from app.ingredient.schemas import (
     CreateIngredientSchema,
     IngredientSchema,
 )
-from app.tag.schemas import TagSchema, CreateTagSchema
+from app.tag.schema import TagSchema, CreateTagSchema
 from app.image.schemas import ImageSchema
 from app.ingredient.services import IngredientService
 from app.image.services import ImageService

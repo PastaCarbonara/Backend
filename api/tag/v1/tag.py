@@ -7,7 +7,7 @@ from core.fastapi_versioning import version
 from app.ingredient.schemas import (
     IngredientSchema,
 )
-from app.tag.schemas import TagSchema, CreateTagSchema
+from app.tag.schema import TagSchema, CreateTagSchema
 from app.tag.services import TagService
 from core.fastapi.dependencies.permission import (
     AllowAll,
@@ -39,7 +39,7 @@ async def get_all_tags():
 
 @tag_v1_router.post(
     "",
-    response_model=IngredientSchema,
+    response_model=TagSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
@@ -52,8 +52,31 @@ async def create_tag(request: CreateTagSchema):
     - request (CreateTagSchema): The schema representing the new tag.
 
     ## Returns
-    IngredientSchema: The newly created tag.
+    TagSchema: The newly created tag.
     """
 
     tag_id = await TagService().create_tag(request)
+    return await TagService().get_tag_by_id(tag_id)
+
+
+@tag_v1_router.put(
+    "/{tag_id}",
+    response_model=TagSchema,
+    responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+)
+@version(1)
+async def update_tag(tag_id: int, request: CreateTagSchema):
+    """
+    Update a tag.
+
+    ## Parameters
+    - tag_id (int): The ID of the tag to update.
+    - request (CreateTagSchema): The schema representing the updated tag.
+
+    ## Returns
+    TagSchema: The updated tag.
+    """
+
+    await TagService().update_tag(tag_id, request)
     return await TagService().get_tag_by_id(tag_id)

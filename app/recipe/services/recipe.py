@@ -12,7 +12,7 @@ from core.db.models import RecipeIngredient, RecipeJudgement, Recipe, RecipeTag,
 from core.db import Transactional, session
 from core.exceptions import RecipeNotFoundException, UserNotFoundException
 from core.exceptions.ingredient import IngredientNotFoundException
-from core.exceptions.tag import TagNotFoundException
+from app.tag.exception.tag import TagNotFoundException
 
 
 class RecipeService:

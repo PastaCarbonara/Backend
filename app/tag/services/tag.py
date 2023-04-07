@@ -7,11 +7,12 @@ fetching all tags, or fetching a tag by its ID or name.
 """
 
 from typing import List
-from sqlalchemy import select
-from app.tag.schemas import CreateTagSchema
+from app.tag.schema import CreateTagSchema
 from core.db.models import Tag
-from core.db import Transactional, session
-from core.exceptions.tag import TagAlreadyExistsException
+from core.db import Transactional
+from app.tag.exception.tag import TagAlreadyExistsException, TagNotFoundException
+from app.tag.repository.tag import TagRepository
+from sqlalchemy.exc import IntegrityError
 
 
 class TagService:
@@ -30,6 +31,9 @@ class TagService:
         Returns the tag with the given name.
     """
 
+    def __init__(self):
+        self.tag_repository = TagRepository()
+
     async def get_tags(self) -> List[Tag]:
         """
         Returns a list of all tags.
@@ -39,9 +43,7 @@ class TagService:
         tags : List[Tag]
             A list of all tags.
         """
-        query = select(Tag)
-        result = await session.execute(query)
-        return result.scalars().all()
+        return await self.tag_repository.get_tags()
 
     @Transactional()
     async def create_tag(self, request: CreateTagSchema) -> int:
@@ -63,16 +65,11 @@ class TagService:
         TagAlreadyExistsException
             If a tag with the given name already exists.
         """
-        tag = await self.get_tag_by_name(request.name)
+        tag = await self.tag_repository.get_tag_by_name(request.name)
         if tag:
             raise TagAlreadyExistsException
 
-        db_tag = Tag(**request.dict())
-
-        session.add(db_tag)
-        await session.flush()
-
-        return db_tag.id
+        return await self.tag_repository.create_tag(request.name)
 
     async def get_tag_by_id(self, tag_id: int) -> Tag:
         """
@@ -88,9 +85,7 @@ class TagService:
         tag : Tag
             The tag with the given ID.
         """
-        query = select(Tag).where(Tag.id == tag_id)
-        result = await session.execute(query)
-        return result.scalars().first()
+        return await self.tag_repository.get_tag_by_id(tag_id)
 
     async def get_tag_by_name(self, tag_name: str) -> Tag:
         """
@@ -106,6 +101,31 @@ class TagService:
         tag : Tag
             The tag with the given name.
         """
-        query = select(Tag).where(Tag.name == tag_name)
-        result = await session.execute(query)
-        return result.scalars().first()
+        return await self.tag_repository.get_tag_by_name(tag_name)
+
+    @Transactional()
+    async def update_tag(self, tag_id: int, request: CreateTagSchema) -> Tag:
+        """
+        Updates the tag with the given ID with the given data.
+
+        Parameters
+        ----------
+        tag_id : int
+            The ID of the tag to update.
+        request : CreateTagSchema
+            The data to update the tag with.
+
+        Returns
+        -------
+        tag : Tag
+            The updated tag.
+        """
+        tag = await self.tag_repository.get_tag_by_id(tag_id)
+        if not tag:
+            raise TagNotFoundException
+        try:
+            tag = await self.tag_repository.update_tag(tag, request.name)
+        except IntegrityError as e:
+            print(e)
+            raise TagAlreadyExistsException
+        return tag
