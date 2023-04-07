@@ -27,6 +27,13 @@ tag_v1_router = APIRouter()
 )
 @version(1)
 async def get_all_tags():
+    """
+    Retrieve a list of all tags.
+
+    ## Returns
+    List[TagSchema]: List of all tags.
+    """
+
     return await TagService().get_tags()
 
 
@@ -38,5 +45,15 @@ async def get_all_tags():
 )
 @version(1)
 async def create_tag(request: CreateTagSchema):
+    """
+    Create a new tag.
+
+    ## Parameters
+    - request (CreateTagSchema): The schema representing the new tag.
+
+    ## Returns
+    IngredientSchema: The newly created tag.
+    """
+
     tag_id = await TagService().create_tag(request)
     return await TagService().get_tag_by_id(tag_id)
