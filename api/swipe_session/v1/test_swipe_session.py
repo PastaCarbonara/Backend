@@ -116,9 +116,7 @@ async def test_create_session(
     groups = res.json()
 
     payload = {"group_id": groups[0].get("id")}
-    res = fastapi_client.post(
-        "/api/v1/swipe_sessions", headers=headers, json=payload
-    )
+    res = fastapi_client.post("/api/v1/swipe_sessions", headers=headers, json=payload)
     session = res.json()
 
     assert res.status_code == 200

@@ -46,13 +46,18 @@ def seed_db():
         recipe_1 = Recipe(
             name="Union pie",
             description="The greatest union pie in the west.",
-            instructions=["Lay it down", "Slice it", "Cook it", "Wait for it to cool", "Add topping", "Enjoy"],
+            instructions=[
+                "Lay it down",
+                "Slice it",
+                "Cook it",
+                "Wait for it to cool",
+                "Add topping",
+                "Enjoy",
+            ],
             preparing_time=30,
             filename="image_1",
             creator=admin,
         )
-        # recipe_1.ingredients.append()
-        # recipe_1.tags.append()
 
         recipe_2 = Recipe(
             name="Guacamole",
@@ -62,6 +67,7 @@ def seed_db():
             filename="image_2",
             creator=admin,
         )
+        tags = [Tag(name="tag1"), Tag(name="tag2"), Tag(name="tag3")]
 
         session.add_all(
             [
@@ -77,6 +83,7 @@ def seed_db():
                 image_2,
                 recipe_1,
                 recipe_2,
+                *tags,
             ]
         )
         session.commit()
