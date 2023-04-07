@@ -24,7 +24,7 @@ class AzureBlobInterface(ObjectStorageInterface):
     connection_string = config.AZURE_BLOB_CONNECTION_STRING
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 
-    @classmethod
+    @staticmethod
     async def upload_image(cls, image: UploadFile, unique_filename: str) -> str:
         async with cls.blob_service_client:
             container_client = cls.blob_service_client.get_container_client(
@@ -40,26 +40,26 @@ class AzureBlobInterface(ObjectStorageInterface):
 
         return unique_filename
 
-    @classmethod
+    @staticmethod
     async def delete_image(cls, filename: str) -> None:
         ...
 
 
-class GCoreInterface:
-    @classmethod
-    async def upload_image(cls, image: UploadFile) -> str:
+class GCoreInterface(ObjectStorageInterface):
+    @staticmethod
+    async def upload_image(cls, image: UploadFile, unique_filename: str) -> str:
         ...
 
-    @classmethod
+    @staticmethod
     async def delete_image(cls, filename: str) -> None:
         ...
 
 
-class GoogleBucketInterface:
-    @classmethod
-    async def upload_image(cls, image: UploadFile) -> str:
+class GoogleBucketInterface(ObjectStorageInterface):
+    @staticmethod
+    async def upload_image(cls, image: UploadFile, unique_filename: str) -> str:
         ...
 
-    @classmethod
+    @staticmethod
     async def delete_image(cls, filename: str) -> None:
         ...
