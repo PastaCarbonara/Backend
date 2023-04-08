@@ -6,8 +6,9 @@ from app.tag.services.tag import TagService
 from app.recipe.schemas import (
     CreatorCreateRecipeRequestSchema,
 )
+from app.ingredient.exception.ingredient import IngredientNotFoundException
 from app.image.repository.image import ImageRepository
-from app.image.exceptions.image import FileNotFoundException
+from app.image.exception.image import FileNotFoundException
 from core.db.models import RecipeIngredient, RecipeJudgement, Recipe, RecipeTag, User
 from core.db import Transactional, session
 from core.exceptions import RecipeNotFoundException, UserNotFoundException
@@ -50,7 +51,6 @@ class RecipeService:
 
     @Transactional()
     async def create_recipe(self, recipe: CreatorCreateRecipeRequestSchema) -> int:
-
         image = await self.image_repository.get_image_by_name(recipe.filename)
         if not image:
             raise FileNotFoundException()
