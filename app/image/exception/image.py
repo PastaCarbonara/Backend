@@ -1,10 +1,10 @@
 from core.exceptions import CustomException
 
 
-class FileIsNotImageException(CustomException):
+class CorruptImageException(CustomException):
     code = 400
-    error_code = "FILE_NOT_IMAGE"
-    message = "File is not an image"
+    error_code = "CORRUPT_IMAGE"
+    message = "Image is corrupt"
 
 
 class InvalidFileTypeException(CustomException):

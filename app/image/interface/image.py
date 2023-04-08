@@ -1,3 +1,5 @@
+"""Interface for image storage."""
+
 from abc import ABC, abstractmethod
 from fastapi import UploadFile
 
