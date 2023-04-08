@@ -6,6 +6,7 @@ from app.tag.services.tag import TagService
 from app.recipe.schemas import (
     CreatorCreateRecipeRequestSchema,
 )
+from app.ingredient.exception.ingredient import IngredientNotFoundException
 from app.image.repository.image import ImageRepository
 from app.image.exception.image import FileNotFoundException
 from core.db.models import RecipeIngredient, RecipeJudgement, Recipe, RecipeTag, User
