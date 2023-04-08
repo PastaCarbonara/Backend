@@ -220,7 +220,6 @@ class ImageService:
             True if the image is too large, False otherwise.
         """
         max_size = 5 * 1024 * 1024  # 5 MB
-        max_size = 5 * 1024 * 1024  # 5 MB
         real_file_size = 0
         with NamedTemporaryFile(delete=False) as temp:
             for chunk in file.file:
