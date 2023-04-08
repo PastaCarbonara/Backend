@@ -27,6 +27,7 @@ class Config(BaseSettings):
     IMAGE_CONTAINER_NAME: str = os.getenv("IMAGE_CONTAINER_NAME")
     AZURE_BLOB_CONNECTION_STRING: str = os.getenv("AZURE_BLOB_CONNECTION_STRING")
     AZURE_IMAGE_URL_BASE: str = os.getenv("AZURE_IMAGE_URL_BASE")
+    OBJECT_STORAGE_INTERFACE: str = "azure"
 
 
 class DevelopmentConfig(Config):

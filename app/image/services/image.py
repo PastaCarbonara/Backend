@@ -25,11 +25,9 @@ from app.image.exception.image import (
 
 
 class ImageService:
-    def __init__(
-        self, object_storage: ObjectStorageInterface, image_repository: ImageRepository
-    ):
+    def __init__(self, object_storage: ObjectStorageInterface):
         self.object_storage_interface = object_storage
-        self.image_repository = image_repository
+        self.image_repository = ImageRepository()
 
     async def get_images(self) -> List[File]:
         images = await self.image_repository.get_images()
