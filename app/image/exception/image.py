@@ -15,14 +15,14 @@ class InvalidFileTypeException(CustomException):
 
 class InvalidImageException(CustomException):
     code = 400
-    error_code = "INVALID_IMAGE"
-    message = "Image is invalid"
+    error_code = "UNSUPPORTED_IMAGE"
+    message = "WE ONLY SUPPORT JPG, PNG"
 
 
 class ImageTooLargeException(CustomException):
     code = 400
     error_code = "IMAGE_TOO_LARGE"
-    message = "Image is too big, maximum = 10MB"
+    message = "Image is too big, maximum = 5MB"
 
 
 class AzureImageUploadException(CustomException):

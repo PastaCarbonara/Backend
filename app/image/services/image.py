@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, IO
+from tempfile import NamedTemporaryFile
 from sqlalchemy.exc import IntegrityError
 from fastapi import UploadFile
 from core.db.models import File
@@ -30,10 +31,6 @@ class ImageService:
         self.object_storage_interface = object_storage
         self.image_repository = image_repository
 
-    async def get_image_by_name(self, filename) -> File:
-        image = await self.image_repository.get_image_by_name(filename)
-        return image
-
     async def get_images(self) -> List[File]:
         images = await self.image_repository.get_images()
         return images
@@ -59,16 +56,16 @@ class ImageService:
         if not image:
             raise FileNotFoundException()
         try:
+            await self.image_repository.delete_image(image)
+        except IntegrityError as e:
+            raise ImageDependecyException() from e
+        try:
             await self.object_storage_interface.delete_image(filename)
         except ResourceNotFoundError as e:
             raise AzureImageDeleteNotFoundException() from e
         except Exception as e:
             print(e)
             raise AzureImageDeleteException() from e
-        try:
-            await self.image_repository.delete_image(image)
-        except IntegrityError as e:
-            raise ImageDependecyException() from e
 
     async def validate_image(self, file: UploadFile):
         # Check if file is an image
@@ -84,9 +81,13 @@ class ImageService:
             raise InvalidImageException()
 
         # Check if file is too large
-        max_size = 10 * 1024 * 1024  # 10 MB
-        f = await file.read()
-        print(sys.getsizeof(f))
-        if sys.getsizeof(f) > max_size:
-            raise ImageTooLargeException()
+        max_size = 5 * 1024 * 1024  # 5 MB
+        real_file_size = 0
+        temp: IO = NamedTemporaryFile(delete=False)
+        for chunk in file.file:
+            real_file_size += len(chunk)
+            if real_file_size > max_size:
+                raise ImageTooLargeException()
+            temp.write(chunk)
+        temp.close()
         await file.seek(0)

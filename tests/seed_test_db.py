@@ -42,7 +42,7 @@ def seed_db():
 
         image_1 = File(filename="image_1")
         image_2 = File(filename="image_2")
-
+        image_3 = File(filename="image_3")
         recipe_1 = Recipe(
             name="Union pie",
             description="The greatest union pie in the west.",
@@ -86,6 +86,7 @@ def seed_db():
                 session_3,
                 image_1,
                 image_2,
+                image_3,
                 recipe_1,
                 recipe_2,
                 *tags,
