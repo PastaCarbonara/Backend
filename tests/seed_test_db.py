@@ -1,5 +1,5 @@
 from core.db.models import *
-from app.user.services import UserService
+from app.user.utils import get_password_hash
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -12,16 +12,14 @@ def seed_db():
     # a sessionmaker(), also in the same scope as the engine
     Session = sessionmaker(engine)
 
-    service = UserService()
-
     with Session() as session:
         admin = User()
         admin.profile = UserProfile(
-            username="admin", password=service.get_password_hash("admin"), is_admin=True
+            username="admin", password=get_password_hash("admin"), is_admin=True
         )
         normal_user = User()
         normal_user.profile = UserProfile(
-            username="normal_user", password=service.get_password_hash("normal_user")
+            username="normal_user", password=get_password_hash("normal_user")
         )
 
         group_1 = Group(name="group_1")

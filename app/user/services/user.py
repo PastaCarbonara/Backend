@@ -1,10 +1,7 @@
-from typing import Optional, List
-
-from sqlalchemy import or_, select, and_
-from sqlalchemy.orm import joinedload
-
+from typing import List
 from core.db.models import User, UserProfile
 from app.user.schemas.user import LoginResponseSchema
+from app.user.repository.user import UserRepository
 from core.db import Transactional, session
 from core.exceptions import (
     DuplicateUsernameException,
@@ -12,80 +9,48 @@ from core.exceptions import (
     IncorrectPasswordException,
 )
 from core.utils.token_helper import TokenHelper
-from passlib.context import CryptContext
+from app.user.utils import get_password_hash, verify_password
 
 
 class UserService:
     def __init__(self):
-        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        self.user_repository = UserRepository()
 
     async def get_user_list(self) -> List[UserProfile]:
-        query = select(UserProfile)
-        result = await session.execute(query)
-        return result.scalars().all()
+        return await self.user_repository.get_user_list()
 
     async def get_user_by_id(self, user_id: int) -> User:
-        query = select(User).where(User.id == user_id).options(joinedload(User.profile))
-        result = await session.execute(query)
-        return result.scalars().first()
+        user = await self.user_repository.get_user_by_id(user_id)
+        if not user:
+            raise UserNotFoundException()
+        return user
 
     @Transactional()
     async def create_user(self, username: str, password: str) -> None:
-
-        query = select(User).where(or_(UserProfile.username == username))
-        result = await session.execute(query)
-        is_exist = result.scalars().first()
-        if is_exist:
-            raise DuplicateUsernameException
-        hashed_pwd = self.get_password_hash(password)
-
-        user = User()
-        session.add(user)
-        await session.flush()
-
-        user_profile = UserProfile(
-            user_id=user.id, username=username, password=hashed_pwd
-        )
-        session.add(user_profile)
+        user = await self.user_repository.get_user_by_username(username)
+        if user:
+            raise DuplicateUsernameException()
+        hashed_pwd = get_password_hash(password)
+        await self.user_repository.create_user(username, hashed_pwd)
 
     @Transactional()
     async def set_admin(self, user_id: int, is_admin: bool):
-        user_query = select(User).where(User.id == user_id)
-        result = await session.execute(user_query)
-        user = result.scalars().first()
-        if not user:
-            raise UserNotFoundException
-        user.is_admin = is_admin
+        user = await self.get_user_by_id(user_id)
+        await self.user_repository.set_admin(user, is_admin)
 
     async def is_admin(self, user_id: int) -> bool:
-        result = await session.execute(
-            select(UserProfile).where(UserProfile.user_id == user_id)
-        )
-        user = result.scalars().first()
-        if not user:
-            return False
-
-        return user.is_admin
+        user = await self.get_user_by_id(user_id)
+        return user.profile.is_admin
 
     async def login(self, username: str, password: str) -> LoginResponseSchema:
-        result = await session.execute(
-            select(UserProfile).where(and_(UserProfile.username == username))
-        )
-        user = result.scalars().first()
+        user = await self.user_repository.get_user_by_username(username)
         if not user:
-            raise UserNotFoundException
-
-        if not self.verify_password(password, user.password):
-            raise IncorrectPasswordException
+            raise UserNotFoundException()
+        if not verify_password(password, user.profile.password):
+            raise IncorrectPasswordException()
 
         response = LoginResponseSchema(
-            access_token=TokenHelper.encode(payload={"user_id": user.user_id}),
+            access_token=TokenHelper.encode(payload={"user_id": user.id}),
             refresh_token=TokenHelper.encode(payload={"sub": "refresh"}),
         )
         return response
-
-    def get_password_hash(self, password):
-        return self.pwd_context.hash(password)
-
-    def verify_password(self, plain_password, hashed_password):
-        return self.pwd_context.verify(plain_password, hashed_password)
