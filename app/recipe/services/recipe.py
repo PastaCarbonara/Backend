@@ -30,7 +30,7 @@ class RecipeService:
         recipe = await self.recipe_repository.get_recipe_by_id(recipe_id)
         if not recipe:
             raise RecipeNotFoundException()
-        return self.recipe_repository.get_recipe_by_id(recipe_id)
+        return recipe
 
     @Transactional()
     async def judge_recipe(self, recipe_id: int, user_id: int, like: bool) -> None:

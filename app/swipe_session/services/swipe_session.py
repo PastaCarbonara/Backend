@@ -247,8 +247,9 @@ class SwipeSessionService:
             await self.handle_connection_code(websocket, 400, e.json())
             return
 
-        recipe = await RecipeService().get_recipe_by_id(packet.payload["recipe_id"])
-        if not recipe:
+        try:
+            await RecipeService().get_recipe_by_id(packet.payload["recipe_id"])
+        except RecipeNotFoundException:
             await self.handle_connection_code(
                 websocket, 404, RecipeNotFoundException.message
             )
@@ -288,8 +289,9 @@ class SwipeSessionService:
     async def handle_session_match(
         self, websocket: WebSocket, session_id: int, recipe_id: int
     ) -> None:
-        recipe = await RecipeService().get_recipe_by_id(recipe_id)
-        if not recipe:
+        try:
+            recipe = await RecipeService().get_recipe_by_id(recipe_id)
+        except RecipeNotFoundException:
             await self.handle_connection_code(
                 websocket, 404, RecipeNotFoundException.message
             )
@@ -327,7 +329,9 @@ class SwipeSessionService:
             request.id = decode_single(request.id)
 
         if type(request.session_date) == date:
-            request.session_date = datetime.combine(request.session_date, datetime.min.time())
+            request.session_date = datetime.combine(
+                request.session_date, datetime.min.time()
+            )
         else:
             if not request.session_date:
                 request.session_date = datetime.now()
