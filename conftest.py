@@ -25,13 +25,13 @@ def client():
 
 @pytest.fixture()
 async def admin_token_headers(client: AsyncClient) -> Dict[str, str]:
-
     login_data = {
         "username": "admin",
         "password": "admin",
     }
     response = await client.post("/api/latest/users/login", json=login_data)
     response = response.json()
+    print(response)
     access_token = response["access_token"]
 
     return {"Authorization": f"Bearer {access_token}"}
@@ -39,7 +39,6 @@ async def admin_token_headers(client: AsyncClient) -> Dict[str, str]:
 
 @pytest.fixture()
 async def normal_user_token_headers(client: AsyncClient) -> Dict[str, str]:
-
     login_data = {
         "username": "normal_user",
         "password": "normal_user",
