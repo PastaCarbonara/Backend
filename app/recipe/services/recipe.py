@@ -1,8 +1,6 @@
 from typing import List
-from sqlalchemy import select
-from sqlalchemy.orm import joinedload
-from core.db.models import RecipeIngredient, RecipeJudgement, Recipe, RecipeTag, User
-from core.db import Transactional, session
+from core.db.models import RecipeIngredient, Recipe, RecipeTag
+from core.db import Transactional
 from core.exceptions import RecipeNotFoundException, UserNotFoundException
 from app.ingredient.services.ingredient import IngredientService
 from app.tag.services.tag import TagService
@@ -87,28 +85,63 @@ class RecipeService:
 
     @Transactional()
     async def create_recipe(self, recipe: CreatorCreateRecipeRequestSchema) -> int:
+        """Create a recipe.
+
+        Parameters
+        ----------
+        recipe : CreatorCreateRecipeRequestSchema
+            The recipe to create.
+
+        Returns
+        -------
+        int
+            The id of the created recipe.
+        Raises
+        ------
+        FileNotFoundException
+            If the image file does not exist.
+        IngredientNotFoundException
+            If one of the ingredients does not exist.
+        TagNotFoundException
+            If one of the tags does not exist.
+        UserNotFoundException
+            If the creator does not exist.
+        """
+
         image = await self.image_repository.get_image_by_name(recipe.filename)
         if not image:
             raise FileNotFoundException()
-
+        await self.user_service.get_user_by_id(recipe.creator_id)
         db_recipe = await self.create_recipe_object(recipe)
         try:
-            await self.add_ingredients_to_recipe(db_recipe, recipe.ingredients)
+            await self.set_ingredients_of_recipe(db_recipe, recipe.ingredients)
         except IngredientNotFoundException as exc:
             raise IngredientNotFoundException() from exc
 
         try:
-            await self.add_tags_to_recipe(db_recipe, recipe.tags)
+            await self.set_tags_of_recipe(db_recipe, recipe.tags)
         except TagNotFoundException as exc:
             raise TagNotFoundException() from exc
 
-        recipe = await self.recipe_repository.create_recipe(db_recipe)
+        recipe: Recipe = await self.recipe_repository.create_recipe(db_recipe)
 
         return recipe.id
 
     async def create_recipe_object(
         self, recipe: CreatorCreateRecipeRequestSchema
     ) -> Recipe:
+        """Create a recipe object.
+
+        Parameters
+        ----------
+        recipe : CreatorCreateRecipeRequestSchema
+            The recipe to create.
+
+        Returns
+        -------
+        Recipe
+            The created recipe object.
+        """
         return Recipe(
             name=recipe.name,
             filename=recipe.filename,
@@ -118,63 +151,143 @@ class RecipeService:
             creator_id=recipe.creator_id,
         )
 
-    async def add_ingredients_to_recipe(
+    async def set_ingredients_of_recipe(
         self, recipe: Recipe, ingredients: List[CreateRecipeIngredientSchema]
     ) -> None:
-        for ingredient in ingredients:
-            recipe.ingredients.append(
-                RecipeIngredient(
-                    unit=ingredient.unit,
-                    amount=ingredient.amount,
-                    ingredient=await self.ingredient_service.get_ingredient_by_id(
-                        ingredient.id
-                    ),
-                )
-            )
+        """Add ingredients to a recipe instance
 
-    async def add_tags_to_recipe(self, recipe: Recipe, tags: List[int]) -> None:
-        for tag_id in tags:
-            recipe.tags.append(
-                RecipeTag(tag=await self.tag_service.get_tag_by_id(tag_id))
+        Parameters
+        ----------
+        recipe : Recipe
+            The recipe to add the ingredients to.
+        ingredients : List[CreateRecipeIngredientSchema]
+            A list of ingredients.
+
+        Raises
+        ------
+        IngredientNotFoundException
+            If one of the ingredients does not exist.
+        """
+        recipe.ingredients = [
+            RecipeIngredient(
+                unit=ingredient.unit,
+                amount=ingredient.amount,
+                ingredient=await self.ingredient_service.get_ingredient_by_id(
+                    ingredient.id
+                ),
             )
+            for ingredient in ingredients
+        ]
+
+    async def set_tags_of_recipe(self, recipe: Recipe, tags: List[int]) -> None:
+        """set tags of a recipe instance
+
+        Parameters
+        ----------
+        recipe : Recipe
+            The recipe to add the tags to.
+        tags : List[int]
+            A list of tag ids.
+        Raises
+        ------
+        TagNotFoundException
+            If one of the tags does not exist.
+        """
+        self.tags = [
+            RecipeTag(tag=await self.tag_service.get_tag_by_id(tag_id))
+            for tag_id in tags
+        ]
 
     @Transactional()
     async def update_recipe(
-        self, recipe_id: int, recipe: CreatorCreateRecipeRequestSchema
-    ) -> None:
-        image = await self.image_repository.get_image_by_name(recipe.filename)
+        self, recipe_id, recipe_data: CreatorCreateRecipeRequestSchema
+    ) -> int:
+        """Update a recipe.
+
+        Parameters
+        ----------
+        recipe_id : int
+            The id of the recipe to update.
+        recipe_data : CreatorCreateRecipeRequestSchema
+            The data to update the recipe with.
+
+        Returns
+        -------
+        int
+            The id of the updated recipe.
+        Raises
+        ------
+        FileNotFoundException
+            If the image file does not exist.
+        IngredientNotFoundException
+            If one of the ingredients does not exist.
+        TagNotFoundException
+            If one of the tags does not exist.
+        RecipeNotFoundException
+            If the recipe with the given id does not exist.
+        UserNotFoundException
+            If the creator does not exist.
+        """
+        recipe = await self.get_recipe_by_id(recipe_id)
+        if not recipe:
+            raise RecipeNotFoundException()
+
+        image = await self.image_repository.get_image_by_name(recipe_data.filename)
         if not image:
             raise FileNotFoundException()
 
-        db_recipe = await self.get_recipe_by_id(recipe_id)
-        db_recipe.name = recipe.name
-        db_recipe.filename = recipe.filename
-        db_recipe.description = recipe.description
-        db_recipe.preparing_time = recipe.preparing_time
-        db_recipe.instructions = recipe.instructions
+        await self.user_service.get_user_by_id(recipe_data.creator_id)
 
-        # update ingredients
-        for i in recipe.ingredients:
-            # check if ingredient exists:
-            ingredient = await self.ingredient_service.get_ingredient_by_id(i.id)
-            if ingredient:
-                db_recipe.ingredients.append(
-                    RecipeIngredient(
-                        unit=i.unit, amount=i.amount, ingredient=ingredient
-                    ),
-                )
-            else:
-                raise IngredientNotFoundException()
+        self.update_recipe_instance(recipe, recipe_data)
 
-        # update tags
-        for tag_id in recipe.tags:
-            tag = await self.tag_service.get_tag_by_id(tag_id)
-            if tag:
-                db_recipe.tags.append(RecipeTag(tag=tag))
-            else:
-                raise TagNotFoundException()
+        try:
+            await self.set_ingredients_of_recipe(recipe, recipe_data.ingredients)
+        except IngredientNotFoundException as exc:
+            raise IngredientNotFoundException() from exc
+
+        try:
+            await self.set_tags_of_recipe(recipe, recipe_data.tags)
+        except TagNotFoundException as exc:
+            raise TagNotFoundException() from exc
+
+        await self.recipe_repository.update_recipe(recipe)
+
+        return recipe.id
+
+    async def update_recipe_instance(
+        recipe: Recipe, recipe_data: CreatorCreateRecipeRequestSchema
+    ) -> None:
+        """Update a recipe instance.
+
+        Parameters
+        ----------
+        recipe : Recipe
+            The recipe to update.
+        recipe_data : CreatorCreateRecipeRequestSchema
+            The data to update the recipe with.
+        """
+        recipe.name = recipe_data.name
+        recipe.filename = recipe_data.filename
+        recipe.description = recipe_data.description
+        recipe.preparing_time = recipe_data.preparing_time
+        recipe.instructions = recipe_data.instructions
+        recipe.creator_id = recipe_data.creator_id
 
     @Transactional()
     async def delete_recipe(self, recipe_id: int) -> None:
+        """Delete a recipe.
+
+        Parameters
+        ----------
+        recipe_id : int
+            The id of the recipe to delete.
+
+        Raises
+        ------
+        RecipeNotFoundException
+            If the recipe with the given id does not exist.
+        """
         recipe = await self.get_recipe_by_id(recipe_id)
-        session.delete(recipe)
+        if not recipe:
+            raise RecipeNotFoundException()
+        await self.recipe_repository.delete_recipe(recipe)
