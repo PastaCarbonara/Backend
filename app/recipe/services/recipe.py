@@ -1,6 +1,9 @@
 from typing import List
-from sqlalchemy import or_, select, and_
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
+from core.db.models import RecipeIngredient, RecipeJudgement, Recipe, RecipeTag, User
+from core.db import Transactional, session
+from core.exceptions import RecipeNotFoundException, UserNotFoundException
 from app.ingredient.services.ingredient import IngredientService
 from app.tag.services.tag import TagService
 from app.recipe.schemas import (
@@ -9,10 +12,8 @@ from app.recipe.schemas import (
 from app.ingredient.exception.ingredient import IngredientNotFoundException
 from app.image.repository.image import ImageRepository
 from app.image.exception.image import FileNotFoundException
-from core.db.models import RecipeIngredient, RecipeJudgement, Recipe, RecipeTag, User
-from core.db import Transactional, session
-from core.exceptions import RecipeNotFoundException, UserNotFoundException
 from app.tag.exception.tag import TagNotFoundException
+from app.recipe.repository.recipe import RecipeRepository
 
 
 class RecipeService:
@@ -20,6 +21,7 @@ class RecipeService:
         self.ingredient_service = IngredientService()
         self.tag_service = TagService()
         self.image_repository = ImageRepository()
+        self.recipe_repository = RecipeRepository()
 
     @Transactional()
     async def judge_recipe(self, recipe_id: int, user_id: int, like: bool) -> None:
