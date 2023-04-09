@@ -8,12 +8,14 @@ from app.ingredient.services.ingredient import IngredientService
 from app.tag.services.tag import TagService
 from app.recipe.schemas import (
     CreatorCreateRecipeRequestSchema,
+    CreateRecipeIngredientSchema,
 )
 from app.ingredient.exception.ingredient import IngredientNotFoundException
 from app.image.repository.image import ImageRepository
 from app.image.exception.image import FileNotFoundException
 from app.tag.exception.tag import TagNotFoundException
 from app.recipe.repository.recipe import RecipeRepository
+from app.user.services.user import UserService
 
 
 class RecipeService:
@@ -22,11 +24,36 @@ class RecipeService:
         self.tag_service = TagService()
         self.image_repository = ImageRepository()
         self.recipe_repository = RecipeRepository()
+        self.user_service = UserService()
 
     async def get_recipe_list(self) -> List[Recipe]:
+        """Get a list of recipes.
+
+        Returns
+        -------
+        List[Recipe]
+            A list of recipes.
+        """
         return await self.recipe_repository.get_recipes()
 
     async def get_recipe_by_id(self, recipe_id: int) -> Recipe:
+        """Get a recipe by id.
+
+        Parameters
+        ----------
+        recipe_id : int
+            The id of the recipe to get.
+
+        Returns
+        -------
+        Recipe
+            The recipe with the given id.
+
+        Raises
+        ------
+        RecipeNotFoundException
+            If the recipe with the given id does not exist.
+        """
         recipe = await self.recipe_repository.get_recipe_by_id(recipe_id)
         if not recipe:
             raise RecipeNotFoundException()
@@ -49,25 +76,14 @@ class RecipeService:
         if not recipe:
             raise RecipeNotFoundException
 
-        user_query = select(User).where(User.id == user_id)
-        result = await session.execute(user_query)
-        user = result.scalars().first()
-        if not user:
-            raise UserNotFoundException
+        try:
+            await self.user_service.get_user_by_id(user_id)
+        except UserNotFoundException as exc:
+            raise UserNotFoundException() from exc
 
-        exists_query = select(RecipeJudgement).where(
-            (RecipeJudgement.recipe_id == recipe_id)
-            & (RecipeJudgement.user_id == user_id)
-        )
-        result = await session.execute(exists_query)
+        await self.recipe_repository.judge_recipe(recipe_id, user_id, like)
 
-        judgment = result.scalars().first()
-        if judgment:
-            judgment.like = like
-        else:
-            session.add(
-                RecipeJudgement(recipe_id=recipe_id, user_id=user_id, like=like)
-            )
+        return "Ok"
 
     @Transactional()
     async def create_recipe(self, recipe: CreatorCreateRecipeRequestSchema) -> int:
@@ -75,7 +91,25 @@ class RecipeService:
         if not image:
             raise FileNotFoundException()
 
-        db_recipe = Recipe(
+        db_recipe = await self.create_recipe_object(recipe)
+        try:
+            await self.add_ingredients_to_recipe(db_recipe, recipe.ingredients)
+        except IngredientNotFoundException as exc:
+            raise IngredientNotFoundException() from exc
+
+        try:
+            await self.add_tags_to_recipe(db_recipe, recipe.tags)
+        except TagNotFoundException as exc:
+            raise TagNotFoundException() from exc
+
+        recipe = await self.recipe_repository.create_recipe(db_recipe)
+
+        return recipe.id
+
+    async def create_recipe_object(
+        self, recipe: CreatorCreateRecipeRequestSchema
+    ) -> Recipe:
+        return Recipe(
             name=recipe.name,
             filename=recipe.filename,
             description=recipe.description,
@@ -83,28 +117,26 @@ class RecipeService:
             instructions=recipe.instructions,
             creator_id=recipe.creator_id,
         )
-        for i in recipe.ingredients:
-            # check if ingredient exists:
-            ingredient = await self.ingredient_service.get_ingredient_by_id(i.id)
-            if ingredient:
-                db_recipe.ingredients.append(
-                    RecipeIngredient(
-                        unit=i.unit, amount=i.amount, ingredient=ingredient
+
+    async def add_ingredients_to_recipe(
+        self, recipe: Recipe, ingredients: List[CreateRecipeIngredientSchema]
+    ) -> None:
+        for ingredient in ingredients:
+            recipe.ingredients.append(
+                RecipeIngredient(
+                    unit=ingredient.unit,
+                    amount=ingredient.amount,
+                    ingredient=await self.ingredient_service.get_ingredient_by_id(
+                        ingredient.id
                     ),
                 )
-            else:
-                raise IngredientNotFoundException()
+            )
 
-        for tag_id in recipe.tags:
-            tag = await self.tag_service.get_tag_by_id(tag_id)
-            if tag:
-                db_recipe.tags.append(RecipeTag(tag=tag))
-            else:
-                raise TagNotFoundException()
-        session.add(db_recipe)
-        await session.flush()
-
-        return db_recipe.id
+    async def add_tags_to_recipe(self, recipe: Recipe, tags: List[int]) -> None:
+        for tag_id in tags:
+            recipe.tags.append(
+                RecipeTag(tag=await self.tag_service.get_tag_by_id(tag_id))
+            )
 
     @Transactional()
     async def update_recipe(

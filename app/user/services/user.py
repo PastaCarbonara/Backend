@@ -20,6 +20,23 @@ class UserService:
         return await self.user_repository.get_user_list()
 
     async def get_user_by_id(self, user_id: int) -> User:
+        """get a user by id.
+
+        Parameters
+        ----------
+        user_id : int
+            The id of the user to get.
+
+        Returns
+        -------
+        User
+            The user with the given id.
+
+        Raises
+        ------
+        UserNotFoundException
+            If the user with the given id does not exist.
+        """
         user = await self.user_repository.get_user_by_id(user_id)
         if not user:
             raise UserNotFoundException()

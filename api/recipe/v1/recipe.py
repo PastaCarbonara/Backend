@@ -50,8 +50,8 @@ async def get_recipe_by_id(recipe_id: int):
 )
 @version(1)
 async def judge_recipe(recipe_id: int, request: JudgeRecipeRequestSchema):
-    await RecipeService().judge_recipe(recipe_id, **request.dict())
-    return "Ok"
+    print(request.user_id)
+    return await RecipeService().judge_recipe(recipe_id, request.user_id, request.like)
 
 
 @recipe_v1_router.post(

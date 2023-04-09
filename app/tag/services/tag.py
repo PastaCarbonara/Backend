@@ -88,8 +88,17 @@ class TagService:
         -------
         tag : Tag
             The tag with the given ID.
+
+        Raises
+        ------
+        TagNotFoundException
+            If no tag with the given ID exists.
         """
-        return await self.tag_repository.get_tag_by_id(tag_id)
+
+        tag = await self.tag_repository.get_tag_by_id(tag_id)
+        if not tag:
+            raise TagNotFoundException()
+        return tag
 
     @Transactional()
     async def update_tag(self, tag_id: int, request: CreateTagSchema) -> Tag:

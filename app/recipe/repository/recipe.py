@@ -22,13 +22,14 @@ class RecipeRepository:
             A list of recipes.
         """
         query = select(Recipe).options(
-            joinedload(Recipe.tags).joinedload(Tag.recipes),
-            joinedload(Recipe.ingredients).joinedload(Ingredient.recipes),
-            joinedload(Recipe.judgements),
+            joinedload(Recipe.tags).joinedload(RecipeTag.tag),
+            joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
             joinedload(Recipe.creator),
+            joinedload(Recipe.judgements),
+            joinedload(Recipe.image),
         )
         result = await session.execute(query)
-        return result.scalars().all()
+        return result.unique().scalars().all()
 
     async def get_recipe_by_id(self, recipe_id) -> Recipe:
         """Get a recipe by id.
@@ -48,9 +49,9 @@ class RecipeRepository:
             .where(Recipe.id == recipe_id)
             .options(
                 joinedload(Recipe.tags).joinedload(RecipeTag.tag),
+                joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
                 joinedload(Recipe.creator),
                 joinedload(Recipe.judgements),
-                joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
                 joinedload(Recipe.image),
             )
         )
@@ -73,7 +74,7 @@ class RecipeRepository:
         query = (
             select(Recipe)
             .join(Recipe.tags)
-            .filter(Tag.name.in_(tags))
+            .where(Tag.name.in_(tags))
             .options(
                 joinedload(Recipe.tags).joinedload(RecipeTag.tag),
                 joinedload(Recipe.creator),
@@ -101,7 +102,7 @@ class RecipeRepository:
         query = (
             select(Recipe)
             .join(Recipe.ingredients)
-            .filter(Ingredient.name.in_(ingredients))
+            .where(Ingredient.name.in_(ingredients))
             .options(
                 joinedload(Recipe.tags).joinedload(RecipeTag.tag),
                 joinedload(Recipe.creator),
@@ -112,6 +113,46 @@ class RecipeRepository:
         )
         result = await session.execute(query)
         return result.scalars().all()
+
+    async def get_recipe_jugment(self, recipe_id: int, user_id: int) -> RecipeJudgement:
+        """Get a recipe judgement.
+
+        Parameters
+        ----------
+        recipe_id : int
+            The id of the recipe to get the judgement for.
+        user_id : int
+            The id of the user to get the judgement for.
+
+        Returns
+        -------
+        RecipeJudgement
+            The recipe judgement.
+        """
+
+        query = select(RecipeJudgement).where(
+            (RecipeJudgement.recipe_id == recipe_id)
+            & (RecipeJudgement.user_id == user_id)
+        )
+        result = await session.execute(query)
+        return result.scalars().first()
+
+    async def create_recipe(self, recipe: Recipe) -> Recipe:
+        """Create a recipe.
+
+        Parameters
+        ----------
+        recipe : Recipe
+            The recipe to create.
+
+        Returns
+        -------
+        Recipe
+            The created recipe.
+        """
+        session.add(recipe)
+        await session.flush()
+        return recipe
 
     async def judge_recipe(self, recipe_id: int, user_id: int, like: bool) -> None:
         """Like a recipe.
@@ -125,7 +166,10 @@ class RecipeRepository:
         like : bool
             True if the user likes the recipe, False if the user dislikes the recipe.
         """
-
-        judgement = RecipeJudgement(recipe_id=recipe_id, user_id=user_id, like=like)
-        await session.add(judgement)
-        await session.flush()
+        judgement = await self.get_recipe_jugment(recipe_id, user_id)
+        if judgement:
+            judgement.like = like
+        else:
+            session.add(
+                RecipeJudgement(recipe_id=recipe_id, user_id=user_id, like=like)
+            )
