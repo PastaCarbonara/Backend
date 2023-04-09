@@ -23,11 +23,29 @@ class RecipeService:
         self.image_repository = ImageRepository()
         self.recipe_repository = RecipeRepository()
 
+    async def get_recipe_list(self) -> List[Recipe]:
+        return await self.recipe_repository.get_recipes()
+
+    async def get_recipe_by_id(self, recipe_id: int) -> Recipe:
+        recipe = await self.recipe_repository.get_recipe_by_id(recipe_id)
+        if not recipe:
+            raise RecipeNotFoundException()
+        return self.recipe_repository.get_recipe_by_id(recipe_id)
+
     @Transactional()
     async def judge_recipe(self, recipe_id: int, user_id: int, like: bool) -> None:
-        recipe_query = select(Recipe).where(Recipe.id == recipe_id)
-        result = await session.execute(recipe_query)
-        recipe = result.scalars().first()
+        """Like a recipe.
+
+        Parameters
+        ----------
+        recipe_id : int
+            The id of the recipe to like.
+        user_id : int
+            The id of the user who likes the recipe.
+        like : bool
+            True if the user likes the recipe, False if the user dislikes the recipe.
+        """
+        recipe = await self.recipe_repository.get_recipe_by_id(recipe_id)
         if not recipe:
             raise RecipeNotFoundException
 
@@ -88,28 +106,43 @@ class RecipeService:
 
         return db_recipe.id
 
-    async def get_recipe_by_id(self, recipe_id) -> Recipe:
-        query = (
-            select(Recipe)
-            .where(Recipe.id == recipe_id)
-            .options(
-                joinedload(Recipe.tags).joinedload(RecipeTag.tag),
-                joinedload(Recipe.creator),
-                joinedload(Recipe.judgements),
-                joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
-                joinedload(Recipe.image),
-            )
-        )
-        result = await session.execute(query)
-        return result.scalars().first()
+    @Transactional()
+    async def update_recipe(
+        self, recipe_id: int, recipe: CreatorCreateRecipeRequestSchema
+    ) -> None:
+        image = await self.image_repository.get_image_by_name(recipe.filename)
+        if not image:
+            raise FileNotFoundException()
 
-    async def get_recipe_list(self) -> List[Recipe]:
-        query = select(Recipe).options(
-            joinedload(Recipe.tags).joinedload(RecipeTag.tag),
-            joinedload(Recipe.creator),
-            joinedload(Recipe.judgements),
-            joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
-            joinedload(Recipe.image),
-        )
-        result = await session.execute(query)
-        return result.unique().scalars().all()
+        db_recipe = await self.get_recipe_by_id(recipe_id)
+        db_recipe.name = recipe.name
+        db_recipe.filename = recipe.filename
+        db_recipe.description = recipe.description
+        db_recipe.preparing_time = recipe.preparing_time
+        db_recipe.instructions = recipe.instructions
+
+        # update ingredients
+        for i in recipe.ingredients:
+            # check if ingredient exists:
+            ingredient = await self.ingredient_service.get_ingredient_by_id(i.id)
+            if ingredient:
+                db_recipe.ingredients.append(
+                    RecipeIngredient(
+                        unit=i.unit, amount=i.amount, ingredient=ingredient
+                    ),
+                )
+            else:
+                raise IngredientNotFoundException()
+
+        # update tags
+        for tag_id in recipe.tags:
+            tag = await self.tag_service.get_tag_by_id(tag_id)
+            if tag:
+                db_recipe.tags.append(RecipeTag(tag=tag))
+            else:
+                raise TagNotFoundException()
+
+    @Transactional()
+    async def delete_recipe(self, recipe_id: int) -> None:
+        recipe = await self.get_recipe_by_id(recipe_id)
+        session.delete(recipe)
