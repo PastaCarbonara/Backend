@@ -9,7 +9,7 @@ from .base import (
 )
 from .group import GroupNotFoundException, GroupJoinConflictException
 from .token import DecodeTokenException, ExpiredTokenException
-from .user import (
+from app.user.exception.user import (
     PasswordDoesNotMatchException,
     DuplicateUsernameException,
     UserNotFoundException,

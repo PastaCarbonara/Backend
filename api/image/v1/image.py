@@ -1,25 +1,16 @@
 from typing import List
-
-from fastapi import APIRouter, Depends, Query, Request, UploadFile
+from fastapi import APIRouter, Depends, UploadFile
 from core.exceptions import ExceptionResponseSchema
 from core.fastapi_versioning import version
-
-from app.ingredient.schemas import (
-    CreateIngredientSchema,
-    IngredientSchema,
-)
-from app.tag.schemas import TagSchema, CreateTagSchema
-from app.image.schemas import ImageSchema
-from app.ingredient.services import IngredientService
-from app.image.services import ImageService
+from core.fastapi.dependencies.object_storage import get_object_storage
 from core.fastapi.dependencies.permission import (
     AllowAll,
     PermissionDependency,
     ProvidesUserID,
     IsAdmin,
 )
-from app.image.interfaces import AzureBlobInterface
-from app.image.repository import ImageRepository
+from app.image.schemas import ImageSchema
+from app.image.services import ImageService
 
 
 image_v1_router = APIRouter()
@@ -32,8 +23,8 @@ image_v1_router = APIRouter()
     dependencies=[Depends(PermissionDependency([[AllowAll]]))],
 )
 @version(1)
-async def get_images():
-    return await ImageService(AzureBlobInterface, ImageRepository()).get_images()
+async def get_images(object_storage=Depends(get_object_storage)):
+    return await ImageService(object_storage).get_images()
 
 
 @image_v1_router.post(
@@ -43,7 +34,17 @@ async def get_images():
     dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
 @version(1)
-async def create_image(images: list[UploadFile]):
-    return await ImageService(AzureBlobInterface, ImageRepository()).upload_images(
-        images
-    )
+async def create_image(
+    images: list[UploadFile], object_storage=Depends(get_object_storage)
+):
+    return await ImageService(object_storage).upload_images(images)
+
+
+@image_v1_router.delete(
+    "/{filename}",
+    status_code=204,
+    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+)
+@version(1)
+async def delete_image(filename: str, object_storage=Depends(get_object_storage)):
+    return await ImageService(object_storage).delete_image(filename)

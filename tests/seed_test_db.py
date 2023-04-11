@@ -1,5 +1,5 @@
 from core.db.models import *
-from app.user.services import UserService
+from app.user.utils import get_password_hash
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -12,16 +12,14 @@ def seed_db():
     # a sessionmaker(), also in the same scope as the engine
     Session = sessionmaker(engine)
 
-    service = UserService()
-
     with Session() as session:
         admin = User()
         admin.profile = UserProfile(
-            username="admin", password=service.get_password_hash("admin"), is_admin=True
+            username="admin", password=get_password_hash("admin"), is_admin=True
         )
         normal_user = User()
         normal_user.profile = UserProfile(
-            username="normal_user", password=service.get_password_hash("normal_user")
+            username="normal_user", password=get_password_hash("normal_user")
         )
 
         group_1 = Group(name="group_1")
@@ -42,17 +40,22 @@ def seed_db():
 
         image_1 = File(filename="image_1")
         image_2 = File(filename="image_2")
-
+        image_3 = File(filename="image_3")
         recipe_1 = Recipe(
             name="Union pie",
             description="The greatest union pie in the west.",
-            instructions=["Lay it down", "Slice it", "Cook it", "Wait for it to cool", "Add topping", "Enjoy"],
+            instructions=[
+                "Lay it down",
+                "Slice it",
+                "Cook it",
+                "Wait for it to cool",
+                "Add topping",
+                "Enjoy",
+            ],
             preparing_time=30,
             filename="image_1",
             creator=admin,
         )
-        # recipe_1.ingredients.append()
-        # recipe_1.tags.append()
 
         recipe_2 = Recipe(
             name="Guacamole",
@@ -62,6 +65,12 @@ def seed_db():
             filename="image_2",
             creator=admin,
         )
+        tags = [Tag(name="tag1"), Tag(name="tag2"), Tag(name="tag3")]
+        ingredients = [
+            Ingredient(name="ingredient1"),
+            Ingredient(name="ingredient2"),
+            Ingredient(name="ingredient3"),
+        ]
 
         session.add_all(
             [
@@ -75,8 +84,11 @@ def seed_db():
                 session_3,
                 image_1,
                 image_2,
+                image_3,
                 recipe_1,
                 recipe_2,
+                *tags,
+                *ingredients,
             ]
         )
         session.commit()

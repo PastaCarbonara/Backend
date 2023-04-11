@@ -25,7 +25,6 @@ def client():
 
 @pytest.fixture()
 async def admin_token_headers(client: AsyncClient) -> Dict[str, str]:
-
     login_data = {
         "username": "admin",
         "password": "admin",
@@ -39,7 +38,6 @@ async def admin_token_headers(client: AsyncClient) -> Dict[str, str]:
 
 @pytest.fixture()
 async def normal_user_token_headers(client: AsyncClient) -> Dict[str, str]:
-
     login_data = {
         "username": "normal_user",
         "password": "normal_user",
