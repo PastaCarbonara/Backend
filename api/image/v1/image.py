@@ -1,26 +1,16 @@
 from typing import List
-
-from fastapi import APIRouter, Depends, Query, Request, UploadFile
+from fastapi import APIRouter, Depends, UploadFile
 from core.exceptions import ExceptionResponseSchema
 from core.fastapi_versioning import version
-
-from app.ingredient.schemas import (
-    CreateIngredientSchema,
-    IngredientSchema,
-)
-from api.image.dependency import get_object_storage
-from app.tag.schema import TagSchema, CreateTagSchema
-from app.image.schemas import ImageSchema
-from app.ingredient.services import IngredientService
-from app.image.services import ImageService
+from core.fastapi.dependencies.object_storage import get_object_storage
 from core.fastapi.dependencies.permission import (
     AllowAll,
     PermissionDependency,
     ProvidesUserID,
     IsAdmin,
 )
-from app.image.interface import AzureBlobInterface
-from app.image.repository import ImageRepository
+from app.image.schemas import ImageSchema
+from app.image.services import ImageService
 
 
 image_v1_router = APIRouter()

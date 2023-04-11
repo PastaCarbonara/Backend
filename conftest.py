@@ -31,7 +31,6 @@ async def admin_token_headers(client: AsyncClient) -> Dict[str, str]:
     }
     response = await client.post("/api/latest/users/login", json=login_data)
     response = response.json()
-    print(response)
     access_token = response["access_token"]
 
     return {"Authorization": f"Bearer {access_token}"}

@@ -28,6 +28,7 @@ class Config(BaseSettings):
     AZURE_BLOB_CONNECTION_STRING: str = os.getenv("AZURE_BLOB_CONNECTION_STRING")
     AZURE_IMAGE_URL_BASE: str = os.getenv("AZURE_IMAGE_URL_BASE")
     OBJECT_STORAGE_INTERFACE: str = "azure"
+    IMAGE_MAX_SIZE = 5 * 1024 * 1024  # 5 MB
 
 
 class DevelopmentConfig(Config):

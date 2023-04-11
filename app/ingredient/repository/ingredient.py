@@ -87,6 +87,5 @@ class IngredientRepository:
         -------
             None
         """
-        print(f"Deleting ingredient {ingredient.name}")
         await session.delete(ingredient)
         await session.flush()

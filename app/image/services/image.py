@@ -23,6 +23,7 @@ from app.image.exception.image import (
     AzureImageDeleteNotFoundException,
     ImageDependecyException,
 )
+from core.config import config
 
 ALLOWED_TYPES = ["image/jpeg", "image/png"]
 
@@ -219,12 +220,12 @@ class ImageService:
         bool
             True if the image is too large, False otherwise.
         """
-        max_size = 5 * 1024 * 1024  # 5 MB
+
         real_file_size = 0
         with NamedTemporaryFile(delete=False) as temp:
             for chunk in file.file:
                 real_file_size += len(chunk)
-                if real_file_size > max_size:
+                if real_file_size > config.IMAGE_MAX_SIZE:
                     return True
                 temp.write(chunk)
         await file.seek(0)
