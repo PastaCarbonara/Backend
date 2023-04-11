@@ -40,6 +40,26 @@ class GetFullRecipeResponseSchema(BaseModel):
         orm_mode = True
 
 
+class CreateBaseRecipeSchema(BaseModel):
+    name: str = Field(..., description="Recipe name")
+    description: str | None = Field(None, description="Recipe description")
+    preperation_time: int = Field(..., description="Time in minutes")
+
+
+class CreateRecipeInstructionSchema(BaseModel):
+    instruction: str = Field(..., description="Instruction")
+
+
+class CreateRecipeTagSchema(BaseModel):
+    name: str = Field(..., description="Tag name")
+
+
+class CreateRecipeIngredientSchema(BaseModel):
+    name: str = Field(..., description="Ingredient name")
+    amount: str = Field(..., description="Ingredient quantity")
+    unit: str = Field(..., description="Ingredient unit")
+
+
 class CreateRecipeBaseRequestSchema(BaseModel):
     name: str = Field(..., description="Recipe name")
     description: str | None = Field(None, description="Recipe description")
