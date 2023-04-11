@@ -5,7 +5,7 @@ from app.swipe_session.schemas.swipe import SwipeSchema
 from core.db import session
 
 from core.db.enums import SwipeSessionEnum, SwipeSessionActionEnum
-from core.helpers.hashids import encode
+from core.helpers.hashid import encode
 
 
 class ActionDocsSchema(BaseModel):

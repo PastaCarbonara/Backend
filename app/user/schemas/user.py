@@ -1,7 +1,7 @@
 from typing import Any
 from pydantic import BaseModel, Field, validator
 
-from core.helpers.hashids import encode
+from core.helpers.hashid import encode
 
 
 class GetUserListResponseSchema(BaseModel):

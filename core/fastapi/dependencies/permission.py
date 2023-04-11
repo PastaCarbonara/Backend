@@ -15,33 +15,7 @@ from core.exceptions import (
     MissingUserIDException,
     MissingGroupIDException,
 )
-from core.helpers.hashids import decode_single
-
-
-async def provides_hashed_id(request, param_name):
-    """Checks and converts ID from hash to int"""
-
-    if param_name in request.path_params:
-        param_id = decode_single(request.path_params[param_name])
-        request.path_params[param_name] = str(param_id)
-
-    else:
-        try:
-            data = await request.json()
-
-        except json.JSONDecodeError:
-            return False
-
-        if not data.get(param_name):
-            return False
-
-        param_id = decode_single(data.get(param_name))
-        data[param_name] = str(param_id)
-
-        new_body = json.dumps(data, indent=2).encode("utf-8")
-        request.body = new_body
-
-    return True
+from core.helpers.hashid import decode_single
 
 
 async def get_x_from_request(request, x) -> any:
@@ -89,39 +63,6 @@ class IsAdmin(BasePermission):
 class AllowAll(BasePermission):
     async def has_permission(self, request: Request) -> bool:
         return True
-
-
-class ProvidesUserID(BasePermission):
-    exception = MissingUserIDException
-
-    async def has_permission(self, request: Request) -> bool:
-        try:
-            data = await request.json()
-
-        except json.JSONDecodeError:
-            return False
-
-        # if user is logged in AND admin: can input user_id
-        # if user is logged in NOT admin: just use their id
-        # if user is NOT logged in: can input user_id
-
-        if request.user.id is None:
-            return data.get("user_id")
-
-        elif await UserService().is_admin(user_id=request.user.id):
-            if not data.get("user_id"):
-                data["user_id"] = request.user.id
-                new_body = json.dumps(data, indent=2).encode("utf-8")
-                request.body = new_body
-
-        return True
-
-
-class ProvidesGroupID(BasePermission):
-    exception = MissingGroupIDException
-
-    async def has_permission(self, request: Request) -> bool:
-        return await provides_hashed_id(request, "group_id")
 
 
 class IsGroupMember(BasePermission):

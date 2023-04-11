@@ -5,14 +5,11 @@ from pydantic.utils import GetterDict
 
 
 from app.user.schemas.user import GetUserListResponseSchema
-from core.helpers.hashids import encode
+from core.helpers.hashid import encode
 
 
 class CreateGroupSchema(BaseModel):
     name: str
-
-class UserCreateGroupSchema(CreateGroupSchema):
-    user_id: int = None
 
 
 class FlattenedGroupMemberSchema(BaseModel):
@@ -27,7 +24,7 @@ class FlattenedGroupMemberSchema(BaseModel):
         if user is None:
             return values
         
-        # NOTE: Currently 'Unknown' is used as default fallback when the user is not logged in.
+        # NOTE: Currently 'Unknown' is used as default fallback when the user is not registered.. if that is possible.
         username = "Unknown" if user.profile is None else user.profile.username
 
         return {

@@ -14,7 +14,6 @@ from app.recipe.services import RecipeService
 from core.fastapi.dependencies.permission import (
     AllowAll,
     PermissionDependency,
-    ProvidesUserID,
     IsAdmin,
 )
 
@@ -46,7 +45,7 @@ async def get_recipe_by_id(recipe_id: int):
     "/{recipe_id}/judge",
     response_model_exclude={"id"},
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[AllowAll, ProvidesUserID]]))],
+    dependencies=[Depends(PermissionDependency([[AllowAll]]))],
 )
 @version(1)
 async def judge_recipe(recipe_id: int, request: JudgeRecipeRequestSchema):

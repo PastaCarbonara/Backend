@@ -23,7 +23,7 @@ from core.db.models import SwipeSession
 from core.exceptions.base import UnauthorizedException
 from core.exceptions.recipe import RecipeNotFoundException
 from core.exceptions.swipe_session import SwipeSessionNotFoundException
-from core.helpers.hashids import check_id, decode, decode_single
+from core.helpers.hashid import check_id, decode, decode_single
 
 
 class SwipeSessionConnectionManager:
