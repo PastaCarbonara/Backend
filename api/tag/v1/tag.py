@@ -1,12 +1,8 @@
+"""Tag API v1."""
 from typing import List
-
 from fastapi import APIRouter, Depends
 from core.exceptions import ExceptionResponseSchema
 from core.fastapi_versioning import version
-
-from app.ingredient.schemas import (
-    IngredientSchema,
-)
 from app.tag.schema import TagSchema, CreateTagSchema
 from app.tag.services import TagService
 from core.fastapi.dependencies.permission import (
@@ -31,7 +27,7 @@ async def get_all_tags():
     Retrieve a list of all tags.
 
     ## Returns
-    List[TagSchema]: List of all tags.
+        List[TagSchema]: List of all tags.
     """
 
     return await TagService().get_tags()
@@ -49,10 +45,10 @@ async def create_tag(request: CreateTagSchema):
     Create a new tag.
 
     ## Parameters
-    - request (CreateTagSchema): The schema representing the new tag.
+        - request (CreateTagSchema): The schema representing the new tag.
 
     ## Returns
-    TagSchema: The newly created tag.
+        TagSchema: The newly created tag.
     """
 
     tag_id = await TagService().create_tag(request)
@@ -71,11 +67,11 @@ async def update_tag(tag_id: int, request: CreateTagSchema):
     Update a tag.
 
     ## Parameters
-    - tag_id (int): The ID of the tag to update.
-    - request (CreateTagSchema): The schema representing the updated tag.
+        - tag_id (int): The ID of the tag to update.
+        - request (CreateTagSchema): The schema representing the updated tag.
 
     ## Returns
-    TagSchema: The updated tag.
+        TagSchema: The updated tag.
     """
 
     await TagService().update_tag(tag_id, request)
@@ -93,7 +89,7 @@ async def delete_tag(tag_id: int):
     Delete a tag.
 
     ## Parameters
-    - tag_id (int): The ID of the tag to delete.
+        - tag_id (int): The ID of the tag to delete.
     """
     await TagService().delete_tag(tag_id)
     return {"message": "Tag deleted successfully."}
