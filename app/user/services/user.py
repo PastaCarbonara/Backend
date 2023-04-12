@@ -50,5 +50,5 @@ class UserService:
         if not verify_password(password, user.profile.password):
             raise IncorrectPasswordException()
 
-        response = JwtService.create_login_tokens(user.id)
+        response = await JwtService.create_login_tokens(user.id)
         return response

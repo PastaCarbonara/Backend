@@ -7,7 +7,7 @@ from core.fastapi_versioning.versioning import version
 from api.user.v1.request.user import LoginRequest
 from api.user.v1.response.user import LoginResponse
 from app.user.schemas import (
-    GetUserListResponseSchema,
+    UserSchema,
     CreateUserRequestSchema,
     CreateUserResponseSchema,
 )
@@ -22,8 +22,7 @@ user_v1_router = APIRouter()
 
 @user_v1_router.get(
     "",
-    response_model=List[GetUserListResponseSchema],
-    response_model_exclude={"id"},
+    response_model=List[UserSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )

@@ -18,20 +18,12 @@ from core.exceptions import (
 from core.helpers.hashid import decode_single
 
 
-async def get_x_from_request(request, x) -> any:
-    x_value = request.path_params.get(x)
-    if not x_value:
-        try:
-            data = await request.json()
-
-        except json.JSONDecodeError:
-            return None
-        
-        x_value = data.get(x)
-        if not x_value:
-            return None
+def get_hashed_id_from_path(request):
+    hashed_id = request.path_params.get("hashed_id")
+    if not hashed_id:
+        return None
     
-    return x_value
+    return decode_single(hashed_id)
 
 
 class BasePermission(ABC):
@@ -73,15 +65,15 @@ class IsGroupMember(BasePermission):
 
         if not user_id:
             return False
-            
-        group_id = await get_x_from_request(request, "group_id")
+
+        group_id = get_hashed_id_from_path(request)
         if not group_id:
             return False
         
         try:
             group_id = int(group_id)
         except ValueError as e:
-            raise ValueError(e + " did you forget to decode?")
+            raise ValueError(str(e) + " did you forget to decode?")
 
         return await GroupService().is_member(group_id=group_id, user_id=user_id)
 
@@ -93,19 +85,15 @@ class IsGroupAdmin(BasePermission):
         user_id = request.user.id
         if not user_id:
             return False
-            
-        group_id = await get_x_from_request(request, "group_id")
+
+        group_id = get_hashed_id_from_path(request)
         if not group_id:
             return False
-        
+
         try:
             group_id = int(group_id)
-        except ValueError:
-            raise ValueError(
-                "invalid literal for int() with base 10: '"
-                + request.path_params["group_id"]
-                + "'. Did you forget to put 'ProvidesGroupID' in the permission dependencies?"
-            )
+        except ValueError as e:
+            raise ValueError(str(e) + " did you forget to decode?")
 
         return await GroupService().is_admin(group_id=group_id, user_id=user_id)
 
@@ -120,15 +108,15 @@ class PermissionDependency(SecurityBase):
         exceptions = {}
         for i, permission_combo in enumerate(self.permissions):
             exceptions[i] = []
-            
+
             for permission in permission_combo:
                 cls = permission()
                 if not await cls.has_permission(request=request):
                     exceptions[i].append(cls.exception)
 
         if any(len(exceptions[i]) == 0 for i in exceptions):
-            return 
-        
+            return
+
         for i in exceptions:
             if len(exceptions[i]) > 0:
                 raise exceptions[i][0]

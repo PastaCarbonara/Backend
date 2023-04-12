@@ -2,13 +2,13 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 from core.exceptions import ExceptionResponseSchema
+from core.fastapi.dependencies.user import get_current_user
 from core.fastapi_versioning import version
 
 from app.recipe.schemas import (
-    JudgeRecipeRequestSchema,
+    JudgeRecipeSchema,
     GetFullRecipeResponseSchema,
-    UserCreateRecipeRequestSchema,
-    CreatorCreateRecipeRequestSchema,
+    CreateRecipeIngredientSchema,
 )
 from app.recipe.services import RecipeService
 from core.fastapi.dependencies.permission import (
@@ -48,7 +48,7 @@ async def get_recipe_by_id(recipe_id: int):
     dependencies=[Depends(PermissionDependency([[AllowAll]]))],
 )
 @version(1)
-async def judge_recipe(recipe_id: int, request: JudgeRecipeRequestSchema):
+async def judge_recipe(recipe_id: int, request: JudgeRecipeSchema):
     await RecipeService().judge_recipe(recipe_id, **request.dict())
     return "Ok"
 
@@ -57,11 +57,9 @@ async def judge_recipe(recipe_id: int, request: JudgeRecipeRequestSchema):
     "",
     response_model=GetFullRecipeResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAdmin, ProvidesUserID]]))],
+    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
 @version(1)
-async def create_recipe(request: UserCreateRecipeRequestSchema):
-    recipe_id = await RecipeService().create_recipe(
-        CreatorCreateRecipeRequestSchema(creator_id=request.user_id, **request.dict())
-    )
+async def create_recipe(request: CreateRecipeIngredientSchema, user = Depends(get_current_user)):
+    recipe_id = await RecipeService().create_recipe(request, user.id)
     return await RecipeService().get_recipe_by_id(recipe_id)

@@ -19,7 +19,7 @@ from app.swipe_session.schemas.swipe_session import (
     UpdateSwipeSessionSchema,
 )
 from core.db.enums import SwipeSessionActionEnum as ACTIONS, SwipeSessionEnum
-from core.db.models import SwipeSession
+from core.db.models import SwipeSession, User
 from core.exceptions.base import UnauthorizedException
 from core.exceptions.recipe import RecipeNotFoundException
 from core.exceptions.swipe_session import SwipeSessionNotFoundException
@@ -151,7 +151,7 @@ class SwipeSessionService:
                     )
 
                 elif packet.action == ACTIONS.RECIPE_SWIPE:
-                    await self.handle_recipe_swipe(websocket, session, user.id, packet)
+                    await self.handle_recipe_swipe(websocket, session, user, packet)
 
                 elif packet.action == ACTIONS.SESSION_MESSAGE:
                     await self.handle_session_message(
@@ -164,7 +164,7 @@ class SwipeSessionService:
                         await self.handle_connection_code(websocket, 401, message)
                         continue
                     await self.handle_session_status_update(
-                        websocket, session.id, user.id, packet.payload.get("status")
+                        websocket, session.id, user, packet.payload.get("status")
                     )
 
                 else:
@@ -178,16 +178,15 @@ class SwipeSessionService:
                 )
 
     async def handle_session_status_update(
-        self, websocket: WebSocket, session_id: int, user_id: int, status: str
+        self, websocket: WebSocket, session_id: int, user: User, status: str
     ):
         if not status in [e.value for e in SwipeSessionEnum]:
             await self.handle_connection_code(websocket, 400, "Incorrect status")
             return
 
         await self.update_swipe_session(
-            UpdateSwipeSessionSchema(
-                id=session_id, status=SwipeSessionEnum.COMPLETED, user_id=user_id
-            )
+            UpdateSwipeSessionSchema(id=session_id, status=SwipeSessionEnum.COMPLETED),
+            user,
         )
 
         payload = {"status": status}
@@ -235,12 +234,12 @@ class SwipeSessionService:
         self,
         websocket: WebSocket,
         session: SwipeSession,
-        user_id: int,
+        user: User,
         packet: PacketSchema,
     ) -> None:
         try:
             swipe_schema = CreateSwipeSchema(
-                swipe_session_id=session.id, user_id=user_id, **packet.payload
+                swipe_session_id=session.id, user_id=user.id, **packet.payload
             )
 
         except ValidationError as e:
@@ -256,7 +255,7 @@ class SwipeSessionService:
 
         existing_swipe = await SwipeService().get_swipe_by_creds(
             swipe_session_id=session.id,
-            user_id=user_id,
+            user_id=user.id,
             recipe_id=packet.payload["recipe_id"],
         )
 
@@ -282,7 +281,7 @@ class SwipeSessionService:
                 websocket, session.id, packet.payload["recipe_id"]
             )
             await self.handle_session_status_update(
-                websocket, session.id, user_id, SwipeSessionEnum.COMPLETED
+                websocket, session.id, user, SwipeSessionEnum.COMPLETED
             )
 
     async def handle_session_match(
@@ -307,6 +306,17 @@ class SwipeSessionService:
 
         result = await session.execute(query)
         return result.unique().scalars().all()
+    
+    async def get_swipe_session_by_group(self, group_id: int) -> list[SwipeSession]:
+        query = (
+            select(SwipeSession)
+            .where(SwipeSession.group_id == group_id)
+            .options(
+                joinedload(SwipeSession.swipes),
+            )
+        )
+        result = await session.execute(query)
+        return result.scalars().unique().all()
 
     async def get_swipe_session_by_id(self, session_id: int) -> SwipeSession:
         query = (
@@ -320,14 +330,13 @@ class SwipeSessionService:
         return result.scalars().first()
 
     @Transactional()
-    async def update_swipe_session(self, request: UpdateSwipeSessionSchema) -> int:
-        try:
-            request.id = int(request.id)
-        except:
-            request.id = decode_single(request.id)
-
+    async def update_swipe_session(
+        self, request: UpdateSwipeSessionSchema, user: User
+    ) -> int:
         if type(request.session_date) == date:
-            request.session_date = datetime.combine(request.session_date, datetime.min.time())
+            request.session_date = datetime.combine(
+                request.session_date, datetime.min.time()
+            )
         else:
             if not request.session_date:
                 request.session_date = datetime.now()
@@ -338,16 +347,14 @@ class SwipeSessionService:
 
         swipe_session = await SwipeSessionService().get_swipe_session_by_id(request.id)
 
-        if not request.status:
-            request.status = swipe_session.status
-
         if not swipe_session:
             raise SwipeSessionNotFoundException
 
-        if not await GroupService().is_admin(swipe_session.group_id, request.user_id):
-            raise UnauthorizedException
+        if not request.status:
+            request.status = swipe_session.status
 
-        del request.user_id
+        if not await GroupService().is_admin(swipe_session.group_id, user.id):
+            raise UnauthorizedException
 
         query = (
             update(SwipeSession)
@@ -359,16 +366,22 @@ class SwipeSessionService:
         return swipe_session.id
 
     @Transactional()
-    async def create_swipe_session(self, request: CreateSwipeSessionSchema) -> int:
-        request.group_id = int(request.group_id)
-        db_swipe_session = SwipeSession(**request.dict())
+    async def create_swipe_session(
+        self, request: CreateSwipeSessionSchema, group_id: int, user: User
+    ) -> int:
+        db_swipe_session = SwipeSession(group_id=group_id, user_id=user.id, **request.dict())
 
-        if not request.session_date:
-            request.session_date = datetime.now()
+        if type(request.session_date) == date:
+            request.session_date = datetime.combine(
+                request.session_date, datetime.min.time()
+            )
+        else:
+            if not request.session_date:
+                request.session_date = datetime.now()
 
-        request.session_date = request.session_date.replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+            request.session_date = request.session_date.replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
 
         session.add(db_swipe_session)
         await session.flush()

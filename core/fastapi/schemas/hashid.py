@@ -1,4 +1,4 @@
-from core.helpers.hashid import decode, encode
+from core.helpers.hashid import decode, decode_single, encode
 
 
 class HashId(int):
@@ -25,8 +25,12 @@ class DehashId(str):
 
     @classmethod
     def validate(cls, v):
-        if not isinstance(v, int):
-            raise TypeError('integer required')
+        if not isinstance(v, str):
+            try: 
+                int(v)
+                return v
+            except:
+                raise TypeError('hash required')
         
-        return decode(v)
+        return decode_single(v)
         

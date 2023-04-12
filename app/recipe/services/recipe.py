@@ -4,7 +4,7 @@ from sqlalchemy.orm import joinedload
 from app.ingredient.services.ingredient import IngredientService
 from app.tag.services.tag import TagService
 from app.recipe.schemas import (
-    CreatorCreateRecipeRequestSchema,
+    CreateRecipeIngredientSchema,
 )
 from app.ingredient.exception.ingredient import IngredientNotFoundException
 from app.image.repository.image import ImageRepository
@@ -50,7 +50,7 @@ class RecipeService:
             )
 
     @Transactional()
-    async def create_recipe(self, recipe: CreatorCreateRecipeRequestSchema) -> int:
+    async def create_recipe(self, recipe: CreateRecipeIngredientSchema, user_id: int) -> int:
         image = await self.image_repository.get_image_by_name(recipe.filename)
         if not image:
             raise FileNotFoundException()
@@ -61,7 +61,7 @@ class RecipeService:
             description=recipe.description,
             preparing_time=recipe.preparing_time,
             instructions=recipe.instructions,
-            creator_id=recipe.creator_id,
+            creator_id=user_id,
         )
         for i in recipe.ingredients:
             # check if ingredient exists:

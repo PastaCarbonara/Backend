@@ -66,7 +66,7 @@ class UserRepository:
         List[UserProfile]
             User list.
         """
-        query = select(UserProfile)
+        query = select(User).options(joinedload(User.profile))
         result = await session.execute(query)
         return result.scalars().all()
 

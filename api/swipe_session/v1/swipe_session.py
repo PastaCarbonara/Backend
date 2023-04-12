@@ -14,10 +14,10 @@ from core.fastapi.dependencies import (
     AllowAll,
     IsAdmin,
     PermissionDependency,
-    ProvidesUserID,
-    ProvidesGroupID,
     IsGroupAdmin,
 )
+from core.fastapi.dependencies.permission import IsAuthenticated
+from core.fastapi.dependencies.user import get_current_user
 from core.fastapi_versioning.versioning import version
 
 
@@ -54,11 +54,11 @@ async def get_swipe_sessions():
     "",
     response_model=SwipeSessionSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[ProvidesUserID, ProvidesGroupID, IsGroupAdmin]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
-async def create_swipe_session(request: CreateSwipeSessionSchema):
-    session_id = await SwipeSessionService().create_swipe_session(request)
+async def create_swipe_session(request: CreateSwipeSessionSchema, user = Depends(get_current_user)):
+    session_id = await SwipeSessionService().create_swipe_session(request, user)
     return await SwipeSessionService().get_swipe_session_by_id(session_id)
 
 
@@ -66,9 +66,9 @@ async def create_swipe_session(request: CreateSwipeSessionSchema):
     "",
     response_model=SwipeSessionSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAdmin, ProvidesUserID]]))],
+    dependencies=[Depends(PermissionDependency([[IsAdmin]]))], # add "IsSessionOwner"
 )
 @version(1)
-async def update_swipe_session(request: UpdateSwipeSessionSchema):
-    session_id = await SwipeSessionService().update_swipe_session(request)
+async def update_swipe_session(request: UpdateSwipeSessionSchema, user = Depends(get_current_user)):
+    session_id = await SwipeSessionService().update_swipe_session(request, user)
     return await SwipeSessionService().get_swipe_session_by_id(session_id)

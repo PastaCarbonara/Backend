@@ -43,7 +43,7 @@ class GroupService:
 
     @Transactional()
     async def create_group(self, request: CreateGroupSchema, user_id: int) -> int:
-        db_group = Group(request)
+        db_group = Group(**request.dict())
 
         db_group.users.append(
             GroupMember(

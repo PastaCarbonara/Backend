@@ -10,7 +10,7 @@ from typing import List
 from sqlalchemy.exc import IntegrityError
 from core.db.models import Tag
 from core.db import Transactional
-from app.tag.schema import CreateTagSchema
+from app.tag.schemas import CreateTagSchema
 from app.tag.exception.tag import (
     TagAlreadyExistsException,
     TagNotFoundException,

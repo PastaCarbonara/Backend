@@ -112,11 +112,12 @@ async def test_create_session(
 ):
     headers = await admin_token_headers
 
-    res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
+    res = fastapi_client.get("/api/v1/groups", headers=headers)
     groups = res.json()
 
-    payload = {"group_id": groups[0].get("id")}
-    res = fastapi_client.post("/api/v1/swipe_sessions", headers=headers, json=payload)
+    group_id = groups[0].get("id")
+    payload = {"group_id": group_id}
+    res = fastapi_client.post(f"/api/v1/groups/{group_id}/swipe_sessions", headers=headers, json=payload)
     session = res.json()
 
     assert res.status_code == 200
@@ -131,12 +132,18 @@ async def test_update_session(
 ):
     headers = await admin_token_headers
 
-    res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
+    res = fastapi_client.get("/api/v1/groups", headers=headers)
+    groups = res.json()
+
+
+    group_id = groups[0].get("id")
+
+    res = fastapi_client.get(f"/api/v1/groups/{group_id}/swipe_sessions", headers=headers)
     sessions = res.json()
 
     payload = {"id": sessions[0].get("id"), "status": sse.IN_PROGRESS}
 
-    res = fastapi_client.patch("/api/v1/swipe_sessions", json=payload, headers=headers)
+    res = fastapi_client.patch(f"/api/v1/groups/{group_id}/swipe_sessions", json=payload, headers=headers)
     swipe_session = res.json()
 
     assert res.status_code == 200
@@ -156,7 +163,7 @@ async def test_websocket_invalid_id(
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
     sessions = res.json()
 
-    assert users[0].get("hashed_id") is not None, "THE USER DTO MIGHT HAVE CHANGED!!!!"
+    assert users[0].get("id") is not None, "THE USER DTO MIGHT HAVE CHANGED!!!!"
 
     with fastapi_client.websocket_connect("/api/v1/swipe_sessions/1/1") as ws:
         ws: WebSocketTestSession
@@ -173,7 +180,7 @@ async def test_websocket_invalid_id(
         assert data == invalid_id_response
 
     with fastapi_client.websocket_connect(
-        f"/api/v1/swipe_sessions/1/{users[0].get('hashed_id')}"
+        f"/api/v1/swipe_sessions/1/{users[0].get('id')}"
     ) as ws:
         ws: WebSocketTestSession
         data = ws.receive_json()
@@ -181,7 +188,7 @@ async def test_websocket_invalid_id(
         assert data == invalid_id_response
 
     with fastapi_client.websocket_connect(
-        f"/api/v1/swipe_sessions/{sessions[0].get('id')}/{users[0].get('hashed_id')}"
+        f"/api/v1/swipe_sessions/{sessions[0].get('id')}/{users[0].get('id')}"
     ) as ws:
         ws: WebSocketTestSession
         data = ws.receive_json()
@@ -205,7 +212,7 @@ async def test_not_in_group(
 
     normal_user = users[1]
     normal_user_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{normal_user.get('hashed_id')}"
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{normal_user.get('id')}"
     )
 
     # i just want the context manager to fit on a single line :,)
@@ -237,7 +244,7 @@ async def test_invalid_json(
 
     admin = users[0]
     admin_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('hashed_id')}"
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
     )
 
     # i just want the context manager to fit on a single line :,)
@@ -274,7 +281,7 @@ async def test_invalid_action(
 
     admin = users[0]
     admin_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('hashed_id')}"
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
     )
 
     # i just want the context manager to fit on a single line :,)
@@ -311,7 +318,7 @@ async def test_invalid_status_update(
 
     admin = users[0]
     admin_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('hashed_id')}"
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
     )
 
     # i just want the context manager to fit on a single line :,)
@@ -348,7 +355,7 @@ async def test_invalid_recipe(
 
     admin = users[0]
     admin_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('hashed_id')}"
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
     )
 
     # i just want the context manager to fit on a single line :,)
@@ -386,7 +393,7 @@ async def test_invalid_message(
 
     admin = users[0]
     admin_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('hashed_id')}"
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
     )
 
     # i just want the context manager to fit on a single line :,)
@@ -428,12 +435,12 @@ async def test_swipe_session(
 
     admin = users[0]
     admin_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('hashed_id')}"
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
     )
 
     normal_user = users[1]
     normal_user_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{normal_user.get('hashed_id')}"
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{normal_user.get('id')}"
     )
 
     # i just want the context manager to fit on a single line :,)
