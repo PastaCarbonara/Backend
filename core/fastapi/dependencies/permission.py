@@ -39,6 +39,34 @@ class IsAuthenticated(BasePermission):
 
     async def has_permission(self, request: Request) -> bool:
         return request.user.id is not None
+    
+
+class IsUserOwner(BasePermission):
+    async def has_permission(self, request: Request) -> bool:
+        user_id = get_hashed_id_from_path(request)
+
+        if not user_id:
+            return False
+        
+        if user_id != request.user.id:
+            return False
+        
+        return True
+
+
+class IsSessionOwner(BasePermission):
+    async def has_permission(self, request: Request) -> bool:
+        session_id = get_hashed_id_from_path(request)
+
+        if not session_id:
+            return False
+        
+        swipe_session = SwipeSessionService().get_swipe_session_by_id(session_id)
+
+        if swipe_session.user_id != request.user.id:
+            return False
+        
+        return True
 
 
 class IsAdmin(BasePermission):

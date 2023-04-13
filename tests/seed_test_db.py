@@ -21,15 +21,19 @@ def seed_db():
         normal_user.profile = UserProfile(
             username="normal_user", password=get_password_hash("normal_user")
         )
+        
+        image_1 = File(filename="image_1")
+        image_2 = File(filename="image_2")
+        image_3 = File(filename="image_3")
 
-        group_1 = Group(name="group_1")
+        group_1 = Group(name="group_1", filename="image_3")
         group_1.users.append(GroupMember(user=admin, is_admin=True))
 
-        group_2 = Group(name="group_2")
+        group_2 = Group(name="group_2", filename="image_3")
         group_2.users.append(GroupMember(user=admin, is_admin=True))
         group_2.users.append(GroupMember(user=normal_user, is_admin=False))
 
-        group_3 = Group(name="group_3")
+        group_3 = Group(name="group_3", filename="image_3")
         group_3.users.append(GroupMember(user=admin, is_admin=True))
 
         # done like this because session.flush() did not work.
@@ -38,9 +42,6 @@ def seed_db():
         session_2 = SwipeSession(user_id=1, group_id=2)
         session_3 = SwipeSession(user_id=1, group_id=2)
 
-        image_1 = File(filename="image_1")
-        image_2 = File(filename="image_2")
-        image_3 = File(filename="image_3")
         recipe_1 = Recipe(
             name="Union pie",
             description="The greatest union pie in the west.",

@@ -129,7 +129,7 @@ async def test_create_group(
     client: AsyncClient,
     admin_token_headers: Dict[str, str],
 ):
-    payload = {"name": "group_4"}
+    payload = {"name": "group_4", "filename": "image_3"}
     res = await client.post(
         "/api/v1/groups", json=payload, headers=await admin_token_headers
     )

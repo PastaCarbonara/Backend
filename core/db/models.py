@@ -178,6 +178,9 @@ class Group(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String())
+    filename: Mapped[str] = mapped_column(
+        ForeignKey("file.filename", ondelete="CASCADE")
+    )
 
     users: Mapped[List["GroupMember"]] = relationship(back_populates="group")
 

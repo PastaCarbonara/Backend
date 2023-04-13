@@ -11,6 +11,7 @@ from core.helpers.hashid import encode
 
 class CreateGroupSchema(BaseModel):
     name: str
+    filename: str
 
 
 class FlattenedGroupMemberSchema(BaseModel):
