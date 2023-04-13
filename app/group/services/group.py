@@ -14,22 +14,26 @@ class GroupService:
 
     async def is_member(self, group_id: int, user_id: int) -> bool:
         result = await session.execute(
-            select(GroupMember).where(and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id))
+            select(GroupMember).where(
+                and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id)
+            )
         )
         user = result.scalars().first()
         if not user:
             return False
-        
+
         return True
 
     async def is_admin(self, group_id: int, user_id: int) -> bool:
         result = await session.execute(
-            select(GroupMember).where(and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id))
+            select(GroupMember).where(
+                and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id)
+            )
         )
         user = result.scalars().first()
         if not user:
             return False
-        
+
         return user.is_admin
 
     async def get_group_list(self) -> List[Group]:
@@ -37,6 +41,20 @@ class GroupService:
             joinedload(Group.users)
             .joinedload(GroupMember.user)
             .joinedload(User.profile)
+        )
+        result = await session.execute(query)
+        return result.unique().scalars().all()
+
+    async def get_groups_by_user(self, user_id) -> list[Group]:
+        query = (
+            select(Group)
+            .join(Group.users)
+            .where(GroupMember.user_id == user_id)
+            .options(
+                joinedload(Group.users)
+                .joinedload(GroupMember.user)
+                .joinedload(User.profile)
+            )
         )
         result = await session.execute(query)
         return result.unique().scalars().all()
@@ -69,14 +87,14 @@ class GroupService:
         )
         result = await session.execute(query)
         return result.unique().scalars().first()
-    
+
     @Transactional()
     async def join_group(self, group_id, user_id) -> None:
         group = await self.get_group_by_id(group_id)
 
         if not group:
             raise GroupNotFoundException
-        
+
         group.users.append(
             GroupMember(
                 is_admin=False,

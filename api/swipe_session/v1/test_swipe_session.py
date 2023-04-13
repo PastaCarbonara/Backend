@@ -117,7 +117,9 @@ async def test_create_session(
 
     group_id = groups[0].get("id")
     payload = {"group_id": group_id}
-    res = fastapi_client.post(f"/api/v1/groups/{group_id}/swipe_sessions", headers=headers, json=payload)
+    res = fastapi_client.post(
+        f"/api/v1/groups/{group_id}/swipe_sessions", headers=headers, json=payload
+    )
     session = res.json()
 
     assert res.status_code == 200
@@ -128,27 +130,39 @@ async def test_create_session(
 @pytest.mark.asyncio
 async def test_update_session(
     admin_token_headers: Dict[str, str],
+    normal_user_token_headers: Dict[str, str],
     fastapi_client: TestClient,
 ):
     headers = await admin_token_headers
+    user_headers = await normal_user_token_headers
 
     res = fastapi_client.get("/api/v1/groups", headers=headers)
     groups = res.json()
 
-
     group_id = groups[0].get("id")
 
-    res = fastapi_client.get(f"/api/v1/groups/{group_id}/swipe_sessions", headers=headers)
+    res = fastapi_client.get(
+        f"/api/v1/groups/{group_id}/swipe_sessions", headers=headers
+    )
     sessions = res.json()
 
     payload = {"id": sessions[0].get("id"), "status": sse.IN_PROGRESS}
 
-    res = fastapi_client.patch(f"/api/v1/groups/{group_id}/swipe_sessions", json=payload, headers=headers)
+    res = fastapi_client.patch(
+        f"/api/v1/groups/{group_id}/swipe_sessions", json=payload, headers=headers
+    )
     swipe_session = res.json()
 
     assert res.status_code == 200
     assert swipe_session.get("status") != sessions[0].get("status")
     assert swipe_session.get("status") == sse.IN_PROGRESS
+
+    res = fastapi_client.patch(
+        f"/api/v1/groups/{group_id}/swipe_sessions",
+        json=payload,
+        headers=user_headers,
+    )
+    assert res.status_code == 401
 
 
 @pytest.mark.asyncio
@@ -243,9 +257,7 @@ async def test_invalid_json(
     cur_session = sessions[0]
 
     admin = users[0]
-    admin_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
-    )
+    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -280,9 +292,7 @@ async def test_invalid_action(
     cur_session = sessions[0]
 
     admin = users[0]
-    admin_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
-    )
+    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -317,9 +327,7 @@ async def test_invalid_status_update(
     cur_session = sessions[0]
 
     admin = users[0]
-    admin_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
-    )
+    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -354,9 +362,7 @@ async def test_invalid_recipe(
     cur_session = sessions[0]
 
     admin = users[0]
-    admin_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
-    )
+    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -392,9 +398,7 @@ async def test_invalid_message(
     cur_session = sessions[0]
 
     admin = users[0]
-    admin_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
-    )
+    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -434,9 +438,7 @@ async def test_swipe_session(
     cur_session = sessions[1]
 
     admin = users[0]
-    admin_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
-    )
+    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
 
     normal_user = users[1]
     normal_user_url = (

@@ -1,12 +1,10 @@
-from datetime import date, datetime
+from datetime import date
 from typing import Any, List
 from pydantic import BaseModel, validator
 from app.swipe_session.schemas.swipe import SwipeSchema
-from core.db import session
 
 from core.db.enums import SwipeSessionEnum, SwipeSessionActionEnum
 from core.fastapi.schemas.hashid import DehashId, HashId
-from core.helpers.hashid import encode
 
 
 class ActionDocsSchema(BaseModel):
