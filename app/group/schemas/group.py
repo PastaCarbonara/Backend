@@ -2,11 +2,9 @@ from dataclasses import Field
 from typing import Any
 from pydantic import BaseModel, root_validator, validator
 from pydantic.utils import GetterDict
-from app.recipe.schemas.user import UserSchema
 
 
 from core.fastapi.schemas.hashid import HashId
-from core.helpers.hashid import encode
 
 
 class CreateGroupSchema(BaseModel):
@@ -18,7 +16,6 @@ class FlattenedGroupMemberSchema(BaseModel):
     id: HashId
     username: str
     is_admin: bool
-    # user: UserSchema = None
 
     @root_validator(pre=True)
     def flatten_group_member(cls, values: GetterDict) -> GetterDict | dict[str, object]:
@@ -43,13 +40,10 @@ class FlattenedGroupMemberSchema(BaseModel):
 
 
 class GroupSchema(BaseModel):
-    id: str
+    id: HashId
     name: str
+    filename: str
     users: list[FlattenedGroupMemberSchema]
-
-    @validator('id')
-    def hash_id(cls, v):
-        return encode(int(v))
 
     class Config:
         orm_mode = True
