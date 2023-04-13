@@ -18,6 +18,16 @@ Boilerplate from [teamhide](https://github.com/teamhide/fastapi-boilerplate).
 
 ## Testing code
 
+Running unittests
+
+`pytest`
+
+- `--tb=no` no error stacktraces
+- `--disable-warnings` no warnings
+- `-s` enable printing
+
+Checking test coverage
+
 `coverage run -m pytest`
 
 `coverage html`

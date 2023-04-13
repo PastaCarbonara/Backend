@@ -2,23 +2,22 @@ from dataclasses import Field
 from typing import Any
 from pydantic import BaseModel, root_validator, validator
 from pydantic.utils import GetterDict
+from app.recipe.schemas.user import UserSchema
 
 
-from app.user.schemas.user import GetUserListResponseSchema
-from core.helpers.hashids import encode
+from core.fastapi.schemas.hashid import HashId
+from core.helpers.hashid import encode
 
 
 class CreateGroupSchema(BaseModel):
     name: str
 
-class UserCreateGroupSchema(CreateGroupSchema):
-    user_id: int = None
-
 
 class FlattenedGroupMemberSchema(BaseModel):
-    id: str
+    id: HashId
     username: str
     is_admin: bool
+    # user: UserSchema = None
 
     @root_validator(pre=True)
     def flatten_group_member(cls, values: GetterDict) -> GetterDict | dict[str, object]:
@@ -27,13 +26,15 @@ class FlattenedGroupMemberSchema(BaseModel):
         if user is None:
             return values
         
-        # NOTE: Currently 'Unknown' is used as default fallback when the user is not logged in.
-        username = "Unknown" if user.profile is None else user.profile.username
+        # NOTE: Currently 'Unknown' is used as default fallback when the user is not registered.. if that is possible.
+        if not user.profile:
+            user.profile.username = "Unknown"
 
         return {
-            "id": encode(values["user_id"]),
-            "username": username,
-            "is_admin": values["is_admin"]
+            "id": user.id,
+            "username": user.profile.username,
+            "is_admin": values["is_admin"],
+            "user": None,
         } | dict(values)
     
     class Config:

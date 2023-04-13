@@ -5,7 +5,8 @@ from app.swipe_session.schemas.swipe import SwipeSchema
 from core.db import session
 
 from core.db.enums import SwipeSessionEnum, SwipeSessionActionEnum
-from core.helpers.hashids import encode
+from core.fastapi.schemas.hashid import DehashId, HashId
+from core.helpers.hashid import encode
 
 
 class ActionDocsSchema(BaseModel):
@@ -14,37 +15,22 @@ class ActionDocsSchema(BaseModel):
 
 class CreateSwipeSessionSchema(BaseModel):
     status: SwipeSessionEnum = SwipeSessionEnum.READY
-    session_date: date | datetime | None = None
-    user_id: int = None
-    group_id: str | None = None
+    session_date: date | None = None
 
 
 class UpdateSwipeSessionSchema(BaseModel):
-    id: str
+    id: DehashId
     session_date: date = None
     status: SwipeSessionEnum = None
-    user_id: int = None
 
 
 class SwipeSessionSchema(BaseModel):
-    id: str
+    id: HashId
     session_date: date
     status: SwipeSessionEnum
-    user_id: str
-    group_id: str
+    user_id: HashId
+    group_id: HashId
     swipes: List[SwipeSchema]
-
-    @validator('id')
-    def hash_id(cls, v):
-        return encode(int(v))
-
-    @validator('user_id')
-    def hash_user_id(cls, v):
-        return encode(int(v))
-
-    @validator('group_id')
-    def hash_group_id(cls, v):
-        return encode(int(v))
 
     class Config:
         orm_mode = True

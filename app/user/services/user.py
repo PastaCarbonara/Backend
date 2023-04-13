@@ -1,4 +1,5 @@
 from typing import List
+from app.auth.services.jwt import JwtService
 from core.db.models import User, UserProfile
 from app.user.schemas.user import LoginResponseSchema
 from app.user.repository.user import UserRepository
@@ -49,8 +50,5 @@ class UserService:
         if not verify_password(password, user.profile.password):
             raise IncorrectPasswordException()
 
-        response = LoginResponseSchema(
-            access_token=TokenHelper.encode(payload={"user_id": user.id}),
-            refresh_token=TokenHelper.encode(payload={"sub": "refresh"}),
-        )
+        response = await JwtService.create_login_tokens(user.id)
         return response

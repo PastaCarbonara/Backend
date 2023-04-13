@@ -1,7 +1,7 @@
 from typing import List
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import joinedload
-from app.group.schemas.group import CreateGroupSchema, UserCreateGroupSchema
+from app.group.schemas.group import CreateGroupSchema
 from app.user.services.user import UserService
 from core.db.models import Group, GroupMember, User
 from core.db import Transactional, session
@@ -42,15 +42,13 @@ class GroupService:
         return result.unique().scalars().all()
 
     @Transactional()
-    async def create_group(self, request: UserCreateGroupSchema) -> int:
-        group_schema = CreateGroupSchema(**request.dict())
-
-        db_group = Group(**group_schema.dict())
+    async def create_group(self, request: CreateGroupSchema, user_id: int) -> int:
+        db_group = Group(**request.dict())
 
         db_group.users.append(
             GroupMember(
                 is_admin=True,
-                user_id=request.user_id,
+                user_id=user_id,
             )
         )
 

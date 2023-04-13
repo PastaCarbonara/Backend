@@ -3,10 +3,9 @@ from fastapi import APIRouter, Depends, UploadFile
 from core.exceptions import ExceptionResponseSchema
 from core.fastapi_versioning import version
 from core.fastapi.dependencies.object_storage import get_object_storage
-from core.fastapi.dependencies.permission import (
+from core.fastapi.dependencies import (
     AllowAll,
     PermissionDependency,
-    ProvidesUserID,
     IsAdmin,
 )
 from app.image.schemas import ImageSchema
