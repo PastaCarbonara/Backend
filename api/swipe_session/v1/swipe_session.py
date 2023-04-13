@@ -61,9 +61,7 @@ async def get_swipe_sessions():
 async def create_swipe_session(request: CreateSwipeSessionSchema, user = Depends(get_current_user)):
     print(request)
     session_id = await SwipeSessionService().create_swipe_session(request, user)
-    x = await SwipeSessionService().get_swipe_session_by_id(session_id)
-    print(x)
-    return x
+    return await SwipeSessionService().get_swipe_session_by_id(session_id)
 
 
 @swipe_session_v1_router.patch(
