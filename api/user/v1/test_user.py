@@ -1,6 +1,7 @@
 from fastapi import Response
 import pytest
 from httpx import AsyncClient
+from fastapi.testclient import TestClient
 from typing import Dict
 
 
@@ -45,3 +46,39 @@ async def test_get_user_list_normal_user(
 async def test_get_user_list_no_auth(client: AsyncClient):
     res = await client.get("/api/v1/users")
     assert res.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_get_user_groups(
+    normal_user_token_headers: Dict[str, str],
+    admin_token_headers: Dict[str, str],
+    fastapi_client: TestClient,
+):
+    admin_headers = await admin_token_headers
+    normal_headers = await normal_user_token_headers
+
+    res = fastapi_client.get("/api/v1/users", headers=admin_headers)
+    users = res.json()
+
+    res = fastapi_client.get("/api/v1/groups", headers=admin_headers)
+    groups = res.json()
+
+    res = fastapi_client.get(
+        f"/api/v1/users/{users[0].get('id')}/groups", headers=admin_headers
+    )
+    assert res.status_code == 200
+
+    res = fastapi_client.get(
+        f"/api/v1/users/{users[0].get('id')}/groups", headers=normal_headers
+    )
+    assert res.status_code == 401
+
+    res = fastapi_client.get(
+        f"/api/v1/users/{users[1].get('id')}/groups", headers=admin_headers
+    )
+    assert res.status_code == 200
+
+    res = fastapi_client.get(
+        f"/api/v1/users/{users[1].get('id')}/groups", headers=normal_headers
+    )
+    assert res.status_code == 200
