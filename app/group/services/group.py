@@ -2,6 +2,9 @@ from typing import List
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import joinedload
 from app.group.schemas.group import CreateGroupSchema
+from app.image.exception.image import FileNotFoundException
+from app.image.interface.image import ObjectStorageInterface
+from app.image.services.image import ImageService
 from app.user.services.user import UserService
 from core.db.models import Group, GroupMember, User
 from core.db import Transactional, session
@@ -60,7 +63,15 @@ class GroupService:
         return result.unique().scalars().all()
 
     @Transactional()
-    async def create_group(self, request: CreateGroupSchema, user_id: int) -> int:
+    async def create_group(
+        self,
+        request: CreateGroupSchema,
+        user_id: int,
+        object_storage: ObjectStorageInterface,
+    ) -> int:
+        # Check if file exists
+        await ImageService(object_storage).get_image_by_name(request.filename)
+
         db_group = Group(**request.dict())
 
         db_group.users.append(

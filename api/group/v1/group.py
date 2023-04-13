@@ -6,11 +6,16 @@ from app.group.schemas.group import GroupSchema, CreateGroupSchema
 from app.group.services.group import GroupService
 
 from fastapi import APIRouter, Depends, Query, Request
-from app.swipe_session.schemas.swipe_session import CreateSwipeSessionSchema, SwipeSessionSchema, UpdateSwipeSessionSchema
+from app.swipe_session.schemas.swipe_session import (
+    CreateSwipeSessionSchema,
+    SwipeSessionSchema,
+    UpdateSwipeSessionSchema,
+)
 from app.swipe_session.services.swipe_session import SwipeSessionService
 from core.exceptions import ExceptionResponseSchema, GroupNotFoundException
 from core.exceptions.group import GroupJoinConflictException
 from core.fastapi.dependencies.hashid import decode_path_id
+from core.fastapi.dependencies.object_storage import get_object_storage
 from core.fastapi.dependencies.user import get_current_user
 from core.fastapi_versioning import version
 
@@ -46,8 +51,12 @@ async def get_group_list():
     dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
-async def create_group(request: CreateGroupSchema, user = Depends(get_current_user)):
-    group_id = await GroupService().create_group(request, user.id)
+async def create_group(
+    request: CreateGroupSchema,
+    user=Depends(get_current_user),
+    object_storage=Depends(get_object_storage),
+):
+    group_id = await GroupService().create_group(request, user.id, object_storage)
     return await GroupService().get_group_by_id(group_id)
 
 
@@ -77,7 +86,7 @@ async def get_group(group_id: int = Depends(decode_path_id)):
 async def join_group(request: Request, group_id: int = Depends(decode_path_id)):
     if not await GroupService().is_member(group_id, request.user.id):
         return await GroupService().join_group(group_id, request.user.id)
-    
+
 
 @group_v1_router.get(
     "/{hashed_id}/swipe_sessions",
@@ -87,7 +96,7 @@ async def join_group(request: Request, group_id: int = Depends(decode_path_id)):
 @version(1)
 async def get_swipe_session_by_group(group_id: int = Depends(decode_path_id)):
     return await SwipeSessionService().get_swipe_session_by_group(group_id)
-    
+
 
 @group_v1_router.post(
     "/{hashed_id}/swipe_sessions",
@@ -95,10 +104,16 @@ async def get_swipe_session_by_group(group_id: int = Depends(decode_path_id)):
     dependencies=[Depends(PermissionDependency([[IsAdmin], [IsGroupAdmin]]))],
 )
 @version(1)
-async def create_swipe_session(request: CreateSwipeSessionSchema, group_id: int = Depends(decode_path_id), user = Depends(get_current_user)):
-    session_id = await SwipeSessionService().create_swipe_session(request, group_id, user)
+async def create_swipe_session(
+    request: CreateSwipeSessionSchema,
+    group_id: int = Depends(decode_path_id),
+    user=Depends(get_current_user),
+):
+    session_id = await SwipeSessionService().create_swipe_session(
+        request, group_id, user
+    )
     return await SwipeSessionService().get_swipe_session_by_id(session_id)
-    
+
 
 @group_v1_router.patch(
     "/{hashed_id}/swipe_sessions",
@@ -107,6 +122,8 @@ async def create_swipe_session(request: CreateSwipeSessionSchema, group_id: int 
     dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
 @version(1)
-async def update_swipe_session(request: UpdateSwipeSessionSchema, user = Depends(get_current_user)):
+async def update_swipe_session(
+    request: UpdateSwipeSessionSchema, user=Depends(get_current_user)
+):
     session_id = await SwipeSessionService().update_swipe_session(request, user)
     return await SwipeSessionService().get_swipe_session_by_id(session_id)

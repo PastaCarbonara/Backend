@@ -22,8 +22,19 @@ image_v1_router = APIRouter()
     dependencies=[Depends(PermissionDependency([[AllowAll]]))],
 )
 @version(1)
-async def get_images(object_storage=Depends(get_object_storage)):
+async def get_images(object_storage = Depends(get_object_storage)):
     return await ImageService(object_storage).get_images()
+
+
+@image_v1_router.get(
+    "/{filename}",
+    response_model=ImageSchema,
+    responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(PermissionDependency([[AllowAll]]))],
+)
+@version(1)
+async def get_images(filename: str, object_storage = Depends(get_object_storage)):
+    return await ImageService(object_storage).get_image_by_name(filename)
 
 
 @image_v1_router.post(
@@ -34,7 +45,7 @@ async def get_images(object_storage=Depends(get_object_storage)):
 )
 @version(1)
 async def create_image(
-    images: list[UploadFile], object_storage=Depends(get_object_storage)
+    images: list[UploadFile], object_storage = Depends(get_object_storage)
 ):
     return await ImageService(object_storage).upload_images(images)
 
@@ -45,5 +56,5 @@ async def create_image(
     dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
 @version(1)
-async def delete_image(filename: str, object_storage=Depends(get_object_storage)):
+async def delete_image(filename: str, object_storage = Depends(get_object_storage)):
     return await ImageService(object_storage).delete_image(filename)

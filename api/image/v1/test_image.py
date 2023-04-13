@@ -18,6 +18,15 @@ async def test_get_images(client: AsyncClient, admin_token_headers: Dict[str, st
 
 
 @pytest.mark.asyncio
+async def get_image(client: AsyncClient):
+    res = await client.get("/api/v1/images/fake_image")
+    assert res.status_code == 404 
+
+    res = await client.get("/api/v1/images/image_1")
+    assert res.status_code == 200 
+
+
+@pytest.mark.asyncio
 async def test_upload_and_delete_image(
     client: AsyncClient, admin_token_headers: Dict[str, str]
 ):
