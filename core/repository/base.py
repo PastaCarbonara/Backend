@@ -46,6 +46,7 @@ class BaseRepo(Generic[ModelType]):
         )
         await session.execute(query)
 
-    async def save(self, model: ModelType) -> ModelType:
-        saved = await session.add(model)
-        return saved
+    async def create(self, model: ModelType) -> int:        
+        session.add(model)
+        await session.flush()
+        return model.id
