@@ -1,6 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Query, Request, WebSocket
+from app.swipe_session.repository.swipe_session import SwipeSessionRepository
 from app.swipe_session.schemas.swipe_session import (
     ActionDocsSchema,
     CreateSwipeSessionSchema,
@@ -74,3 +75,9 @@ async def create_swipe_session(request: CreateSwipeSessionSchema, user = Depends
 async def update_swipe_session(request: UpdateSwipeSessionSchema, user = Depends(get_current_user)):
     session_id = await SwipeSessionService().update_swipe_session(request, user)
     return await SwipeSessionService().get_swipe_session_by_id(session_id)
+
+
+@swipe_session_v1_router.get("/{session_id}/match")
+@version(1)
+async def test(session_id: int):
+    return await SwipeSessionRepository().get_match(session_id)

@@ -8,7 +8,7 @@ from core.fastapi_versioning import version
 from app.recipe.schemas import (
     JudgeRecipeSchema,
     GetFullRecipeResponseSchema,
-    CreateRecipeIngredientSchema,
+    CreateRecipeSchema,
 )
 from app.recipe.services import RecipeService
 from core.fastapi.dependencies.permission import (
@@ -60,6 +60,6 @@ async def judge_recipe(recipe_id: int, request: JudgeRecipeSchema):
     dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
 @version(1)
-async def create_recipe(request: CreateRecipeIngredientSchema, user = Depends(get_current_user)):
+async def create_recipe(request: CreateRecipeSchema, user = Depends(get_current_user)):
     recipe_id = await RecipeService().create_recipe(request, user.id)
     return await RecipeService().get_recipe_by_id(recipe_id)
