@@ -8,6 +8,7 @@ from app.swipe_session.schemas.swipe_session import (
     UpdateSwipeSessionSchema,
 )
 from app.swipe_session.services.swipe_session import SwipeSessionService
+from app.swipe_session.services.swipe_session_websocket import SwipeSessionWebsocketService
 
 from core.exceptions import ExceptionResponseSchema
 from core.fastapi.dependencies import (
@@ -26,7 +27,7 @@ swipe_session_v1_router = APIRouter()
 
 @swipe_session_v1_router.websocket("/{session_id}/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, session_id: str, user_id: str):
-    await SwipeSessionService().handler(websocket, session_id, user_id)
+    await SwipeSessionWebsocketService().handler(websocket, session_id, user_id)
 
 
 @swipe_session_v1_router.get(
@@ -58,6 +59,7 @@ async def get_swipe_sessions():
 )
 @version(1)
 async def create_swipe_session(request: CreateSwipeSessionSchema, user = Depends(get_current_user)):
+    print(request)
     session_id = await SwipeSessionService().create_swipe_session(request, user)
     return await SwipeSessionService().get_swipe_session_by_id(session_id)
 

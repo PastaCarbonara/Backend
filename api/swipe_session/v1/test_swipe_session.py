@@ -6,40 +6,22 @@ from httpx import AsyncClient
 from fastapi.testclient import TestClient
 from starlette.testclient import WebSocketTestSession
 import pytest
+import app.swipe_session.exception.swipe_session as exc
 
 from core.db.enums import SwipeSessionEnum as sse
 from core.db.enums import SwipeSessionActionEnum as ssae
+from core.exceptions.base import UnauthorizedException
+from core.exceptions.recipe import RecipeNotFoundException
 
-# Some things I reuse
-invalid_id_response = {
-    "action": ssae.CONNECTION_CODE,
-    "payload": {"status_code": 400, "message": "Invalid ID"},
-}
 
-valid_connection = {
-    "action": ssae.CONNECTION_CODE,
-    "payload": {"status_code": 200, "message": "You have connected"},
-}
+def assert_status_code(data, exception):
+    assert data.get("action") == ssae.CONNECTION_CODE
 
-invalid_json = {
-    "action": ssae.CONNECTION_CODE,
-    "payload": {"status_code": 400, "message": "Data is not JSON serializable"},
-}
+    payload = data.get("payload")
+    assert payload is not None
 
-invalid_action = {
-    "action": ssae.CONNECTION_CODE,
-    "payload": {"status_code": 400, "message": "Action does not exist"},
-}
-
-invalid_status = {
-    "action": ssae.CONNECTION_CODE,
-    "payload": {"status_code": 400, "message": "Incorrect status"},
-}
-
-invalid_message = {
-    "action": ssae.CONNECTION_CODE,
-    "payload": {"status_code": 400, "message": "No message provided"},
-}
+    assert payload.get("status_code") == exception.code
+    assert payload.get("message") == exception.message
 
 
 def send_swipe(ws: WebSocketTestSession, recipe_id: int, like: bool):
@@ -179,35 +161,39 @@ async def test_websocket_invalid_id(
 
     assert users[0].get("id") is not None, "THE USER DTO MIGHT HAVE CHANGED!!!!"
 
+    # both bad session and user id
     with fastapi_client.websocket_connect("/api/v1/swipe_sessions/1/1") as ws:
         ws: WebSocketTestSession
         data = ws.receive_json()
 
-        assert data == invalid_id_response
+        assert_status_code(data, exc.InvalidIdException)
 
+    # bad user id
     with fastapi_client.websocket_connect(
         f"/api/v1/swipe_sessions/{sessions[0].get('id')}/1"
     ) as ws:
         ws: WebSocketTestSession
         data = ws.receive_json()
 
-        assert data == invalid_id_response
+        assert_status_code(data, exc.InvalidIdException)
 
+    # bad session id
     with fastapi_client.websocket_connect(
         f"/api/v1/swipe_sessions/1/{users[0].get('id')}"
     ) as ws:
         ws: WebSocketTestSession
         data = ws.receive_json()
 
-        assert data == invalid_id_response
+        assert_status_code(data, exc.InvalidIdException)
 
+    # session inactive
     with fastapi_client.websocket_connect(
         f"/api/v1/swipe_sessions/{sessions[0].get('id')}/{users[0].get('id')}"
     ) as ws:
         ws: WebSocketTestSession
         data = ws.receive_json()
 
-        assert data == valid_connection
+        assert_status_code(data, exc.SuccessfullConnection)
 
 
 @pytest.mark.asyncio
@@ -239,7 +225,39 @@ async def test_not_in_group(
 
         data = ws.receive_json()
 
-        assert data == invalid_id_response
+        assert_status_code(data, exc.InvalidIdException)
+
+
+@pytest.mark.asyncio
+async def test_inactive_session(
+    fastapi_client: TestClient,
+    admin_token_headers: Dict[str, str],
+):
+    headers = await admin_token_headers
+    res = fastapi_client.get("/api/v1/users", headers=headers)
+    users = res.json()
+
+    res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
+    sessions = res.json()
+
+    cur_session = sessions[1]
+
+    normal_user = users[1]
+    normal_user_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{normal_user.get('id')}"
+    )
+
+    # i just want the context manager to fit on a single line :,)
+    connect = fastapi_client.websocket_connect
+
+    # NOTE to self: receive() functions wait until they receive any data
+    # and if they do not receive anything, they wait 'til the end of time
+    with connect(normal_user_url) as ws:
+        ws: WebSocketTestSession
+
+        data = ws.receive_json()
+
+        assert_status_code(data, exc.InactiveException)
 
 
 @pytest.mark.asyncio
@@ -269,12 +287,12 @@ async def test_invalid_json(
 
         data = ws.receive_json()
 
-        assert data == valid_connection
+        assert_status_code(data, exc.SuccessfullConnection)
 
         ws.send_text("I am not JSON")
         data = ws.receive_json()
 
-        assert data == invalid_json
+        assert_status_code(data, exc.JSONSerializableException)
 
 
 @pytest.mark.asyncio
@@ -304,12 +322,12 @@ async def test_invalid_action(
 
         data = ws.receive_json()
 
-        assert data == valid_connection
+        assert_status_code(data, exc.SuccessfullConnection)
 
         ws.send_json({"action": "BANANA"})
         data = ws.receive_json()
 
-        assert data == invalid_action
+        assert_status_code(data, exc.ActionNotFoundException)
 
 
 @pytest.mark.asyncio
@@ -339,12 +357,12 @@ async def test_invalid_status_update(
 
         data = ws.receive_json()
 
-        assert data == valid_connection
+        assert_status_code(data, exc.SuccessfullConnection)
 
         send_status_update(ws, "Some status")
         data = ws.receive_json()
 
-        assert data == invalid_status
+        assert_status_code(data, exc.StatusNotFoundException)
 
 
 @pytest.mark.asyncio
@@ -374,13 +392,14 @@ async def test_invalid_recipe(
 
         data = ws.receive_json()
 
-        assert data == valid_connection
+        assert_status_code(data, exc.SuccessfullConnection)
 
         send_swipe(ws, "haha recipe ID is not an int", True)
         data = ws.receive_json()
 
         assert data.get("action") == ssae.CONNECTION_CODE
         assert data.get("payload").get("status_code") == 400
+        assert type(data.get("payload").get("message")) == str
 
 
 @pytest.mark.asyncio
@@ -410,17 +429,57 @@ async def test_invalid_message(
 
         data = ws.receive_json()
 
-        assert data == valid_connection
+        assert_status_code(data, exc.SuccessfullConnection)
 
         send_message(ws, None)
         data = ws.receive_json()
 
-        assert data == invalid_message
+        assert_status_code(data, exc.NoMessageException)
 
         send_global_message(ws, None)
         data = ws.receive_json()
 
-        assert data == invalid_message
+        assert_status_code(data, exc.NoMessageException)
+
+
+@pytest.mark.asyncio
+async def test_update_session_to_active(
+    fastapi_client: TestClient,
+    admin_token_headers: Dict[str, str],
+):
+    headers = await admin_token_headers
+
+    res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
+    sessions = res.json()
+
+    assert sessions[1].get("status") == sse.READY
+    assert sessions[2].get("status") == sse.READY
+
+    payload = {"id": sessions[2].get("id"), "status": sse.IN_PROGRESS}
+    res = fastapi_client.patch(
+        f"/api/v1/groups/{sessions[2].get('group_id')}/swipe_sessions",
+        json=payload,
+        headers=headers,
+    )
+
+    res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
+    sessions = res.json()
+
+    assert sessions[1].get("status") == sse.READY
+    assert sessions[2].get("status") == sse.IN_PROGRESS
+
+    payload = {"id": sessions[1].get("id"), "status": sse.IN_PROGRESS}
+    res = fastapi_client.patch(
+        f"/api/v1/groups/{sessions[1].get('group_id')}/swipe_sessions",
+        json=payload,
+        headers=headers,
+    )
+
+    res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
+    sessions = res.json()
+
+    assert sessions[1].get("status") == sse.IN_PROGRESS
+    assert sessions[2].get("status") == sse.PAUSED
 
 
 @pytest.mark.asyncio
@@ -429,6 +488,7 @@ async def test_swipe_session(
     admin_token_headers: Dict[str, str],
 ):
     headers = await admin_token_headers
+
     res = fastapi_client.get("/api/v1/users", headers=headers)
     users = res.json()
 
@@ -458,8 +518,8 @@ async def test_swipe_session(
         data_1 = ws_admin.receive_json()
         data_2 = ws_normal_user.receive_json()
 
-        assert data_1 == valid_connection
-        assert data_2 == valid_connection
+        assert_status_code(data_1, exc.SuccessfullConnection)
+        assert_status_code(data_2, exc.SuccessfullConnection)
 
         # Swipe recipes (does not return anything)
         send_swipe(ws_admin, 1, False)
@@ -469,15 +529,13 @@ async def test_swipe_session(
         send_swipe(ws_admin, 1, False)
         data_1 = ws_admin.receive_json()
 
-        assert data_1.get("action") == ssae.CONNECTION_CODE
-        assert data_1.get("payload").get("status_code") == 409
+        assert_status_code(data_1, exc.AlreadySwipedException)
 
         # Swipe non existing recipe
         send_swipe(ws_admin, 3, False)
         data_1 = ws_admin.receive_json()
 
-        assert data_1.get("action") == ssae.CONNECTION_CODE
-        assert data_1.get("payload").get("status_code") == 404
+        assert_status_code(data_1, RecipeNotFoundException)
 
         # Session message
         send_message(ws_admin, "Message!")
@@ -519,8 +577,7 @@ async def test_swipe_session(
         send_global_message(ws_normal_user, "Message!")
         data_2 = ws_normal_user.receive_json()
 
-        assert data_2.get("action") == ssae.CONNECTION_CODE
-        assert data_2.get("payload").get("status_code") == 401
+        assert_status_code(data_2, UnauthorizedException)
 
         # Status update
         send_status_update(ws_admin, sse.PAUSED)
@@ -538,8 +595,7 @@ async def test_swipe_session(
         send_status_update(ws_normal_user, sse.IN_PROGRESS)
         data_2 = ws_normal_user.receive_json()
 
-        assert data_2.get("action") == ssae.CONNECTION_CODE
-        assert data_2.get("payload").get("status_code") == 401
+        assert_status_code(data_2, UnauthorizedException)
 
         # Swipe match
         send_swipe(ws_normal_user, 2, True)

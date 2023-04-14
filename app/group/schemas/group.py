@@ -1,4 +1,4 @@
-from dataclasses import Field
+from pydantic import Field
 from typing import Any
 from pydantic import BaseModel, root_validator, validator
 from pydantic.utils import GetterDict
@@ -8,7 +8,7 @@ from core.fastapi.schemas.hashid import HashId
 
 
 class CreateGroupSchema(BaseModel):
-    name: str
+    name: str = Field(..., max_length=100)
     filename: str
 
 

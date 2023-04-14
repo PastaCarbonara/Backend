@@ -1,6 +1,7 @@
 from datetime import date
 from typing import Any, List
 from pydantic import BaseModel, validator
+from app.swipe_session.schemas.recipe import RecipeSchema
 from app.swipe_session.schemas.swipe import SwipeSchema
 
 from core.db.enums import SwipeSessionEnum, SwipeSessionActionEnum
@@ -29,6 +30,7 @@ class SwipeSessionSchema(BaseModel):
     user_id: HashId
     group_id: HashId
     swipes: List[SwipeSchema]
+    match: RecipeSchema = None
 
     class Config:
         orm_mode = True
