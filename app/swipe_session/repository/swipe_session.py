@@ -58,7 +58,7 @@ class SwipeSessionRepository(BaseRepo):
         )
         await session.execute(query)
 
-    async def get_match(self, session_id) -> int:
+    async def get_match(self, session_id: int, group_id: int = 1) -> int:
         # swipes_query = (
         #     select(Swipe).where(Swipe.swipe_session_id == session_id)
         # )
@@ -97,11 +97,20 @@ class SwipeSessionRepository(BaseRepo):
             .join(SwipeSession, Swipe.swipe_session_id == SwipeSession.id)
             .join(Group, Group.id == SwipeSession.group_id)
             .join(GroupMember, GroupMember.group_id == Group.id)
-            .where(and_(SwipeSession.id == 1,
-                        GroupMember.group_id == 1,
-                        Swipe.like == True))
+            .where(
+                and_(
+                    SwipeSession.id == session_id,
+                    GroupMember.group_id == group_id,
+                    Swipe.like == True,
+                )
+            )
             .group_by(Swipe.recipe_id)
-            .having(func.count(distinct(Swipe.user_id)) == select(func.count(distinct(GroupMember.user_id))).where(GroupMember.group_id == 2).scalar_subquery())
+            .having(
+                func.count(distinct(Swipe.user_id))
+                == select(func.count(distinct(GroupMember.user_id)))
+                .where(GroupMember.group_id == group_id)
+                .scalar_subquery()
+            )
         )
         result = await session.execute(query)
         return result.scalars().all()
