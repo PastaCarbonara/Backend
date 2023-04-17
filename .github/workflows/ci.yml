@@ -13,6 +13,14 @@ permissions:
   contents: read
 
 jobs:
+  show_environment:
+    name: "Show environment variables"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Show environmetn variables"
+        run: |
+          env
   build:
 
     runs-on: ubuntu-latest
