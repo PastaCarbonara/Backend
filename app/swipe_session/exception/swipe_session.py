@@ -11,7 +11,7 @@ class ConnectionCode:
 
 
 class SuccessfullConnection(ConnectionCode):
-    code = 200
+    code = 202
     message = "you have connected"
 
 
