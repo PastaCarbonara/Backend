@@ -3,6 +3,21 @@
 
 name: Python application
 
+env: 
+  DU: ${{ secrets.DU }}
+  DP: ${{secrets.DP}}
+  DB: ${{secrets.DB}}
+  H: ${{secrets.H}}
+  P: ${{secrets.P}}
+  JWT_SECRET_KEY: ${{secrets.JWT_SECRET_KEY}}
+  HASH_MIN_LEN: ${{secrets.HASH_MIN_LEN}}
+  HASH_SALT: ${{secrets.HASH_SALT}}
+  AZURE_BLOB_ACCOUNT_URL: ${{secrets.AZURE_BLOB_ACCOUNT_URL}}
+  IMAGE_CONTAINER_NAME: ${{secrets.IMAGE_CONTAINER_NAME}}
+  AZURE_BLOB_CONNECTION_STRING: ${{secrets.AZURE_BLOB_CONNECTION_STRING}}
+  AZURE_IMAGE_URL_BASE: ${{secrets.AZURE_IMAGE_URL_BASE}}
+  
+  
 on:
   push:
     branches: [ "alpha" ]
@@ -16,8 +31,7 @@ jobs:
   show_environment:
     name: "Show environment variables"
     runs-on: ubuntu-latest
-    env: 
-      DU: ${{ secrets.DU }}
+
 
     steps:
       - name: "Show environmetn variables"
