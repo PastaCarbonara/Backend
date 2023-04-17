@@ -23,6 +23,7 @@ jobs:
       - name: "Show environmetn variables"
         run: |
           env
+          echo "MY_VARIABLE DU: $DU"
   build:
 
     runs-on: ubuntu-latest
