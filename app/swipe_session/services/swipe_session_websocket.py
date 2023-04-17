@@ -11,6 +11,7 @@ from app.swipe_session.exception.swipe_session import (
     ActionNotFoundException,
     ActionNotImplementedException,
     AlreadySwipedException,
+    ClosingConnection,
     ConnectionCode,
     InactiveException,
     InvalidIdException,
@@ -55,16 +56,21 @@ class SwipeSessionConnectionManager:
         )
         await websocket.close(status.WS_1000_NORMAL_CLOSURE)
 
-    def disconnect(self, session_id: str, websocket: WebSocket) -> bool:
-        """Returns a bool wether or not there are still connections active"""
-
+    def disconnect(self, session_id: str, websocket: WebSocket):
         self.active_connections[session_id].remove(websocket)
 
-        if self.get_connection_count(session_id) == 0:
-            del self.active_connections[session_id]
-            return False
+    def disconnect_session(self, session_id, packet) -> None:
+        session = self.active_connections.get(session_id)
 
-        return True
+        if not session:  # Error Log this
+            print("Tried to disconnect for non existing session")
+            return
+
+        websocket: WebSocket
+        for websocket in session:
+            
+            self.personal_packet(websocket, packet)
+            websocket.close()
 
     async def personal_packet(self, websocket: WebSocket, packet: PacketSchema) -> None:
         await websocket.send_json(packet.dict())
@@ -100,6 +106,9 @@ class SwipeSessionConnectionManager:
 
 
 class SwipeSessionWebsocketService:
+    def __init__(self) -> None:
+        self.manager = SwipeSessionConnectionManager()
+
     async def handler(
         self, websocket: WebSocket, session_id: str, user_id: int
     ) -> None:
@@ -109,30 +118,30 @@ class SwipeSessionWebsocketService:
                 session_id, SwipeSessionService().get_swipe_session_by_id
             )
         except:
-            await manager.deny(websocket, InvalidIdException)
+            await self.manager.deny(websocket, InvalidIdException)
             return
-        
+
         if session.status != SwipeSessionEnum.IN_PROGRESS:
-            await manager.deny(websocket, InactiveException)
+            await self.manager.deny(websocket, InactiveException)
             return
 
         if session.group_id:
             if not await GroupService().is_member(session.group_id, user.id):
-                await manager.deny(websocket, InvalidIdException)
+                await self.manager.deny(websocket, InvalidIdException)
                 return
 
-        await manager.connect(websocket, session.id)
+        await self.manager.connect(websocket, session.id)
 
         if not user or not session:
             await self.handle_connection_code(websocket, InvalidIdException)
-            manager.disconnect(session.id, websocket)
+            self.manager.disconnect(session.id, websocket)
             return
 
         await self.handle_connection_code(websocket, SuccessfullConnection)
 
         try:
             while True:
-                # NOTE NOTE NOTE NOTE!!!! DO NOTTTTT 'RETURN' IF YOU WISH TO 'CONTINUE'
+                # NOTE! DO NOT 'RETURN' IF YOU WISH TO 'CONTINUE'
                 # Learned it the hard way, and took me a day.
 
                 data = await websocket.receive_text()
@@ -189,7 +198,9 @@ class SwipeSessionWebsocketService:
                     )
 
         except WebSocketDisconnect:
-            if manager.disconnect(session.id, websocket):
+            self.manager.disconnect(session.id, websocket)
+
+            if self.manager.get_connection_count(session.id) > 0:
                 await self.handle_session_message(
                     websocket, session.id, f"Client {user_id} left the session"
                 )
@@ -222,7 +233,7 @@ class SwipeSessionWebsocketService:
         await self.handle_global_packet(packet)
 
     async def handle_global_packet(self, packet: PacketSchema) -> None:
-        await manager.global_broadcast(packet)
+        await self.manager.global_broadcast(packet)
 
     async def handle_session_message(
         self, websocket: WebSocket, session_id: int, message: str
@@ -239,7 +250,7 @@ class SwipeSessionWebsocketService:
     async def handle_session_packet(
         self, session_id: int, packet: PacketSchema
     ) -> None:
-        await manager.session_broadcast(session_id, packet)
+        await self.manager.session_broadcast(session_id, packet)
 
     async def handle_connection_code(
         self, websocket, exception: CustomException | ConnectionCode
@@ -247,7 +258,7 @@ class SwipeSessionWebsocketService:
         payload = {"status_code": exception.code, "message": exception.message}
         packet = PacketSchema(action=ACTIONS.CONNECTION_CODE, payload=payload)
 
-        await manager.personal_packet(websocket, packet)
+        await self.manager.personal_packet(websocket, packet)
 
     async def handle_recipe_swipe(
         self,
@@ -300,6 +311,12 @@ class SwipeSessionWebsocketService:
                 websocket, session.id, user, SwipeSessionEnum.COMPLETED
             )
 
+            exception = ClosingConnection
+            payload = {"status_code": exception.code, "message": exception.message}
+            packet = PacketSchema(action=ACTIONS.CONNECTION_CODE, payload=payload)
+
+            self.manager.disconnect_session(session.id, packet)
+
     async def handle_session_match(
         self, websocket: WebSocket, session_id: int, recipe_id: int
     ) -> None:
@@ -314,6 +331,3 @@ class SwipeSessionWebsocketService:
         packet = PacketSchema(action=ACTIONS.RECIPE_MATCH, payload=payload)
 
         await self.handle_session_packet(session_id, packet)
-
-
-manager = SwipeSessionConnectionManager()

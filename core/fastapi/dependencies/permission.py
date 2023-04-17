@@ -25,6 +25,13 @@ def get_hashed_id_from_path(request):
     
     return decode_single(hashed_id)
 
+def get_group_id_from_path(request):
+    hashed_id = request.path_params.get("group_id")
+    if not hashed_id:
+        return None
+    
+    return decode_single(hashed_id)
+
 
 class BasePermission(ABC):
     exception = CustomException
@@ -94,7 +101,7 @@ class IsGroupMember(BasePermission):
         if not user_id:
             return False
 
-        group_id = get_hashed_id_from_path(request)
+        group_id = get_group_id_from_path(request)
         if not group_id:
             return False
         

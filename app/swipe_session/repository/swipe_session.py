@@ -58,40 +58,14 @@ class SwipeSessionRepository(BaseRepo):
         )
         await session.execute(query)
 
-    async def get_match(self, session_id: int, group_id: int = 1) -> int:
-        # swipes_query = (
-        #     select(Swipe).where(Swipe.swipe_session_id == session_id)
-        # )
-        # swipes = await session.execute(swipes_query)
-        # swipes = swipes.scalars().all()
-
-        # swipes_dict = {}
-        # for swipe in swipes:
-        #     if not swipe.like: continue
-        #     x = swipe.recipe_id
-
-        #     if not swipes_dict.get(x):
-        #         swipes_dict[x] = 1
-        #     else: swipes_dict[x] += 1
-
-        # swipe_session_query = (
-        #     select(SwipeSession.group_id).where(SwipeSession.id == session_id)
-        # )
-        # swipe_session = await session.execute(swipe_session_query)
-        # swipe_session = swipe_session.scalars().first()
-
-        # group_query = (
-        #     select(Group).where(Group.id == swipe_session)
-        #     .options(joinedload(Group.users))
-        # )
-        # group = await session.execute(group_query)
-        # group = group.scalars().first()
-
-        # user_count = len(group.users)
-        # for i in swipes_dict.keys():
-        #     if swipes_dict[i] == user_count:
-        #         return i
-        # return None
+    async def get_matches(self, session_id: int) -> int:
+        group_size = (
+            select(func.count(distinct(GroupMember.user_id)))
+            .where(GroupMember.group_id == Group.id)
+            .where(SwipeSession.id == session_id)
+            .select_from(join(GroupMember, Group).join(SwipeSession))
+            .scalar_subquery()
+        )
         query = (
             select(Swipe.recipe_id)
             .join(SwipeSession, Swipe.swipe_session_id == SwipeSession.id)
@@ -100,16 +74,12 @@ class SwipeSessionRepository(BaseRepo):
             .where(
                 and_(
                     SwipeSession.id == session_id,
-                    GroupMember.group_id == group_id,
                     Swipe.like == True,
                 )
             )
             .group_by(Swipe.recipe_id)
             .having(
-                func.count(distinct(Swipe.user_id))
-                == select(func.count(distinct(GroupMember.user_id)))
-                .where(GroupMember.group_id == group_id)
-                .scalar_subquery()
+                func.count(distinct(Swipe.user_id)) == group_size
             )
         )
         result = await session.execute(query)

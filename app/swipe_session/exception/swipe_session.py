@@ -15,6 +15,11 @@ class SuccessfullConnection(ConnectionCode):
     message = "you have connected"
 
 
+class ClosingConnection(ConnectionCode):
+    code = 200
+    message = "you have been forcefully disconnected"
+
+
 class InactiveException(CustomException):
     code = 400
     error_code = "WEBSOCKET__INACTIVE_SESSION"

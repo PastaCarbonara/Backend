@@ -6,6 +6,7 @@ from app.group.schemas.group import GroupSchema, CreateGroupSchema
 from app.group.services.group import GroupService
 
 from fastapi import APIRouter, Depends, Query, Request
+from app.recipe.schemas.recipe import GetFullRecipeResponseSchema
 from app.swipe_session.schemas.swipe_session import (
     CreateSwipeSessionSchema,
     SwipeSessionSchema,
@@ -14,7 +15,7 @@ from app.swipe_session.schemas.swipe_session import (
 from app.swipe_session.services.swipe_session import SwipeSessionService
 from core.exceptions import ExceptionResponseSchema, GroupNotFoundException
 from core.exceptions.group import GroupJoinConflictException
-from core.fastapi.dependencies.hashid import decode_path_id
+from core.fastapi.dependencies.hashid import decode_path_id, get_group_id, get_session_id
 from core.fastapi.dependencies.object_storage import get_object_storage
 from core.fastapi.dependencies.user import get_current_user
 from core.fastapi_versioning import version
@@ -91,7 +92,7 @@ async def join_group(request: Request, group_id: int = Depends(decode_path_id)):
 @group_v1_router.get(
     "/{hashed_id}/swipe_sessions",
     response_model=list[SwipeSessionSchema],
-    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsGroupAdmin]]))],
+    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsGroupMember]]))],
 )
 @version(1)
 async def get_swipe_sessions_by_group(group_id: int = Depends(decode_path_id)):
@@ -127,3 +128,13 @@ async def update_swipe_session(
 ):
     session_id = await SwipeSessionService().update_swipe_session(request, user, group_id)
     return await SwipeSessionService().get_swipe_session_by_id(session_id)
+
+
+@group_v1_router.get(
+    "/{group_id}/swipe_sessions/{session_id}/match",
+    response_model=GetFullRecipeResponseSchema,
+    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsGroupMember]]))]
+)
+@version(1)
+async def get_swipe_session_match(group_id: int = Depends(get_group_id), session_id: int = Depends(get_session_id)):
+    return await SwipeSessionService().get_matches(session_id)
