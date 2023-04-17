@@ -50,7 +50,7 @@ class TagService:
         return await self.tag_repository.get_tags()
 
     @Transactional()
-    async def create_tag(self, request: CreateTagSchema) -> int:
+    async def create_tag(self, request: CreateTagSchema) -> Tag:
         """
         Creates a new tag with the given data and returns the ID of the new tag.
 
@@ -62,7 +62,7 @@ class TagService:
         Returns
         -------
         id : int
-            The ID of the new tag.
+            The new tag.
 
         Raises
         ------
@@ -96,6 +96,31 @@ class TagService:
         """
 
         tag = await self.tag_repository.get_tag_by_id(tag_id)
+        if not tag:
+            raise TagNotFoundException()
+        return tag
+
+    async def get_tag_by_name(self, name: str) -> Tag:
+        """
+        Returns the tag with the given name.
+
+        Parameters
+        ----------
+        name : str
+            The name of the tag.
+
+        Returns
+        -------
+        tag : Tag
+            The tag with the given name.
+
+        Raises
+        ------
+        TagNotFoundException
+            If no tag with the given name exists.
+        """
+
+        tag = await self.tag_repository.get_tag_by_name(name)
         if not tag:
             raise TagNotFoundException()
         return tag

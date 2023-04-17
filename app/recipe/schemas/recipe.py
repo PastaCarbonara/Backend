@@ -56,7 +56,7 @@ class CreateRecipeTagSchema(BaseModel):
 
 class CreateRecipeIngredientSchema(BaseModel):
     name: str = Field(..., description="Ingredient name")
-    amount: str = Field(..., description="Ingredient quantity")
+    amount: float = Field(..., description="Ingredient quantity")
     unit: str = Field(..., description="Ingredient unit")
 
 
@@ -66,7 +66,7 @@ class CreateRecipeBaseRequestSchema(BaseModel):
     filename: str = Field(..., description="image")
     preparing_time: int = Field(..., description="Time in minutes")
 
-    tags: List[int] = Field(..., description="Tags of the recipe")
+    tags: List[str] = Field(..., description="Tags of the recipe")
     instructions: List[str] = Field(..., description="Instructions for the recipe")
     ingredients: List[CreateRecipeIngredientSchema] = Field(
         ..., description="Ingredients for the recipe"

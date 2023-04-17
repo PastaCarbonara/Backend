@@ -1,20 +1,4 @@
 """Endpoints for recipe.
-Paths:
-"" - GET - Get a list of all recipes.
-"" - POST - Create a recipe basic information(name, description, preparation time).
-"/{recipe_id}" - GET - Get a recipe by id.
-"/{recipe_id}" - PUT - Update primary information(name, description, preparation time) of the recipe.
-"/{recipe_id}" - DELETE - Delete a recipe.
-"/{recipe_id}/steps" - POST - Add/Update steps to a recipe.
-"/{recipe_id}/images" - POST - Add images to a recipe.
-"/{recipe_id}/images/{filename}" - DELETE - Remove an image from a recipe.
-"/{recipe_id}/ingredients" - POST - Add ingredients to a recipe.
-"/{recipe_id}/ingredients/{ingredient_id}" - DELETE - Remove an ingredient from a recipe.
-"/{recipe_id}/ingredients/{ingredient_id}" - PUT - Update an ingredient of a recipe.
-"/{recipe_id}/tags" - POST - Add tags to a recipe.
-"/{recipe_id}/tags/{tag_id}" - DELETE - Remove a tag from a recipe.
-"/{recipe_id}/tags/{tag_id}" - PUT - Update a tag of a recipe.
-"/{recipe_id}/judge" - POST - Like or dislike a recipe.
 """
 
 from typing import List
