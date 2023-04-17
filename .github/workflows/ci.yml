@@ -16,6 +16,8 @@ jobs:
   show_environment:
     name: "Show environment variables"
     runs-on: ubuntu-latest
+    env: 
+      DU: ${{ secrets.DU }}
 
     steps:
       - name: "Show environmetn variables"
