@@ -23,6 +23,7 @@ from app.image.exception.image import (
     AzureImageDeleteNotFoundException,
     ImageDependecyException,
 )
+from core.config import config
 
 ALLOWED_TYPES = ["image/jpeg", "image/png"]
 
@@ -67,6 +68,14 @@ class ImageService:
     def __init__(self, object_storage: ObjectStorageInterface):
         self.object_storage_interface = object_storage
         self.image_repository = ImageRepository()
+
+    async def get_image_by_name(self, filename) -> File:
+        image = await self.image_repository.get_image_by_name(filename)
+        
+        if not image:
+            raise FileNotFoundException
+        
+        return image
 
     async def get_images(self) -> List[File]:
         """
@@ -219,12 +228,12 @@ class ImageService:
         bool
             True if the image is too large, False otherwise.
         """
-        max_size = 5 * 1024 * 1024  # 5 MB
+
         real_file_size = 0
         with NamedTemporaryFile(delete=False) as temp:
             for chunk in file.file:
                 real_file_size += len(chunk)
-                if real_file_size > max_size:
+                if real_file_size > config.IMAGE_MAX_SIZE:
                     return True
                 temp.write(chunk)
         await file.seek(0)

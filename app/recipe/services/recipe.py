@@ -6,10 +6,7 @@ from app.ingredient.services.ingredient import IngredientService
 from app.ingredient.repository.ingredient import IngredientRepository
 from app.tag.services.tag import TagService
 from app.tag.repository.tag import TagRepository
-from app.recipe.schemas import (
-    CreatorCreateRecipeRequestSchema,
-    CreateRecipeIngredientSchema,
-)
+from app.recipe.schemas import CreateRecipeSchema, CreateRecipeIngredientSchema
 from app.ingredient.exception.ingredient import IngredientNotFoundException
 from app.image.repository.image import ImageRepository
 from app.image.exception.image import FileNotFoundException
@@ -86,7 +83,7 @@ class RecipeService:
         return "Ok"
 
     @Transactional()
-    async def create_recipe(self, recipe: CreatorCreateRecipeRequestSchema) -> int:
+    async def create_recipe(self, recipe: CreateRecipeSchema) -> int:
         """Create a recipe.
 
         Parameters
@@ -119,7 +116,7 @@ class RecipeService:
         return recipe.id
 
     async def create_recipe_object(
-        self, recipe: CreatorCreateRecipeRequestSchema
+        self, recipe: CreateRecipeSchema, user_id: int
     ) -> Recipe:
         """Create a recipe object.
 
@@ -139,7 +136,7 @@ class RecipeService:
             description=recipe.description,
             preparing_time=recipe.preparing_time,
             instructions=recipe.instructions,
-            creator_id=recipe.creator_id,
+            creator_id=user_id,
         )
 
     async def set_ingredients_of_recipe(
@@ -198,9 +195,7 @@ class RecipeService:
         recipe.tags = recipe_tags
 
     @Transactional()
-    async def update_recipe(
-        self, recipe_id, recipe_data: CreatorCreateRecipeRequestSchema
-    ) -> int:
+    async def update_recipe(self, recipe_id, recipe_data: CreateRecipeSchema) -> int:
         """Update a recipe.
 
         Parameters
@@ -254,7 +249,7 @@ class RecipeService:
         return recipe.id
 
     async def update_recipe_instance(
-        recipe: Recipe, recipe_data: CreatorCreateRecipeRequestSchema
+        recipe: Recipe, recipe_data: CreateRecipeSchema
     ) -> None:
         """Update a recipe instance.
 

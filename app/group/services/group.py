@@ -1,7 +1,10 @@
 from typing import List
 from sqlalchemy import or_, select, and_
 from sqlalchemy.orm import joinedload
-from app.group.schemas.group import CreateGroupSchema, UserCreateGroupSchema
+from app.group.schemas.group import CreateGroupSchema
+from app.image.exception.image import FileNotFoundException
+from app.image.interface.image import ObjectStorageInterface
+from app.image.services.image import ImageService
 from app.user.services.user import UserService
 from core.db.models import Group, GroupMember, User
 from core.db import Transactional, session
@@ -14,22 +17,26 @@ class GroupService:
 
     async def is_member(self, group_id: int, user_id: int) -> bool:
         result = await session.execute(
-            select(GroupMember).where(and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id))
+            select(GroupMember).where(
+                and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id)
+            )
         )
         user = result.scalars().first()
         if not user:
             return False
-        
+
         return True
 
     async def is_admin(self, group_id: int, user_id: int) -> bool:
         result = await session.execute(
-            select(GroupMember).where(and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id))
+            select(GroupMember).where(
+                and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id)
+            )
         )
         user = result.scalars().first()
         if not user:
             return False
-        
+
         return user.is_admin
 
     async def get_group_list(self) -> List[Group]:
@@ -41,16 +48,36 @@ class GroupService:
         result = await session.execute(query)
         return result.unique().scalars().all()
 
-    @Transactional()
-    async def create_group(self, request: UserCreateGroupSchema) -> int:
-        group_schema = CreateGroupSchema(**request.dict())
+    async def get_groups_by_user(self, user_id) -> list[Group]:
+        query = (
+            select(Group)
+            .join(Group.users)
+            .where(GroupMember.user_id == user_id)
+            .options(
+                joinedload(Group.users)
+                .joinedload(GroupMember.user)
+                .joinedload(User.profile)
+            )
+        )
+        result = await session.execute(query)
+        return result.unique().scalars().all()
 
-        db_group = Group(**group_schema.dict())
+    @Transactional()
+    async def create_group(
+        self,
+        request: CreateGroupSchema,
+        user_id: int,
+        object_storage: ObjectStorageInterface,
+    ) -> int:
+        # Check if file exists
+        await ImageService(object_storage).get_image_by_name(request.filename)
+
+        db_group = Group(**request.dict())
 
         db_group.users.append(
             GroupMember(
                 is_admin=True,
-                user_id=request.user_id,
+                user_id=user_id,
             )
         )
 
@@ -71,14 +98,14 @@ class GroupService:
         )
         result = await session.execute(query)
         return result.unique().scalars().first()
-    
+
     @Transactional()
     async def join_group(self, group_id, user_id) -> None:
         group = await self.get_group_by_id(group_id)
 
         if not group:
             raise GroupNotFoundException
-        
+
         group.users.append(
             GroupMember(
                 is_admin=False,

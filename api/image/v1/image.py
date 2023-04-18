@@ -1,26 +1,15 @@
 from typing import List
-
-from fastapi import APIRouter, Depends, Query, Request, UploadFile
+from fastapi import APIRouter, Depends, UploadFile
 from core.exceptions import ExceptionResponseSchema
 from core.fastapi_versioning import version
-
-from app.ingredient.schemas import (
-    CreateIngredientSchema,
-    IngredientSchema,
-)
-from api.image.dependency import get_object_storage
-from app.tag.schema import TagSchema, CreateTagSchema
-from app.image.schemas import ImageSchema
-from app.ingredient.services import IngredientService
-from app.image.services import ImageService
-from core.fastapi.dependencies.permission import (
+from core.fastapi.dependencies.object_storage import get_object_storage
+from core.fastapi.dependencies import (
     AllowAll,
     PermissionDependency,
-    ProvidesUserID,
     IsAdmin,
 )
-from app.image.interface import AzureBlobInterface
-from app.image.repository import ImageRepository
+from app.image.schemas import ImageSchema
+from app.image.services import ImageService
 
 
 image_v1_router = APIRouter()
@@ -33,8 +22,19 @@ image_v1_router = APIRouter()
     dependencies=[Depends(PermissionDependency([[AllowAll]]))],
 )
 @version(1)
-async def get_images(object_storage=Depends(get_object_storage)):
+async def get_images(object_storage = Depends(get_object_storage)):
     return await ImageService(object_storage).get_images()
+
+
+@image_v1_router.get(
+    "/{filename}",
+    response_model=ImageSchema,
+    responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(PermissionDependency([[AllowAll]]))],
+)
+@version(1)
+async def get_images(filename: str, object_storage = Depends(get_object_storage)):
+    return await ImageService(object_storage).get_image_by_name(filename)
 
 
 @image_v1_router.post(
@@ -45,7 +45,7 @@ async def get_images(object_storage=Depends(get_object_storage)):
 )
 @version(1)
 async def create_image(
-    images: list[UploadFile], object_storage=Depends(get_object_storage)
+    images: list[UploadFile], object_storage = Depends(get_object_storage)
 ):
     return await ImageService(object_storage).upload_images(images)
 
@@ -56,5 +56,5 @@ async def create_image(
     dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
 @version(1)
-async def delete_image(filename: str, object_storage=Depends(get_object_storage)):
+async def delete_image(filename: str, object_storage = Depends(get_object_storage)):
     return await ImageService(object_storage).delete_image(filename)

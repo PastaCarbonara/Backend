@@ -1,22 +1,19 @@
-from dataclasses import Field
+from pydantic import Field
 from typing import Any
 from pydantic import BaseModel, root_validator, validator
 from pydantic.utils import GetterDict
 
 
-from app.user.schemas.user import GetUserListResponseSchema
-from core.helpers.hashids import encode
+from core.fastapi.schemas.hashid import HashId
 
 
 class CreateGroupSchema(BaseModel):
-    name: str
-
-class UserCreateGroupSchema(CreateGroupSchema):
-    user_id: int = None
+    name: str = Field(..., max_length=100)
+    filename: str
 
 
 class FlattenedGroupMemberSchema(BaseModel):
-    id: str
+    id: HashId
     username: str
     is_admin: bool
 
@@ -27,13 +24,15 @@ class FlattenedGroupMemberSchema(BaseModel):
         if user is None:
             return values
         
-        # NOTE: Currently 'Unknown' is used as default fallback when the user is not logged in.
-        username = "Unknown" if user.profile is None else user.profile.username
+        # NOTE: Currently 'Unknown' is used as default fallback when the user is not registered.. if that is possible.
+        if not user.profile:
+            user.profile.username = "Unknown"
 
         return {
-            "id": encode(values["user_id"]),
-            "username": username,
-            "is_admin": values["is_admin"]
+            "id": user.id,
+            "username": user.profile.username,
+            "is_admin": values["is_admin"],
+            "user": None,
         } | dict(values)
     
     class Config:
@@ -41,13 +40,10 @@ class FlattenedGroupMemberSchema(BaseModel):
 
 
 class GroupSchema(BaseModel):
-    id: str
+    id: HashId
     name: str
+    filename: str
     users: list[FlattenedGroupMemberSchema]
-
-    @validator('id')
-    def hash_id(cls, v):
-        return encode(int(v))
 
     class Config:
         orm_mode = True

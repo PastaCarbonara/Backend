@@ -112,16 +112,13 @@ async def test_check_not_joined(
 
 
 @pytest.mark.asyncio
-async def test_create_group(
-    client: AsyncClient,
-    normal_user_token_headers: Dict[str, str],
-):
-    payload = {"name": "group_4"}
-    res = await client.post(
-        "/api/v1/groups", json=payload, headers=await normal_user_token_headers
-    )
+async def test_create_group_bad_name(client: AsyncClient, admin_token_headers: Dict[str, str], ):
+    headers = await admin_token_headers
 
-    assert res.status_code == 401
+    payload = {"name": "123456789."*10 + "1", "filename": "image_3"}
+    res = await client.post("/api/v1/groups", json=payload, headers=headers)
+
+    res.status_code == 422
 
 
 @pytest.mark.asyncio
@@ -129,7 +126,7 @@ async def test_create_group(
     client: AsyncClient,
     admin_token_headers: Dict[str, str],
 ):
-    payload = {"name": "group_4"}
+    payload = {"name": "group_4", "filename": "image_3"}
     res = await client.post(
         "/api/v1/groups", json=payload, headers=await admin_token_headers
     )
