@@ -16,17 +16,26 @@ from core.exceptions import (
     MissingGroupIDException,
 )
 from core.helpers.hashid import decode_single
+    
 
-
-def get_hashed_id_from_path(request):
-    hashed_id = request.path_params.get("hashed_id")
+def get_group_id_from_path(request):
+    hashed_id = request.path_params.get("group_id")
     if not hashed_id:
         return None
     
     return decode_single(hashed_id)
+    
 
-def get_group_id_from_path(request):
-    hashed_id = request.path_params.get("group_id")
+def get_user_id_from_path(request):
+    hashed_id = request.path_params.get("user_id")
+    if not hashed_id:
+        return None
+    
+    return decode_single(hashed_id)
+    
+
+def get_session_id_from_path(request):
+    hashed_id = request.path_params.get("session_id")
     if not hashed_id:
         return None
     
@@ -50,7 +59,7 @@ class IsAuthenticated(BasePermission):
 
 class IsUserOwner(BasePermission):
     async def has_permission(self, request: Request) -> bool:
-        user_id = get_hashed_id_from_path(request)
+        user_id = get_user_id_from_path(request)
 
         if not user_id:
             return False
@@ -63,7 +72,7 @@ class IsUserOwner(BasePermission):
 
 class IsSessionOwner(BasePermission):
     async def has_permission(self, request: Request) -> bool:
-        session_id = get_hashed_id_from_path(request)
+        session_id = get_session_id_from_path(request)
 
         if not session_id:
             return False
@@ -121,7 +130,7 @@ class IsGroupAdmin(BasePermission):
         if not user_id:
             return False
 
-        group_id = get_hashed_id_from_path(request)
+        group_id = get_group_id_from_path(request)
         if not group_id:
             return False
 
