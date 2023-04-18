@@ -60,7 +60,6 @@ async def get_swipe_sessions():
 )
 @version(1)
 async def create_swipe_session(request: CreateSwipeSessionSchema, user = Depends(get_current_user)):
-    print(request)
     session_id = await SwipeSessionService().create_swipe_session(request, user)
     return await SwipeSessionService().get_swipe_session_by_id(session_id)
 

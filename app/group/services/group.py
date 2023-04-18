@@ -79,13 +79,6 @@ class GroupService:
             for swipe_session in group.swipe_sessions:
                 swipe_session.matches = await self.swipe_session_serv.get_matches(swipe_session.id)
 
-        print(groups)
-        print()
-        for i in groups:
-            print(i.__dict__)
-            print()
-            for x in i.swipe_sessions:
-                print("\t", x.__dict__)
         return groups
 
     @Transactional()
