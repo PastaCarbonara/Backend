@@ -3,7 +3,6 @@ from typing import Any, List
 from pydantic import BaseModel, validator
 from app.swipe_session.schemas.recipe import RecipeSchema
 from app.swipe_session.schemas.swipe import SwipeSchema
-from app.swipe_session.services import swipe_session
 
 from core.db.enums import SwipeSessionEnum, SwipeSessionActionEnum
 from core.fastapi.schemas.hashid import DehashId, HashId

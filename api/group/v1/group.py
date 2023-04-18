@@ -131,7 +131,7 @@ async def update_swipe_session(
 
 
 @group_v1_router.get(
-    "/{group_id}/swipe_sessions/{session_id}/match",
+    "/{group_id}/swipe_sessions/{session_id}/matches",
     response_model=GetFullRecipeResponseSchema,
     dependencies=[Depends(PermissionDependency([[IsAdmin], [IsGroupMember]]))]
 )

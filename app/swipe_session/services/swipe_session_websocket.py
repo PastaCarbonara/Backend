@@ -217,6 +217,8 @@ class SwipeSessionWebsocketService:
         if not status in [e.value for e in SwipeSessionEnum]:
             await self.handle_connection_code(websocket, StatusNotFoundException)
             return
+        
+        # check is admin
 
         await SwipeSessionService().update_swipe_session(
             UpdateSwipeSessionSchema(id=session_id, status=SwipeSessionEnum.COMPLETED),

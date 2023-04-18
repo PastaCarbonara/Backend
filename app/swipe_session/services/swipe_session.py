@@ -1,10 +1,6 @@
 from datetime import date, datetime
-import json
 from typing import List
-from fastapi import WebSocket
-from sqlalchemy import select, update
-from sqlalchemy.orm import joinedload
-from app.group.services.group import GroupService
+from sqlalchemy import update
 from app.recipe.services.recipe import RecipeService
 from app.swipe_session.repository.swipe_session import SwipeSessionRepository
 from core.db import Transactional, session
@@ -22,7 +18,6 @@ from core.exceptions.swipe_session import SwipeSessionNotFoundException
 class SwipeSessionService:
     def __init__(self) -> None:
         self.repo = SwipeSessionRepository()
-        self.group_serv = GroupService()
         self.recipe_serv = RecipeService()
 
     async def get_swipe_session_list(self) -> List[SwipeSession]:
@@ -95,9 +90,6 @@ class SwipeSessionService:
         else:
             if request.status == SwipeSessionEnum.IN_PROGRESS and group_id:
                 await self.update_all_in_group_to_paused(group_id)
-
-        if not await self.group_serv.is_admin(swipe_session.group_id, user.id):
-            raise UnauthorizedException
 
         query = (
             update(SwipeSession)

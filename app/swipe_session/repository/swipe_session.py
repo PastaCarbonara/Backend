@@ -1,11 +1,9 @@
-from sqlalchemy import and_, case, desc, distinct, func, join, literal, select, update
+from sqlalchemy import and_, distinct, func, join, select, update
 from sqlalchemy.orm import joinedload, aliased
 from core.db import session
 from core.db.enums import SwipeSessionEnum
 from core.db.models import (
     GroupMember,
-    Recipe,
-    RecipeIngredient,
     Swipe,
     SwipeSession,
     Group,

@@ -2,6 +2,7 @@ from pydantic import Field
 from typing import Any
 from pydantic import BaseModel, root_validator, validator
 from pydantic.utils import GetterDict
+from app.swipe_session.schemas.swipe_session import SwipeSessionSchema
 
 
 from core.fastapi.schemas.hashid import HashId
@@ -44,6 +45,7 @@ class GroupSchema(BaseModel):
     name: str
     filename: str
     users: list[FlattenedGroupMemberSchema]
+    swipe_sessions: list[SwipeSessionSchema]
 
     class Config:
         orm_mode = True
