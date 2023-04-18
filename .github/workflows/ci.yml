@@ -29,6 +29,7 @@ permissions:
 
 jobs:
   build:
+    name: quality code test
 
     runs-on: ubuntu-20.04
 
