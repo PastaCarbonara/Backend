@@ -53,3 +53,13 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Cover 
+        uses: orgoro/coverage@v3
+        with:
+            coverageFile: path/to/coverage.xml
+            token: ${{ secrets.GITHUB_TOKEN }}
+            thresholdNew: 0.85
+            tresholdModified: 0.85
