@@ -86,6 +86,32 @@ class IngredientService:
             raise IngredientNotFoundException
         return await self.ingredient_repository.get_ingredient_by_id(ingredient_id)
 
+    async def get_ingredient_by_name(self, ingredient_name: str) -> Ingredient:
+        """
+        Returns an ingredient with a given name.
+
+        Parameters
+        ----------
+        ingredient_name : str
+            The name of the ingredient to retrieve.
+
+        Returns
+        -------
+        Ingredient
+            An instance of the `Ingredient` model class with the given name.
+
+        Raises
+        ------
+        IngredientNotFoundException
+            If no ingredient with the given name exists.
+        """
+        ingredient = await self.ingredient_repository.get_ingredient_by_name(
+            ingredient_name
+        )
+        if not ingredient:
+            raise IngredientNotFoundException
+        return ingredient
+
     @Transactional()
     async def create_ingredient(self, request: CreateIngredientSchema) -> Ingredient:
         """
