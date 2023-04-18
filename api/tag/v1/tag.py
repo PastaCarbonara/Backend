@@ -51,8 +51,7 @@ async def create_tag(request: CreateTagSchema):
         TagSchema: The newly created tag.
     """
 
-    tag_id = await TagService().create_tag(request)
-    return await TagService().get_tag_by_id(tag_id)
+    return await TagService().create_tag(request)
 
 
 @tag_v1_router.put(
@@ -74,8 +73,7 @@ async def update_tag(tag_id: int, request: CreateTagSchema):
         TagSchema: The updated tag.
     """
 
-    await TagService().update_tag(tag_id, request)
-    return await TagService().get_tag_by_id(tag_id)
+    return await TagService().update_tag(tag_id, request)
 
 
 @tag_v1_router.delete(

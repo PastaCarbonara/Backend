@@ -46,7 +46,7 @@ class CreateRecipeSchema(BaseModel):
     filename: str = Field(..., description="image")
     preparing_time: int = Field(..., description="Time in minutes")
 
-    tags: List[int] = Field(..., description="Tags of the recipe")
+    tags: List[str] = Field(..., description="Tags of the recipe")
     instructions: List[str] = Field(..., description="Instructions for the recipe")
     ingredients: List[CreateRecipeIngredientSchema] = Field(
         ..., description="Ingredients for the recipe"
@@ -54,5 +54,4 @@ class CreateRecipeSchema(BaseModel):
 
 
 class JudgeRecipeSchema(BaseModel):
-    user_id: int | None = Field(None, description="UserID, optional")
     like: bool = Field(..., description="Like / Dislike")

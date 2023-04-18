@@ -7,7 +7,7 @@ from core.db.models import Tag
 class TagRepository:
     """Repository for tag related database operations"""
 
-    async def create_tag(self, name: str) -> int:
+    async def create_tag(self, name: str) -> Tag:
         """
         Creates a new tag with the given data and returns the ID of the new tag.
 
@@ -19,13 +19,13 @@ class TagRepository:
         Returns
         -------
         id : int
-            The ID of the new tag.
+            The new tag.
         """
 
         db_tag = Tag(name=name)
         session.add(db_tag)
         await session.flush()
-        return db_tag.id
+        return db_tag
 
     async def get_tags(self) -> List[Tag]:
         """
@@ -94,6 +94,7 @@ class TagRepository:
         """
         tag.name = name
         await session.flush()
+        return tag
 
     async def delete_tag(self, tag: Tag):
         """

@@ -30,12 +30,10 @@ class SwipeSessionService:
 
     async def get_swipe_session_by_id(self, session_id: int) -> SwipeSession:
         return await self.repo.get_by_id(session_id)
-    
+
     def convert_date(self, session_date) -> datetime:
         if type(session_date) == date:
-            session_date = datetime.combine(
-                session_date, datetime.min.time()
-            )
+            session_date = datetime.combine(session_date, datetime.min.time())
         else:
             if not session_date:
                 session_date = datetime.now()
@@ -44,15 +42,14 @@ class SwipeSessionService:
                 hour=0, minute=0, second=0, microsecond=0
             )
         return session_date
-    
+
     async def update_all_in_group_to_paused(self, group_id) -> None:
         await self.repo.update_by_group_to_paused(group_id)
 
     @Transactional()
     async def update_swipe_session(
-        self, request: UpdateSwipeSessionSchema, user: User, group_id = None
+        self, request: UpdateSwipeSessionSchema, user: User, group_id=None
     ) -> int:
-
         swipe_session = await SwipeSessionService().get_swipe_session_by_id(request.id)
 
         if not request.session_date:
