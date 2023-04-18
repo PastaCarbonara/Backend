@@ -66,7 +66,7 @@ async def judge_recipe(
     dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
 @version(1)
-async def create_recipe(request: CreateRecipeSchema, user=Depends(get_current_user)):
+async def create_recipe(request: CreateRecipeSchema, user = Depends(get_current_user)):
     recipe_id = await RecipeService().create_recipe(request, user.id)
     return await RecipeService().get_recipe_by_id(recipe_id)
 

@@ -11,8 +11,13 @@ class ConnectionCode:
 
 
 class SuccessfullConnection(ConnectionCode):
-    code = 200
+    code = 202
     message = "you have connected"
+
+
+class ClosingConnection(ConnectionCode):
+    code = 200
+    message = "you have been forcefully disconnected"
 
 
 class InactiveException(CustomException):

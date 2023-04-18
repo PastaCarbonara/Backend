@@ -5,15 +5,16 @@ from app.group.schemas.group import CreateGroupSchema
 from app.image.exception.image import FileNotFoundException
 from app.image.interface.image import ObjectStorageInterface
 from app.image.services.image import ImageService
+from app.swipe_session.services.swipe_session import SwipeSessionService
 from app.user.services.user import UserService
-from core.db.models import Group, GroupMember, User
+from core.db.models import Group, GroupMember, SwipeSession, User
 from core.db import Transactional, session
 from core.exceptions.group import GroupNotFoundException
 
 
 class GroupService:
     def __init__(self):
-        ...
+        self.swipe_session_serv = SwipeSessionService()
 
     async def is_member(self, group_id: int, user_id: int) -> bool:
         result = await session.execute(
@@ -44,9 +45,18 @@ class GroupService:
             joinedload(Group.users)
             .joinedload(GroupMember.user)
             .joinedload(User.profile)
+        ).options(
+            joinedload(Group.swipe_sessions)
+            .joinedload(SwipeSession.swipes)
         )
         result = await session.execute(query)
-        return result.unique().scalars().all()
+        groups: list[Group] = result.unique().scalars().all()
+        
+        for group in groups:
+            for swipe_session in group.swipe_sessions:
+                swipe_session.matches = await self.swipe_session_serv.get_matches(swipe_session.id)
+
+        return groups
 
     async def get_groups_by_user(self, user_id) -> list[Group]:
         query = (
@@ -57,10 +67,26 @@ class GroupService:
                 joinedload(Group.users)
                 .joinedload(GroupMember.user)
                 .joinedload(User.profile)
+            ).options(
+                joinedload(Group.swipe_sessions)
+                .joinedload(SwipeSession.swipes)
             )
         )
         result = await session.execute(query)
-        return result.unique().scalars().all()
+        groups: list[Group] = result.unique().scalars().all()
+        
+        for group in groups:
+            for swipe_session in group.swipe_sessions:
+                swipe_session.matches = await self.swipe_session_serv.get_matches(swipe_session.id)
+
+        print(groups)
+        print()
+        for i in groups:
+            print(i.__dict__)
+            print()
+            for x in i.swipe_sessions:
+                print("\t", x.__dict__)
+        return groups
 
     @Transactional()
     async def create_group(
@@ -94,10 +120,18 @@ class GroupService:
                 joinedload(Group.users)
                 .joinedload(GroupMember.user)
                 .joinedload(User.profile)
+            ).options(
+                joinedload(Group.swipe_sessions)
+                .joinedload(SwipeSession.swipes)
             )
         )
         result = await session.execute(query)
-        return result.unique().scalars().first()
+        group: Group = result.unique().scalars().first()
+
+        for swipe_session in group.swipe_sessions:
+            swipe_session.matches = await self.swipe_session_serv.get_matches(swipe_session.id)
+
+        return group
 
     @Transactional()
     async def join_group(self, group_id, user_id) -> None:

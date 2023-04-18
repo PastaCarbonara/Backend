@@ -1,6 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Query, Request, WebSocket
+from app.swipe_session.repository.swipe_session import SwipeSessionRepository
 from app.swipe_session.schemas.swipe_session import (
     ActionDocsSchema,
     CreateSwipeSessionSchema,

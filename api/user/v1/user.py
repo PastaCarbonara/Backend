@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from app.group.schemas.group import GroupSchema
 from app.group.services.group import GroupService
 from core.exceptions import ExceptionResponseSchema
-from core.fastapi.dependencies.hashid import decode_path_id
+from core.fastapi.dependencies.hashid import get_path_user_id
 from core.fastapi.dependencies.permission import IsAuthenticated, IsUserOwner
 from core.fastapi.dependencies.user import get_current_user
 from core.fastapi_versioning.versioning import version
@@ -59,10 +59,10 @@ async def login(request: LoginRequest):
 
 
 @user_v1_router.get(
-    "/{hashed_id}/groups",
+    "/{user_id}/groups",
     response_model=list[GroupSchema],
     dependencies=[Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsUserOwner]]))]
 )
 @version(1)
-async def get_user_groups(user_id: int = Depends(decode_path_id)):
+async def get_user_groups(user_id: int = Depends(get_path_user_id)):
     return await GroupService().get_groups_by_user(user_id)
