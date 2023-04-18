@@ -53,7 +53,7 @@ async def test_create_recipe(client: AsyncClient, admin_token_headers: Dict[str,
         },
         headers=await admin_token_headers,
     )
-    assert response.status_code == 998
+    assert response.status_code == 200
 
 
 # @pytest.mark.asyncio
