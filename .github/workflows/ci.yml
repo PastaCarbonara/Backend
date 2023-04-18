@@ -52,12 +52,13 @@ jobs:
      #   flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pytest --cov-report xml:tests/coverage.xml
+        coverage run -m pytest 
+        coverage xml
 
     - name: Get Cover 
       uses: orgoro/coverage@v3
       with:
-          coverageFile: tests/coverage.xml
+          coverageFile: coverage.xml
           token: ${{ secrets.GITHUB_TOKEN }}
           thresholdNew: 0.85
           thresholdModified: 0.85
