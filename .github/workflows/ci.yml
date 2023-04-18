@@ -28,16 +28,6 @@ permissions:
   contents: read
 
 jobs:
-  show_environment:
-    name: "Show environment variables"
-    runs-on: ubuntu-latest
-
-
-    steps:
-      - name: "Show environmetn variables"
-        run: |
-          env
-          echo "MY_VARIABLE DU: $DU"
   build:
 
     runs-on: ubuntu-20.04
