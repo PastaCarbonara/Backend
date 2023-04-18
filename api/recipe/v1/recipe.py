@@ -53,7 +53,6 @@ async def get_recipe_by_id(recipe_id: int):
 )
 @version(1)
 async def judge_recipe(recipe_id: int, request: JudgeRecipeRequestSchema):
-    print(request.user_id)
     return await RecipeService().judge_recipe(recipe_id, request.user_id, request.like)
 
 
@@ -71,25 +70,25 @@ async def create_recipe(request: UserCreateRecipeRequestSchema):
     return await RecipeService().get_recipe_by_id(recipe_id)
 
 
-@recipe_v1_router.put(
-    "/{recipe_id}",
-    response_model=GetFullRecipeResponseSchema,
-    responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAdmin, ProvidesUserID]]))],
-)
-@version(1)
-async def update_recipe(recipe_id: int, request: UserCreateRecipeRequestSchema):
-    await RecipeService().update_recipe(recipe_id, request)
-    return await RecipeService().get_recipe_by_id(recipe_id)
+# @recipe_v1_router.put(
+#     "/{recipe_id}",
+#     response_model=GetFullRecipeResponseSchema,
+#     responses={"400": {"model": ExceptionResponseSchema}},
+#     dependencies=[Depends(PermissionDependency([[IsAdmin, ProvidesUserID]]))],
+# )
+# @version(1)
+# async def update_recipe(recipe_id: int, request: UserCreateRecipeRequestSchema):
+#     await RecipeService().update_recipe(recipe_id, request)
+#     return await RecipeService().get_recipe_by_id(recipe_id)
 
 
-@recipe_v1_router.delete(
-    "/{recipe_id}",
-    responses={"400": {"model": ExceptionResponseSchema}},
-    status_code=204,
-    dependencies=[Depends(PermissionDependency([[IsAdmin, ProvidesUserID]]))],
-)
-@version(1)
-async def delete_recipe(recipe_id: int):
-    await RecipeService().delete_recipe(recipe_id)
-    return {"message": "Recipe deleted successfully."}
+# @recipe_v1_router.delete(
+#     "/{recipe_id}",
+#     responses={"400": {"model": ExceptionResponseSchema}},
+#     status_code=204,
+#     dependencies=[Depends(PermissionDependency([[IsAdmin, ProvidesUserID]]))],
+# )
+# @version(1)
+# async def delete_recipe(recipe_id: int):
+#     await RecipeService().delete_recipe(recipe_id)
+#     return {"message": "Recipe deleted successfully."}
