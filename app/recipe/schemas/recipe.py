@@ -54,5 +54,4 @@ class CreateRecipeSchema(BaseModel):
 
 
 class JudgeRecipeSchema(BaseModel):
-    user_id: int | None = Field(None, description="UserID, optional")
     like: bool = Field(..., description="Like / Dislike")

@@ -83,7 +83,7 @@ class RecipeService:
         return "Ok"
 
     @Transactional()
-    async def create_recipe(self, recipe: CreateRecipeSchema) -> int:
+    async def create_recipe(self, recipe: CreateRecipeSchema, user_id: int) -> int:
         """Create a recipe.
 
         Parameters
@@ -106,8 +106,8 @@ class RecipeService:
         image = await self.image_repository.get_image_by_name(recipe.filename)
         if not image:
             raise FileNotFoundException()
-        await self.user_service.get_user_by_id(recipe.creator_id)
-        db_recipe = await self.create_recipe_object(recipe)
+        await self.user_service.get_user_by_id(user_id)
+        db_recipe = await self.create_recipe_object(recipe, user_id)
         await self.set_ingredients_of_recipe(db_recipe, recipe.ingredients)
         await self.set_tags_of_recipe(db_recipe, recipe.tags)
 
