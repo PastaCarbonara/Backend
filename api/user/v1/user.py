@@ -1,13 +1,18 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Query
+from app.group.schemas.group import GroupSchema
+from app.group.services.group import GroupService
 from core.exceptions import ExceptionResponseSchema
+from core.fastapi.dependencies.hashid import get_path_user_id
+from core.fastapi.dependencies.permission import IsAuthenticated, IsUserOwner
+from core.fastapi.dependencies.user import get_current_user
 from core.fastapi_versioning.versioning import version
 
 from api.user.v1.request.user import LoginRequest
 from api.user.v1.response.user import LoginResponse
 from app.user.schemas import (
-    GetUserListResponseSchema,
+    UserSchema,
     CreateUserRequestSchema,
     CreateUserResponseSchema,
 )
@@ -22,8 +27,7 @@ user_v1_router = APIRouter()
 
 @user_v1_router.get(
     "",
-    response_model=List[GetUserListResponseSchema],
-    response_model_exclude={"id"},
+    response_model=List[UserSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
@@ -52,3 +56,13 @@ async def create_user(request: CreateUserRequestSchema):
 async def login(request: LoginRequest):
     token = await UserService().login(username=request.username, password=request.password)
     return {"access_token": token.access_token, "refresh_token": token.refresh_token}
+
+
+@user_v1_router.get(
+    "/{user_id}/groups",
+    response_model=list[GroupSchema],
+    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsUserOwner]]))]
+)
+@version(1)
+async def get_user_groups(user_id: int = Depends(get_path_user_id)):
+    return await GroupService().get_groups_by_user(user_id)

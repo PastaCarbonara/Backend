@@ -159,6 +159,7 @@ class SwipeSession(Base, TimestampMixin):
     swipes: Mapped[List["Swipe"]] = relationship(
         back_populates="swipe_session", uselist=True
     )
+    group: Mapped["Group"] = relationship(back_populates="swipe_sessions")
 
 
 class Swipe(Base):
@@ -178,8 +179,12 @@ class Group(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String())
+    filename: Mapped[str] = mapped_column(
+        ForeignKey("file.filename", ondelete="CASCADE")
+    )
 
     users: Mapped[List["GroupMember"]] = relationship(back_populates="group")
+    swipe_sessions: Mapped[List[SwipeSession]] = relationship(back_populates="group")
 
 
 class GroupMember(Base):

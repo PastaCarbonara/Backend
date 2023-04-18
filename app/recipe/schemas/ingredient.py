@@ -5,7 +5,7 @@ from app.ingredient.schemas.ingredient import IngredientSchema
 
 
 class CreateRecipeIngredientSchema(BaseModel):
-    id: int
+    name: str
     amount: float
     unit: str
 
@@ -19,10 +19,10 @@ class FlattenedRecipeIngredientSchema(BaseModel):
     @root_validator(pre=True)
     def flatten_recipe_tag(cls, values: GetterDict) -> GetterDict | dict[str, object]:
         ingredient = values.get("ingredient")
-        
+
         if ingredient is None:
             return values
-        
+
         ingredient = IngredientSchema.validate(ingredient)
         return {
             "id": ingredient.id,
@@ -33,7 +33,6 @@ class FlattenedRecipeIngredientSchema(BaseModel):
 
     class Config:
         orm_mode = True
-
 
 
 class GetIngredientSchema(BaseModel):

@@ -40,27 +40,18 @@ class GetFullRecipeResponseSchema(BaseModel):
         orm_mode = True
 
 
-class CreateRecipeBaseRequestSchema(BaseModel):
+class CreateRecipeSchema(BaseModel):
     name: str = Field(..., description="Recipe name")
     description: str | None = Field(None, description="Recipe description")
     filename: str = Field(..., description="image")
     preparing_time: int = Field(..., description="Time in minutes")
 
-    tags: List[int] = Field(..., description="Tags of the recipe")
+    tags: List[str] = Field(..., description="Tags of the recipe")
     instructions: List[str] = Field(..., description="Instructions for the recipe")
     ingredients: List[CreateRecipeIngredientSchema] = Field(
         ..., description="Ingredients for the recipe"
     )
 
 
-class UserCreateRecipeRequestSchema(CreateRecipeBaseRequestSchema):
-    user_id: int = None
-
-
-class CreatorCreateRecipeRequestSchema(CreateRecipeBaseRequestSchema):
-    creator_id: int = None
-
-
-class JudgeRecipeRequestSchema(BaseModel):
-    user_id: int | None = Field(None, description="UserID, optional")
+class JudgeRecipeSchema(BaseModel):
     like: bool = Field(..., description="Like / Dislike")

@@ -1,19 +1,19 @@
 from typing import Any
 from pydantic import BaseModel, Field, validator
+from core.fastapi.schemas import HashId
 
-from core.helpers.hashids import encode
 
-
-class GetUserListResponseSchema(BaseModel):
-    user_id: int = Field(..., description="ID")
-    hashed_id: str = None
+class UserProfileSchema(BaseModel):
     username: str = Field(..., description="Username")
+    is_admin: bool
+    
+    class Config:
+        orm_mode = True
 
-    @validator('hashed_id', always=True)
-    def validate_hashed_id(cls, v: str, values: dict[str, Any]) -> str:
-        assert "user_id" in values, "sanity check"
-        if not v:
-            return encode(values["user_id"])
+
+class UserSchema(BaseModel):
+    id: HashId
+    profile: UserProfileSchema | None = None
     
     class Config:
         orm_mode = True

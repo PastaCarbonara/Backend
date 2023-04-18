@@ -8,6 +8,7 @@ from starlette.middleware.authentication import (
 from starlette.requests import HTTPConnection
 
 from core.config import config
+from core.helpers.hashid import decode_single
 from ..schemas import CurrentUser
 
 
@@ -36,7 +37,7 @@ class AuthBackend(AuthenticationBackend):
                 config.JWT_SECRET_KEY,
                 algorithms=[config.JWT_ALGORITHM],
             )
-            user_id = payload.get("user_id")
+            user_id = int(decode_single(payload.get("user_id")))
         except jwt.exceptions.PyJWTError:
             return False, current_user
 
