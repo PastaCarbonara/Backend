@@ -3,7 +3,6 @@ import subprocess
 import pytest
 from dotenv import load_dotenv
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
 
 load_dotenv()
 os.environ["ENV"] = "test"
@@ -11,7 +10,6 @@ os.environ["ENV"] = "test"
 from typing import Dict
 from app.server import app
 from tests.seed_test_db import seed_db
-from core.db import Base
 from httpx import AsyncClient
 
 
@@ -128,9 +126,10 @@ def generate_database():
             "test.db already exists, remove it to have unpolluted tests. \nor provide `--use-db True` to use the existing database\n\nNOTE! If you also did not provide `--no-db-del True` then `test.db` is now deleted!"
         )
 
-    engine = create_engine(
-        "sqlite:///test.db", connect_args={"check_same_thread": False}
-    )
-    Base.metadata.create_all(engine)
-    engine.dispose()
+    # Using the shell command, because I could not (bother to)
+    # figure out how to create the tables using an engine
+    # context manager. Mostly because the session/database
+    # setup in this boilerplate is not written by me and I
+    # have no clue how to edit it.
+    subprocess.run("alembic upgrade head")
     seed_db()
