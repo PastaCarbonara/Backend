@@ -52,7 +52,7 @@ jobs:
      #   flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pytest pytest --cov-report xml:tests/coverage.xml
+        pytest --cov-report xml:tests/coverage.xml
 
     - name: Get Cover 
       uses: orgoro/coverage@v3
