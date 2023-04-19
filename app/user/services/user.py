@@ -1,4 +1,5 @@
 from typing import List
+import uuid
 from app.user.utils import get_password_hash
 from core.db.models import User
 from app.user.repository.user import UserRepository
@@ -39,19 +40,20 @@ class UserService:
             raise UserNotFoundException()
         return user
 
-    @Transactional()
-    async def create_user(self, username: str, password: str) -> None:
-        user = await self.user_repository.get_user_by_username(username)
+    async def create_user(self, username: str, password: str) -> int:
+        user = await self.user_repository.get_user_by_display_name(username)
         if user:
             raise DuplicateUsernameException()
         hashed_pwd = get_password_hash(password)
-        await self.user_repository.create_user(username, hashed_pwd)
 
-    @Transactional()
+        user_id = await self.user_repository.create_user(username, uuid.uuid4())
+        await self.user_repository.create_account_auth(user_id, username, hashed_pwd)
+        return user_id
+
     async def set_admin(self, user_id: int, is_admin: bool):
         user = await self.get_user_by_id(user_id)
         await self.user_repository.set_admin(user, is_admin)
 
     async def is_admin(self, user_id: int) -> bool:
         user = await self.get_user_by_id(user_id)
-        return user.profile.is_admin
+        return user.is_admin

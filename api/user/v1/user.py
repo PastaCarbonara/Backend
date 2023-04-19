@@ -36,13 +36,14 @@ async def get_user_list():
 
 @user_v1_router.post(
     "",
-    response_model=CreateUserResponseSchema,
+    response_model=UserSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
 )
 @version(1)
 async def create_user(request: CreateUserRequestSchema):
-    await UserService().create_user(**request.dict())
-    return {"username": request.username}
+    """Create completely new user, account creation on top of existing user is WIP"""
+    user_id = await UserService().create_user(**request.dict())
+    return await UserService().get_user_by_id(user_id)
 
 
 @user_v1_router.get(

@@ -487,7 +487,6 @@ async def test_swipe_session(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
 ):
-    return
     headers = await admin_token_headers
 
     res = fastapi_client.get("/api/v1/users", headers=headers)
@@ -533,7 +532,7 @@ async def test_swipe_session(
         assert_status_code(data_1, exc.AlreadySwipedException)
 
         # Swipe non existing recipe
-        send_swipe(ws_admin, 3, False)
+        send_swipe(ws_admin, 999, False)
         data_1 = ws_admin.receive_json()
 
         assert_status_code(data_1, RecipeNotFoundException)

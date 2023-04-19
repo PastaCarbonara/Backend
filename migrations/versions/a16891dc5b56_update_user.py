@@ -28,7 +28,6 @@ def upgrade():
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('user_id')
     )
-    op.create_unique_constraint(None, 'user', ['client_token'])
     
     if op.get_context().dialect.name == "sqlite":
         op.add_column('user', sa.Column('display_name', sa.String(length=50), nullable=False))
@@ -52,8 +51,9 @@ def upgrade():
             FROM user_profile WHERE "user".id = user_profile.user_id;""")
         op.alter_column('user', 'display_name', nullable=False)
         op.alter_column('user', 'is_admin', nullable=False)
-        op.drop_table('user_profile')
     # ### end Alembic commands ###
+    op.create_unique_constraint(None, 'user', ['client_token'])
+    op.drop_table('user_profile')
 
 
 def downgrade():

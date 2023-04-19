@@ -283,9 +283,10 @@ class SwipeSessionWebsocketService:
         except ValidationError as e:
             await self.handle_connection_code(websocket, ValidationException(e.json()))
             return
-
-        recipe = await RecipeService().get_recipe_by_id(packet.payload["recipe_id"])
-        if not recipe:
+        
+        try:
+            recipe = await RecipeService().get_recipe_by_id(packet.payload["recipe_id"])
+        except:
             await self.handle_connection_code(websocket, RecipeNotFoundException)
             return
 

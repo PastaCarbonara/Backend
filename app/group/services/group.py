@@ -44,7 +44,7 @@ class GroupService:
         query = select(Group).options(
             joinedload(Group.users)
             .joinedload(GroupMember.user)
-            .joinedload(User.profile)
+            .joinedload(User.account_auth)
         ).options(
             joinedload(Group.swipe_sessions)
             .joinedload(SwipeSession.swipes)
@@ -66,7 +66,7 @@ class GroupService:
             .options(
                 joinedload(Group.users)
                 .joinedload(GroupMember.user)
-                .joinedload(User.profile)
+                .joinedload(User.account_auth)
             ).options(
                 joinedload(Group.swipe_sessions)
                 .joinedload(SwipeSession.swipes)
@@ -112,7 +112,7 @@ class GroupService:
             .options(
                 joinedload(Group.users)
                 .joinedload(GroupMember.user)
-                .joinedload(User.profile)
+                .joinedload(User.account_auth)
             ).options(
                 joinedload(Group.swipe_sessions)
                 .joinedload(SwipeSession.swipes)

@@ -135,7 +135,7 @@ async def test_create_group(
     assert res.status_code == 200
     assert group.get("name") == "group_4"
     assert len(group.get("users")) == 1
-    assert group.get("users")[0].get("username") == "admin"
+    assert group.get("users")[0].get("display_name") == "admin"
 
 
 @pytest.mark.asyncio
