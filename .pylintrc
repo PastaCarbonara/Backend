@@ -1,2 +1,4 @@
 [MASTER]
 extension-pkg-whitelist=pydantic
+ignore=schemas
+ignore-patterns=app\*\schemas\*.py# Ignore schemas directory
