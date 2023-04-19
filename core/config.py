@@ -29,6 +29,7 @@ class Config(BaseSettings):
     AZURE_IMAGE_URL_BASE: str = os.getenv("AZURE_IMAGE_URL_BASE")
     OBJECT_STORAGE_INTERFACE: str = "azure"
     IMAGE_MAX_SIZE = 5 * 1024 * 1024  # 5 MB
+    PRIVATE_KEY_PASSWORD: str = os.getenv("PRIVATE_KEY_PASSWORD")
 
 
 class DevelopmentConfig(Config):

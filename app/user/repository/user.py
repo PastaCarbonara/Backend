@@ -1,20 +1,19 @@
 from typing import List
+import uuid
 from sqlalchemy import select, or_, and_
 from sqlalchemy.orm import joinedload
-from core.db.models import User, UserProfile
+from core.db.models import User
 from core.db import session
-from app.user.exception.user import DuplicateUsernameException
-from app.user.utils import get_password_hash
 
 
 class UserRepository:
-    async def create_user(self, username: str, hashed_pwd: str) -> None:
+    async def create_user(self, username: str, ctoken: uuid.UUID) -> None:
         user = User()
         session.add(user)
         await session.flush()
 
-        user_profile = UserProfile(
-            user_id=user.id, username=username, password=hashed_pwd
+        user_profile = User(
+            display_name=username, client_token=ctoken
         )
         session.add(user_profile)
 
@@ -36,7 +35,7 @@ class UserRepository:
         result = await session.execute(query)
         return result.scalars().first()
 
-    async def get_user_by_username(self, username: str) -> User:
+    async def get_user_by_display_name(self, display_name: str) -> User:
         """Get user by username.
 
         Parameters
@@ -52,13 +51,12 @@ class UserRepository:
         query = (
             select(User)
             .join(User.profile)
-            .where(UserProfile.username == username)
-            .options(joinedload(User.profile))
+            .where(User.display_name == display_name)
         )
         result = await session.execute(query)
         return result.scalars().first()
 
-    async def get_user_list(self) -> List[UserProfile]:
+    async def get_user_list(self) -> List[User]:
         """Get user list.
 
         Returns
@@ -66,7 +64,7 @@ class UserRepository:
         List[UserProfile]
             User list.
         """
-        query = select(User).options(joinedload(User.profile))
+        query = select(User)#.options(joinedload(User.profile))
         result = await session.execute(query)
         return result.scalars().all()
 

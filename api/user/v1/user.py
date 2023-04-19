@@ -9,8 +9,6 @@ from core.fastapi.dependencies.permission import IsAuthenticated, IsUserOwner
 from core.fastapi.dependencies.user import get_current_user
 from core.fastapi_versioning.versioning import version
 
-from api.user.v1.request.user import LoginRequest
-from api.user.v1.response.user import LoginResponse
 from app.user.schemas import (
     UserSchema,
     CreateUserRequestSchema,
@@ -45,17 +43,6 @@ async def get_user_list():
 async def create_user(request: CreateUserRequestSchema):
     await UserService().create_user(**request.dict())
     return {"username": request.username}
-
-
-@user_v1_router.post(
-    "/login",
-    response_model=LoginResponse,
-    responses={"404": {"model": ExceptionResponseSchema}},
-)
-@version(1)
-async def login(request: LoginRequest):
-    token = await UserService().login(username=request.username, password=request.password)
-    return {"access_token": token.access_token, "refresh_token": token.refresh_token}
 
 
 @user_v1_router.get(

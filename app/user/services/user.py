@@ -1,23 +1,19 @@
 from typing import List
-from app.auth.services.jwt import JwtService
-from core.db.models import User, UserProfile
-from app.user.schemas.user import LoginResponseSchema
+from app.user.utils import get_password_hash
+from core.db.models import User
 from app.user.repository.user import UserRepository
 from core.db import Transactional, session
 from core.exceptions import (
     DuplicateUsernameException,
     UserNotFoundException,
-    IncorrectPasswordException,
 )
-from core.utils.token_helper import TokenHelper
-from app.user.utils import get_password_hash, verify_password
 
 
 class UserService:
     def __init__(self):
         self.user_repository = UserRepository()
 
-    async def get_user_list(self) -> List[UserProfile]:
+    async def get_user_list(self) -> List[User]:
         return await self.user_repository.get_user_list()
 
     async def get_user_by_id(self, user_id: int) -> User:
@@ -59,13 +55,3 @@ class UserService:
     async def is_admin(self, user_id: int) -> bool:
         user = await self.get_user_by_id(user_id)
         return user.profile.is_admin
-
-    async def login(self, username: str, password: str) -> LoginResponseSchema:
-        user = await self.user_repository.get_user_by_username(username)
-        if not user:
-            raise UserNotFoundException()
-        if not verify_password(password, user.profile.password):
-            raise IncorrectPasswordException()
-
-        response = await JwtService.create_login_tokens(user.id)
-        return response

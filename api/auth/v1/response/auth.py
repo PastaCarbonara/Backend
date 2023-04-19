@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
 
-class RefreshTokenResponse(BaseModel):
+class TokensSchema(BaseModel):
     access_token: str = Field(..., description="Access token")
     refresh_token: str = Field(..., description="Refresh token")

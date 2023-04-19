@@ -1,3 +1,4 @@
+import uuid
 from pydantic import BaseModel, Field
 
 
@@ -8,3 +9,16 @@ class RefreshTokenRequest(BaseModel):
 
 class VerifyTokenRequest(BaseModel):
     token: str = Field(..., description="Token")
+
+
+class LoginRequest(BaseModel):
+    username: str = Field(..., description="Email")
+    password: str = Field(..., description="Password")
+
+
+class ClientTokenSchema(BaseModel):
+    token: str
+
+
+class UUIDSchema(BaseModel):
+    token: uuid.UUID | str
