@@ -132,7 +132,7 @@ Bugger
 Cabbie
 Candy Butcher
 Captain F
-50% Lunch %50 Errors
+50% Lunch 50% Errors
 Captain Peroxide
 Celtic Charger
 Centurion Sherman
@@ -195,7 +195,6 @@ DriftDetector
 DriftManiac
 Drop Stone
 Dropkick
-Drugstore Cowboy
 DuckDuck
 Earl of Arms
 Easy Sweep
@@ -232,7 +231,6 @@ Suleiman
 Billy the Butcher
 Thor
 Napoleon
-Spiritomb
 Maximus
 Khan
 Geronimo

@@ -1,5 +1,3 @@
-import asyncio
-import time
 from typing import Dict
 from fastapi import Response
 from httpx import AsyncClient
@@ -601,18 +599,22 @@ async def test_swipe_session(
         send_swipe(ws_normal_user, 2, True)
         send_swipe(ws_admin, 2, True)
 
-        data_2 = ws_normal_user.receive_json()
         data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
 
         assert data_1.get("action") == ssae.RECIPE_MATCH
         assert data_1.get("payload").get("recipe").get("id") == 2
 
         assert data_2.get("action") == ssae.RECIPE_MATCH
         assert data_2.get("payload").get("recipe").get("id") == 2
-
-        ws_normal_user.close()
+        
+        # should be closing
 
         data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
 
-        assert data_1.get("action") == ssae.SESSION_MESSAGE
-        assert data_1.get("payload").get("message") is not None
+        assert data_1.get("action") == ssae.SESSION_STATUS_UPDATE
+        assert data_1.get("payload").get("status") == sse.COMPLETED
+
+        assert data_2.get("action") == ssae.SESSION_STATUS_UPDATE
+        assert data_2.get("payload").get("status") == sse.COMPLETED
