@@ -1,7 +1,9 @@
+""" Recipe repository. """
+
 from typing import List
-from core.db import session
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
+from core.db import session
 from core.db.models import (
     Recipe,
     Tag,
@@ -13,6 +15,27 @@ from core.db.models import (
 
 
 class RecipeRepository:
+    """Recipe repository.
+
+    Attributes
+    ----------
+    session : Session
+        The database session.
+
+    Methods
+    -------
+    get_recipes()
+        Get a list of recipes.
+    get_recipe_by_id(recipe_id)
+        Get a recipe by id.
+    get_recipe_by_tags(tags)
+        Get a list of recipes by tags.
+    get_recipe_by_ingredients(ingredients)
+        Get a list of recipes by ingredients.
+    get_recipe_jugment(recipe_id, user_id)
+        Get a recipe judgement by recipe id and user id.
+    """
+
     async def get_recipes(self) -> List[Recipe]:
         """Get a list of recipes.
 
