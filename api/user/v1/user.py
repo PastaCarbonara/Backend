@@ -42,7 +42,7 @@ async def get_user_list():
 @version(1)
 async def create_user(request: CreateUserRequestSchema):
     """Create completely new user, account creation on top of existing user is WIP"""
-    user_id = await UserService().create_user(**request.dict())
+    user_id = await UserService().create_auth_user(**request.dict())
     return await UserService().get_user_by_id(user_id)
 
 

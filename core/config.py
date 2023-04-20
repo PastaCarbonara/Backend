@@ -30,6 +30,7 @@ class Config(BaseSettings):
     OBJECT_STORAGE_INTERFACE: str = "azure"
     IMAGE_MAX_SIZE = 5 * 1024 * 1024  # 5 MB
     PRIVATE_KEY_PASSWORD: str = os.getenv("PRIVATE_KEY_PASSWORD")
+    TOKEN_EXPIRE_PERIOD: int = 3600
 
 
 class DevelopmentConfig(Config):
@@ -38,6 +39,7 @@ class DevelopmentConfig(Config):
     AZURE_BLOB_ACCOUNT_URL: str = os.getenv("AZURE_BLOB_ACCOUNT_URL")
     IMAGE_CONTAINER_NAME: str = os.getenv("IMAGE_CONTAINER_NAME")
     AZURE_BLOB_CONNECTION_STRING: str = os.getenv("AZURE_BLOB_CONNECTION_STRING")
+    TOKEN_EXPIRE_PERIOD: int = os.getenv("TOKEN_EXPIRE_PERIOD")
 
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
@@ -49,12 +51,14 @@ class LocalConfig(Config):
     AZURE_BLOB_ACCOUNT_URL: str = os.getenv("AZURE_BLOB_ACCOUNT_URL")
     IMAGE_CONTAINER_NAME: str = os.getenv("IMAGE_CONTAINER_NAME")
     AZURE_BLOB_CONNECTION_STRING: str = os.getenv("AZURE_BLOB_CONNECTION_STRING")
+    TOKEN_EXPIRE_PERIOD: int = 3600 * 24
 
 
 class ProductionConfig(Config):
     DEBUG: str = False
     WRITER_DB_URL: str = f"postgresql+asyncpg://fastapi:fastapi@localhost:3303/prod"
     READER_DB_URL: str = f"postgresql+asyncpg://fastapi:fastapi@localhost:3303/prod"
+    TOKEN_EXPIRE_PERIOD: int = os.getenv("TOKEN_EXPIRE_PERIOD")
 
 
 class TestConfig(Config):

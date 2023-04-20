@@ -53,6 +53,13 @@ class Encryption:
             )
         )
         return decrypted.decode('utf-8')
+    
+    def get_public_key(self):
+        pem = self.public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        return pem
 
 
     def _read(self):

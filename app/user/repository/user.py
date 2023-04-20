@@ -20,6 +20,15 @@ class UserRepository:
         user = await self.get_user_by_id(user_id)
         user.account_auth = AccountAuth(username=username, password=password)
 
+    async def get_user_by_client_token(self, ctoken: uuid.UUID) -> User:
+        query = (
+            select(User)
+            .where(User.client_token == ctoken)
+            .options(joinedload(User.account_auth))
+        )
+        result = await session.execute(query)
+        return result.scalars().first()
+
     async def get_user_by_id(self, user_id: int) -> User:
         """Get user by id.
 
