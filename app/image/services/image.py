@@ -187,9 +187,6 @@ class ImageService:
         """
 
         if file.content_type not in ALLOWED_TYPES:
-            print(file)
-            print(file.content_type)
-
             raise InvalidImageException()
 
         if await self.is_image_corrupt(file):

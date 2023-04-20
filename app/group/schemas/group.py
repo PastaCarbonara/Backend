@@ -15,7 +15,7 @@ class CreateGroupSchema(BaseModel):
 
 class FlattenedGroupMemberSchema(BaseModel):
     id: HashId
-    username: str
+    display_name: str
     is_admin: bool
 
     @root_validator(pre=True)
@@ -24,14 +24,10 @@ class FlattenedGroupMemberSchema(BaseModel):
 
         if user is None:
             return values
-        
-        # NOTE: Currently 'Unknown' is used as default fallback when the user is not registered.. if that is possible.
-        if not user.profile:
-            user.profile.username = "Unknown"
 
         return {
             "id": user.id,
-            "username": user.profile.username,
+            "display_name": user.display_name,
             "is_admin": values["is_admin"],
             "user": None,
         } | dict(values)

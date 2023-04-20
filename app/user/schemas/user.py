@@ -13,7 +13,8 @@ class UserProfileSchema(BaseModel):
 
 class UserSchema(BaseModel):
     id: HashId
-    profile: UserProfileSchema | None = None
+    display_name: str
+    is_admin: bool
     
     class Config:
         orm_mode = True

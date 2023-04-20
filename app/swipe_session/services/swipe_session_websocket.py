@@ -63,6 +63,15 @@ class SwipeSessionConnectionManager:
         self.active_connections[session_id].remove(websocket)
         await websocket.close()
 
+        if self.get_connection_count(session_id) < 1:
+            self.active_connections.pop(session_id)
+
+        # pain.
+        # else:
+        #     await self.handle_session_message(
+        #         websocket, session_id, f"Client left the session"
+        #     )
+
     async def disconnect_session(self, session_id, packet) -> None:
         session = self.active_connections.get(session_id)
 
@@ -72,9 +81,8 @@ class SwipeSessionConnectionManager:
 
         websocket: WebSocket
         for websocket in session:
-            
             await self.personal_packet(websocket, packet)
-            await websocket.close()
+            await self.disconnect(session_id, websocket)
 
     async def personal_packet(self, websocket: WebSocket, packet: PacketSchema) -> None:
         await websocket.send_json(packet.dict())
@@ -111,6 +119,7 @@ class SwipeSessionConnectionManager:
 
 manager = SwipeSessionConnectionManager()
 
+
 class SwipeSessionWebsocketService:
     def __init__(self) -> None:
         self.manager = manager
@@ -135,7 +144,7 @@ class SwipeSessionWebsocketService:
             if not await GroupService().is_member(session.group_id, user.id):
                 await self.manager.deny(websocket, InvalidIdException)
                 return
-            
+
         websocket = await self.manager.connect(websocket, session.id)
 
         if not user or not session:
@@ -206,10 +215,9 @@ class SwipeSessionWebsocketService:
         except WebSocketDisconnect:
             await self.manager.disconnect(session.id, websocket)
 
-            if self.manager.get_connection_count(session.id) > 0:
-                await self.handle_session_message(
-                    websocket, session.id, f"Client {user_id} left the session"
-                )
+        except Exception as e:
+            print("???")
+            print(e)
 
     async def handle_session_status_update(
         self, websocket: WebSocket, session_id: int, user: User, status: str
@@ -217,7 +225,7 @@ class SwipeSessionWebsocketService:
         if not status in [e.value for e in SwipeSessionEnum]:
             await self.handle_connection_code(websocket, StatusNotFoundException)
             return
-        
+
         # check is admin
 
         await SwipeSessionService().update_swipe_session(
@@ -284,8 +292,9 @@ class SwipeSessionWebsocketService:
             await self.handle_connection_code(websocket, ValidationException(e.json()))
             return
 
-        recipe = await RecipeService().get_recipe_by_id(packet.payload["recipe_id"])
-        if not recipe:
+        try:
+            recipe = await RecipeService().get_recipe_by_id(packet.payload["recipe_id"])
+        except:
             await self.handle_connection_code(websocket, RecipeNotFoundException)
             return
 

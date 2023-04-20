@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from typing import List
+import uuid
 from sqlalchemy import (
     Column,
     String,
@@ -35,22 +36,24 @@ class User(Base, TimestampMixin):
     __tablename__ = "user"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    display_name: Mapped[str] = mapped_column(String(50), nullable=False)
+    is_admin: Mapped[bool] = mapped_column(default=False)
+    client_token: Mapped[uuid.UUID] = mapped_column(unique=True, nullable=False)
 
-    profile: Mapped["UserProfile"] = relationship(back_populates="user", lazy="joined")
+    account_auth: Mapped["AccountAuth"] = relationship(back_populates="user")
     recipes: Mapped[List["Recipe"]] = relationship(back_populates="creator")
     judged_recipes: Mapped[List[RecipeJudgement]] = relationship(back_populates="user")
     groups: Mapped[List["GroupMember"]] = relationship(back_populates="user")
 
 
-class UserProfile(Base, TimestampMixin):
-    __tablename__ = "user_profile"
+class AccountAuth(Base, TimestampMixin):
+    __tablename__ = "account_auth"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), primary_key=True)
     username: Mapped[str] = mapped_column(String(50))
     password: Mapped[str] = mapped_column()
-    is_admin: Mapped[bool] = mapped_column(default=False)
 
-    user: Mapped[User] = relationship(back_populates="profile")
+    user: Mapped[User] = relationship(back_populates="account_auth")
 
 
 class RecipeIngredient(Base):
