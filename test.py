@@ -14,7 +14,6 @@ try:
         )
 except FileNotFoundError as e:
     # Log this, "new key generated"
-    print("Generating new private key")
     private_key = rsa.generate_private_key(
         public_exponent=65537,
         key_size=2048,

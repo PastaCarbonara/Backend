@@ -609,3 +609,10 @@ async def test_swipe_session(
 
         assert data_2.get("action") == ssae.RECIPE_MATCH
         assert data_2.get("payload").get("recipe").get("id") == 2
+
+        ws_normal_user.close()
+
+        data_1 = ws_admin.receive_json()
+
+        assert data_1.get("action") == ssae.SESSION_MESSAGE
+        assert data_1.get("payload").get("message") is not None
