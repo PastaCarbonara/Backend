@@ -134,3 +134,5 @@ def generate_database():
     Base.metadata.create_all(engine)
     engine.dispose()
     seed_db()
+
+    # dit is een comment
