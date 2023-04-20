@@ -17,7 +17,6 @@ class Encryption:
 
         except FileNotFoundError as e:
             # Log this, "new key generated"
-            print("Generating new private key")
             self.private_key = self._generate()
 
         self.public_key = self.private_key.public_key()

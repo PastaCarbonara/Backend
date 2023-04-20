@@ -21,7 +21,7 @@ async def test_create_existing_user(client: AsyncClient):
         "/api/v1/users",
         json={"username": "admin", "password": "admin"},
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 @pytest.mark.asyncio
