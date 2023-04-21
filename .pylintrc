@@ -1,3 +1,4 @@
 [MASTER]
 extension-pkg-whitelist=pydantic
 ignore=schemas, exception
+

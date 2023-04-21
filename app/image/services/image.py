@@ -71,10 +71,10 @@ class ImageService:
 
     async def get_image_by_name(self, filename) -> File:
         image = await self.image_repository.get_image_by_name(filename)
-        
+
         if not image:
             raise FileNotFoundException
-        
+
         return image
 
     async def get_images(self) -> List[File]:

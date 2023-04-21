@@ -79,7 +79,7 @@ async def get_group(group_id: int = Depends(get_path_group_id)):
 
 
 @group_v1_router.get(
-    "/join/{group_id}",
+    "/{group_id}/join",
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )

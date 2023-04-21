@@ -49,7 +49,7 @@ async def test_join_group(
     groups = await groups
 
     res = await client.get(
-        f"/api/v1/groups/join/{groups[2].get('id')}",
+        f"/api/v1/groups/{groups[2].get('id')}/join",
         headers=await normal_user_token_headers,
     )
     json_res = res.json()
@@ -84,7 +84,7 @@ async def test_already_join_group(
     groups = await groups
 
     res = await client.get(
-        f"/api/v1/groups/join/{groups[2].get('id')}",
+        f"/api/v1/groups/{groups[2].get('id')}/join",
         headers=await normal_user_token_headers,
     )
     json_res = res.json()
@@ -135,7 +135,7 @@ async def test_create_group(
     assert res.status_code == 200
     assert group.get("name") == "group_4"
     assert len(group.get("users")) == 1
-    assert group.get("users")[0].get("username") == "admin"
+    assert group.get("users")[0].get("display_name") == "admin"
 
 
 @pytest.mark.asyncio

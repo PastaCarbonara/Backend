@@ -44,7 +44,7 @@ class AzureImageDeleteNotFoundException(AzureImageDeleteException):
 class ImageDependecyException(CustomException):
     code = 409
     error_code = "IMAGE_DEPENDENCY"
-    message = "The image is used in a recipe."
+    message = "The image is being used."
 
 
 class DuplicateFileNameException(CustomException):

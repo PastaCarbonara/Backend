@@ -44,10 +44,10 @@ class GroupService:
         query = select(Group).options(
             joinedload(Group.users)
             .joinedload(GroupMember.user)
-            .joinedload(User.profile)
-        ).options(
+            .joinedload(User.account_auth),
             joinedload(Group.swipe_sessions)
-            .joinedload(SwipeSession.swipes)
+            .joinedload(SwipeSession.swipes),
+            joinedload(Group.image)
         )
         result = await session.execute(query)
         groups: list[Group] = result.unique().scalars().all()
@@ -66,10 +66,10 @@ class GroupService:
             .options(
                 joinedload(Group.users)
                 .joinedload(GroupMember.user)
-                .joinedload(User.profile)
-            ).options(
+                .joinedload(User.account_auth),
                 joinedload(Group.swipe_sessions)
-                .joinedload(SwipeSession.swipes)
+                .joinedload(SwipeSession.swipes),
+                joinedload(Group.image)
             )
         )
         result = await session.execute(query)
@@ -112,10 +112,10 @@ class GroupService:
             .options(
                 joinedload(Group.users)
                 .joinedload(GroupMember.user)
-                .joinedload(User.profile)
-            ).options(
+                .joinedload(User.account_auth),
                 joinedload(Group.swipe_sessions)
-                .joinedload(SwipeSession.swipes)
+                .joinedload(SwipeSession.swipes),
+                joinedload(Group.image)
             )
         )
         result = await session.execute(query)
