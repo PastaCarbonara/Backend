@@ -2,6 +2,7 @@ from pydantic import Field
 from typing import Any
 from pydantic import BaseModel, root_validator, validator
 from pydantic.utils import GetterDict
+from app.image.schemas.image import ImageSchema
 from app.swipe_session.schemas.swipe_session import SwipeSessionSchema
 
 
@@ -39,7 +40,7 @@ class FlattenedGroupMemberSchema(BaseModel):
 class GroupSchema(BaseModel):
     id: HashId
     name: str
-    filename: str
+    image: ImageSchema = Field(..., description="image")
     users: list[FlattenedGroupMemberSchema]
     swipe_sessions: list[SwipeSessionSchema]
 

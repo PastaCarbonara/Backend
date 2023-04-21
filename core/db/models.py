@@ -92,6 +92,7 @@ class File(Base):
     filename: Mapped[str] = mapped_column(String(), primary_key=True)
 
     recipe: Mapped["Recipe"] = relationship(back_populates="image")
+    group: Mapped["Group"] = relationship(back_populates="image")
 
     @hybrid_property
     def file_url(self):
@@ -186,6 +187,7 @@ class Group(Base, TimestampMixin):
         ForeignKey("file.filename", ondelete="CASCADE")
     )
 
+    image: Mapped[File] = relationship(back_populates="group")
     users: Mapped[List["GroupMember"]] = relationship(back_populates="group")
     swipe_sessions: Mapped[List[SwipeSession]] = relationship(back_populates="group")
 
