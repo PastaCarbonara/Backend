@@ -31,7 +31,7 @@ async def admin_token_headers(client: AsyncClient) -> Dict[str, str]:
         "username": "admin",
         "password": "admin",
     }
-    response = await client.post("/api/latest/users/login", json=login_data)
+    response = await client.post("/api/latest/auth/login", json=login_data)
     response = response.json()
     access_token = response["access_token"]
 
@@ -44,7 +44,7 @@ async def normal_user_token_headers(client: AsyncClient) -> Dict[str, str]:
         "username": "normal_user",
         "password": "normal_user",
     }
-    response = await client.post("/api/latest/users/login", json=login_data)
+    response = await client.post("/api/latest/auth/login", json=login_data)
     response = response.json()
     access_token = response["access_token"]
 
@@ -134,3 +134,5 @@ def generate_database():
     Base.metadata.create_all(engine)
     engine.dispose()
     seed_db()
+
+    # dit is een comment

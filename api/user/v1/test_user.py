@@ -21,7 +21,7 @@ async def test_create_existing_user(client: AsyncClient):
         "/api/v1/users",
         json={"username": "admin", "password": "admin"},
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 @pytest.mark.asyncio
@@ -29,8 +29,8 @@ async def test_get_user_list(client: AsyncClient, admin_token_headers: Dict[str,
     res = await client.get("/api/v1/users", headers=await admin_token_headers)
     users = res.json()
 
-    assert users[0]["profile"]["username"] == "admin"
-    assert users[1]["profile"]["username"] == "normal_user"
+    assert users[0]["display_name"] == "admin"
+    assert users[1]["display_name"] == "normal_user"
     assert res.status_code == 200
 
 

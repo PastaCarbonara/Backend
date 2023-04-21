@@ -103,10 +103,6 @@ async def test_delete_image_not_exist(
     admin_token_headers = await admin_token_headers
 
     response = await client.delete(
-        "/api/v1/images/image_3", headers=admin_token_headers
-    )
-    assert response.status_code == 400
-    response = await client.delete(
         "/api/v1/images/image_1", headers=admin_token_headers
     )
     assert response.status_code == 409

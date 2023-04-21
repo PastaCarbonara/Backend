@@ -13,7 +13,7 @@ class UserProfileSchema(BaseModel):
 
 class UserSchema(BaseModel):
     id: HashId = Field(..., description="ID")
-    profile: UserProfileSchema | None = Field(None, description="User profile")
+    # profile: UserProfileSchema | None = Field(None, description="User profile")
 
     class Config:
         orm_mode = True

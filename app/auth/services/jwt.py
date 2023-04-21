@@ -27,7 +27,7 @@ class JwtService:
             refresh_token=TokenHelper.encode(payload={"sub": "refresh"}),
         )
     
-    async def create_login_tokens(user_id):
+    async def create_login_tokens(user_id: int):
         user_id = encode(int(user_id))
 
         return LoginResponseSchema(
