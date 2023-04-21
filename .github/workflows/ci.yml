@@ -51,14 +51,8 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
      #   flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
-      run: |
-        coverage run -m pytest 
-        coverage xml
+      run: | 
+        pytest --cov=app --cov=api --cov-report=html --cov-fail-under=85
 
-    - name: Get Cover 
-      uses: orgoro/coverage@v3
-      with:
-          coverageFile: coverage.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
-          thresholdNew: 0.85
-          thresholdModified: 0.85
+
+
