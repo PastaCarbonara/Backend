@@ -8,7 +8,7 @@ from core.exceptions import DecodeTokenException, ExpiredTokenException
 
 class TokenHelper:
     @staticmethod
-    def encode(payload: dict, expire_period: int = 3600) -> str:
+    def encode(payload: dict, expire_period: int = config.TOKEN_EXPIRE_PERIOD) -> str:
         token = jwt.encode(
             payload={
                 **payload,

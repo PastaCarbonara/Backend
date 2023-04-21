@@ -1,7 +1,7 @@
 import sys
 from pylint import lint
 
-THRESHOLD = 8
+THRESHOLD = 9
 
 if len(sys.argv) < 2:
     raise Exception("Module to evaluate needs to be the first argument")

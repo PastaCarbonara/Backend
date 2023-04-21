@@ -13,12 +13,12 @@ def seed_db():
     Session = sessionmaker(engine)
 
     with Session() as session:
-        admin = User()
-        admin.profile = UserProfile(
-            username="admin", password=get_password_hash("admin"), is_admin=True
+        admin = User(display_name="admin", is_admin=True, client_token=uuid.uuid4())
+        admin.account_auth = AccountAuth(
+            username="admin", password=get_password_hash("admin")
         )
-        normal_user = User()
-        normal_user.profile = UserProfile(
+        normal_user = User(display_name="normal_user", client_token=uuid.uuid4())
+        normal_user.account_auth = AccountAuth(
             username="normal_user", password=get_password_hash("normal_user")
         )
         
