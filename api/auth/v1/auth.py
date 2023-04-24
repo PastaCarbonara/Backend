@@ -75,7 +75,6 @@ async def client_token_login(request: ClientTokenSchema):
 
 @auth_v1_router.post(
     "/test-encrypt-token",
-    response_model=TokensSchema,
     responses={"404": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([[AllowAll]]))]
 )
