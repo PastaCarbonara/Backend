@@ -1,6 +1,6 @@
 import uuid
 from api.auth.v1.response.auth import TokensSchema
-from app.auth.exceptions.auth import BadEncryptedStringException
+from app.auth.exceptions.auth import BadEncryptedStringException, BadEncryptedUUIDException
 from app.auth.services.jwt import JwtService
 from app.user.exception.user import IncorrectPasswordException, UserNotFoundException
 from app.user.services.user import UserService
@@ -34,7 +34,7 @@ class AuthService:
         try:
             ctoken = uuid.UUID(ctoken)
         except ValueError:
-            raise BadEncryptedStringException
+            raise BadEncryptedUUIDException
         
         user = await self.user_serv.get_user_by_client_token(ctoken=ctoken)
         
