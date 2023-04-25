@@ -24,7 +24,7 @@ class AuthService:
 
         return await self.jwt.create_login_tokens(user.id)
 
-    async def client_token_login(self, ctoken):
+    async def client_token_login(self, ctoken) -> TokensSchema:
         try:
             ctoken = self.encryption.decrypt(ctoken)
 

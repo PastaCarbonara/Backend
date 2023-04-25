@@ -138,16 +138,3 @@ class TokenChecker:
 
 
 token_checker = TokenChecker()
-
-
-a = token_checker.generate_add()
-print(token_checker)
-print()
-b = token_checker.generate_add(a)
-print(token_checker)
-print()
-c = token_checker.generate_add(b)
-print(token_checker)
-print()
-d = token_checker.generate_add(b)
-print(token_checker)
