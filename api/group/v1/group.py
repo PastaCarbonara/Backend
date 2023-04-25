@@ -38,7 +38,7 @@ group_v1_router = APIRouter()
     "",
     responses={"400": {"model": ExceptionResponseSchema}},
     response_model=list[GroupSchema],
-    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
 async def get_group_list():
@@ -66,7 +66,9 @@ async def create_group(
     responses={"400": {"model": ExceptionResponseSchema}},
     response_model=GroupSchema,
     dependencies=[
-        Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupMember]]))
+        Depends(
+            PermissionDependency([[IsAuthenticated], [IsAuthenticated, IsGroupMember]])
+        )
     ],
 )
 @version(1)
@@ -92,7 +94,7 @@ async def join_group(request: Request, group_id: int = Depends(get_path_group_id
 @group_v1_router.get(
     "/{group_id}/swipe_sessions",
     response_model=list[SwipeSessionSchema],
-    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsGroupMember]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated], [IsGroupMember]]))],
 )
 @version(1)
 async def get_swipe_sessions_by_group(group_id: int = Depends(get_path_group_id)):
@@ -102,7 +104,7 @@ async def get_swipe_sessions_by_group(group_id: int = Depends(get_path_group_id)
 @group_v1_router.post(
     "/{group_id}/swipe_sessions",
     response_model=SwipeSessionSchema,
-    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsGroupAdmin]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated], [IsGroupAdmin]]))],
 )
 @version(1)
 async def create_swipe_session(
@@ -120,21 +122,28 @@ async def create_swipe_session(
     "/{group_id}/swipe_sessions",
     response_model=SwipeSessionSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
 async def update_swipe_session(
-    request: UpdateSwipeSessionSchema, group_id: int = Depends(get_path_group_id), user = Depends(get_current_user)
+    request: UpdateSwipeSessionSchema,
+    group_id: int = Depends(get_path_group_id),
+    user=Depends(get_current_user),
 ):
-    session_id = await SwipeSessionService().update_swipe_session(request, user, group_id)
+    session_id = await SwipeSessionService().update_swipe_session(
+        request, user, group_id
+    )
     return await SwipeSessionService().get_swipe_session_by_id(session_id)
 
 
 @group_v1_router.get(
     "/{group_id}/swipe_sessions/{session_id}/matches",
     response_model=GetFullRecipeResponseSchema,
-    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsGroupMember]]))]
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated], [IsGroupMember]]))],
 )
 @version(1)
-async def get_swipe_session_match(group_id: int = Depends(get_path_group_id), session_id: int = Depends(get_path_session_id)):
+async def get_swipe_session_match(
+    group_id: int = Depends(get_path_group_id),
+    session_id: int = Depends(get_path_session_id),
+):
     return await SwipeSessionService().get_matches(session_id)

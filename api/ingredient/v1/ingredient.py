@@ -8,6 +8,7 @@ from core.fastapi.dependencies.permission import (
     AllowAll,
     PermissionDependency,
     IsAdmin,
+    IsAuthenticated,
 )
 from app.ingredient.schemas import (
     CreateIngredientSchema,
@@ -59,7 +60,7 @@ async def get_ingredient_by_id(ingredient_id: int):
     "",
     response_model=IngredientSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
 async def create_ingredient(request: CreateIngredientSchema):
@@ -78,7 +79,7 @@ async def create_ingredient(request: CreateIngredientSchema):
     "/{ingredient_id}",
     response_model=IngredientSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
 async def update_ingredient(ingredient_id: int, request: CreateIngredientSchema):
@@ -98,7 +99,7 @@ async def update_ingredient(ingredient_id: int, request: CreateIngredientSchema)
     "/{ingredient_id}",
     responses={"400": {"model": ExceptionResponseSchema}},
     status_code=204,
-    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
 async def delete_ingredient(ingredient_id: int):

@@ -9,7 +9,9 @@ from app.swipe_session.schemas.swipe_session import (
     UpdateSwipeSessionSchema,
 )
 from app.swipe_session.services.swipe_session import SwipeSessionService
-from app.swipe_session.services.swipe_session_websocket import SwipeSessionWebsocketService
+from app.swipe_session.services.swipe_session_websocket import (
+    SwipeSessionWebsocketService,
+)
 
 from core.exceptions import ExceptionResponseSchema
 from core.fastapi.dependencies import (
@@ -17,6 +19,7 @@ from core.fastapi.dependencies import (
     IsAdmin,
     PermissionDependency,
     IsGroupAdmin,
+    IsAuthenticated,
 )
 from core.fastapi.dependencies.permission import IsAuthenticated, IsSessionOwner
 from core.fastapi.dependencies.user import get_current_user
@@ -38,7 +41,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str, user_id: str
 )
 @version(1)
 async def get_swipe_session_actions():
-    return ActionDocsSchema(actions=await SwipeSessionService().get_swipe_session_actions())
+    return ActionDocsSchema(
+        actions=await SwipeSessionService().get_swipe_session_actions()
+    )
 
 
 @swipe_session_v1_router.get(
@@ -59,7 +64,9 @@ async def get_swipe_sessions():
     dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
-async def create_swipe_session(request: CreateSwipeSessionSchema, user = Depends(get_current_user)):
+async def create_swipe_session(
+    request: CreateSwipeSessionSchema, user=Depends(get_current_user)
+):
     """Create a personal swipe session, no group"""
     session_id = await SwipeSessionService().create_swipe_session(request, user)
     return await SwipeSessionService().get_swipe_session_by_id(session_id)
@@ -72,6 +79,8 @@ async def create_swipe_session(request: CreateSwipeSessionSchema, user = Depends
     dependencies=[Depends(PermissionDependency([[IsAdmin], [IsSessionOwner]]))],
 )
 @version(1)
-async def update_swipe_session(request: UpdateSwipeSessionSchema, user = Depends(get_current_user)):
+async def update_swipe_session(
+    request: UpdateSwipeSessionSchema, user=Depends(get_current_user)
+):
     session_id = await SwipeSessionService().update_swipe_session(request, user)
     return await SwipeSessionService().get_swipe_session_by_id(session_id)
