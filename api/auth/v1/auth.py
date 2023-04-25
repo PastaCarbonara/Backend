@@ -22,10 +22,9 @@ auth_v1_router = APIRouter()
 )
 @version(1)
 async def refresh_token(request: RefreshTokenRequest):
-    token = await JwtService().create_refresh_token(
+    return await JwtService().create_refresh_token(
         access_token=request.access_token, refresh_token=request.refresh_token
     )
-    return {"access_token": token.access_token, "refresh_token": token.refresh_token}
 
 
 @auth_v1_router.post(
