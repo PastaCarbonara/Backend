@@ -3,9 +3,8 @@ from pydantic import BaseModel, Field, validator
 from core.fastapi.schemas import HashId
 
 
-class UserProfileSchema(BaseModel):
+class AccountAuthSchema(BaseModel):
     username: str = Field(..., description="Username")
-    is_admin: bool
     
     class Config:
         orm_mode = True
@@ -15,6 +14,7 @@ class UserSchema(BaseModel):
     id: HashId
     display_name: str
     is_admin: bool
+    account_auth: AccountAuthSchema = None
     
     class Config:
         orm_mode = True

@@ -16,9 +16,5 @@ class LoginRequest(BaseModel):
     password: str = Field(..., description="Password")
 
 
-class ClientTokenSchema(BaseModel):
-    token: str
-
-
 class UUIDSchema(BaseModel):
-    token: uuid.UUID | str
+    token: uuid.UUID

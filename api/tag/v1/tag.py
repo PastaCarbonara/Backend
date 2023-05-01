@@ -7,6 +7,7 @@ from app.tag.schemas import TagSchema, CreateTagSchema
 from app.tag.services import TagService
 from core.fastapi.dependencies.permission import (
     AllowAll,
+    IsAuthenticated,
     PermissionDependency,
     IsAdmin,
     IsAuthenticated,

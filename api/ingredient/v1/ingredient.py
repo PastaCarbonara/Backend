@@ -6,6 +6,7 @@ from core.exceptions import ExceptionResponseSchema
 from core.fastapi_versioning import version
 from core.fastapi.dependencies.permission import (
     AllowAll,
+    IsAuthenticated,
     PermissionDependency,
     IsAdmin,
     IsAuthenticated,
