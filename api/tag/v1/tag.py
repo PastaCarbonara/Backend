@@ -7,6 +7,7 @@ from app.tag.schemas import TagSchema, CreateTagSchema
 from app.tag.services import TagService
 from core.fastapi.dependencies.permission import (
     AllowAll,
+    IsAuthenticated,
     PermissionDependency,
     IsAdmin,
 )
@@ -37,7 +38,7 @@ async def get_all_tags():
     "",
     response_model=TagSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
 async def create_tag(request: CreateTagSchema):
@@ -58,7 +59,7 @@ async def create_tag(request: CreateTagSchema):
     "/{tag_id}",
     response_model=TagSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
 async def update_tag(tag_id: int, request: CreateTagSchema):
@@ -80,7 +81,7 @@ async def update_tag(tag_id: int, request: CreateTagSchema):
     "/{tag_id}",
     responses={"400": {"model": ExceptionResponseSchema}},
     status_code=204,
-    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 async def delete_tag(tag_id: int):
     """

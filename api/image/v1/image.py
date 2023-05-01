@@ -1,6 +1,7 @@
 from typing import List
 from fastapi import APIRouter, Depends, UploadFile
 from core.exceptions import ExceptionResponseSchema
+from core.fastapi.dependencies.permission import IsAuthenticated
 from core.fastapi_versioning import version
 from core.fastapi.dependencies.object_storage import get_object_storage
 from core.fastapi.dependencies import (
@@ -41,7 +42,7 @@ async def get_images(filename: str, object_storage = Depends(get_object_storage)
     "",
     response_model=List[ImageSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
 async def create_image(
@@ -53,7 +54,7 @@ async def create_image(
 @image_v1_router.delete(
     "/{filename}",
     status_code=204,
-    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
 async def delete_image(filename: str, object_storage = Depends(get_object_storage)):

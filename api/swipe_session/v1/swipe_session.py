@@ -60,7 +60,9 @@ async def get_swipe_sessions():
 )
 @version(1)
 async def create_swipe_session(request: CreateSwipeSessionSchema, user = Depends(get_current_user)):
-    """Create a personal swipe session, no group"""
+    """Create a personal swipe session, no group.
+    
+    You might want to use `/groups/{group_id}/swipe_sessions` instead."""
     session_id = await SwipeSessionService().create_swipe_session(request, user)
     return await SwipeSessionService().get_swipe_session_by_id(session_id)
 
@@ -69,7 +71,7 @@ async def create_swipe_session(request: CreateSwipeSessionSchema, user = Depends
     "",
     response_model=SwipeSessionSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsSessionOwner]]))],
+    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsSessionOwner]]))],
 )
 @version(1)
 async def update_swipe_session(request: UpdateSwipeSessionSchema, user = Depends(get_current_user)):
