@@ -19,6 +19,7 @@ from core.fastapi.dependencies.permission import (
     AllowAll,
     PermissionDependency,
     IsAdmin,
+    IsAuthenticated,
 )
 
 
@@ -63,10 +64,10 @@ async def judge_recipe(
     "",
     response_model=GetFullRecipeResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
-async def create_recipe(request: CreateRecipeSchema, user = Depends(get_current_user)):
+async def create_recipe(request: CreateRecipeSchema, user=Depends(get_current_user)):
     recipe_id = await RecipeService().create_recipe(request, user.id)
     return await RecipeService().get_recipe_by_id(recipe_id)
 
@@ -75,7 +76,7 @@ async def create_recipe(request: CreateRecipeSchema, user = Depends(get_current_
 #     "/{recipe_id}",
 #     response_model=GetFullRecipeResponseSchema,
 #     responses={"400": {"model": ExceptionResponseSchema}},
-#     dependencies=[Depends(PermissionDependency([[IsAdmin, ProvidesUserID]]))],
+#     dependencies=[Depends(PermissionDependency([[IsAuthenticated, ProvidesUserID]]))],
 # )
 # @version(1)
 # async def update_recipe(recipe_id: int, request: UserCreateRecipeRequestSchema):
@@ -87,7 +88,7 @@ async def create_recipe(request: CreateRecipeSchema, user = Depends(get_current_
 #     "/{recipe_id}",
 #     responses={"400": {"model": ExceptionResponseSchema}},
 #     status_code=204,
-#     dependencies=[Depends(PermissionDependency([[IsAdmin, ProvidesUserID]]))],
+#     dependencies=[Depends(PermissionDependency([[IsAuthenticated, ProvidesUserID]]))],
 # )
 # @version(1)
 # async def delete_recipe(recipe_id: int):

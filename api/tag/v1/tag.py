@@ -10,6 +10,7 @@ from core.fastapi.dependencies.permission import (
     IsAuthenticated,
     PermissionDependency,
     IsAdmin,
+    IsAuthenticated,
 )
 
 

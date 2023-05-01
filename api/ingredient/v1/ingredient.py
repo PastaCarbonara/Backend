@@ -9,6 +9,7 @@ from core.fastapi.dependencies.permission import (
     IsAuthenticated,
     PermissionDependency,
     IsAdmin,
+    IsAuthenticated,
 )
 from app.ingredient.schemas import (
     CreateIngredientSchema,
