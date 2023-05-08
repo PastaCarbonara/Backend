@@ -1,10 +1,8 @@
-import asyncio
 from datetime import datetime, timedelta
 import os
 import glob
 import importlib.util
 import sys
-from app.swipe_session.services.swipe_session import SwipeSessionService
 
 from core.tasks.base_task import BaseTask
 from core.helpers import bcolors
@@ -28,19 +26,16 @@ def get_tasks() -> list[BaseTask]:
     return tasks
 
 
-def between_callback():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    loop.run_until_complete(start_tasks())
-    loop.close()
-
-
-async def start_tasks() -> None:
+def start_tasks() -> None:
     tasks = get_tasks()
 
     for task in tasks:
-        await task.start()
+        task.start()
+
+    # print(
+    #     f"{bcolors.OKGREEN}INFO{bcolors.ENDC}:  "
+    #     f"Tasks {bcolors.BOLD}{[j.name for j in tasks]}{bcolors.ENDC} have started."
+    # )
 
     for task in tasks:
         next_iteration = datetime.today() + timedelta(seconds=task.countdown)
@@ -51,14 +46,3 @@ async def start_tasks() -> None:
             f"Task {bcolors.BOLD}{task.name}{bcolors.ENDC}"
             f" starts at: {bcolors.BOLD}{next_iteration}{bcolors.ENDC}"
         )
-
-async def stop_tasks() -> None:
-    tasks = get_tasks()
-
-    for task in tasks:
-        task.stop()
-
-    print(
-        f"{bcolors.OKGREEN}INFO{bcolors.ENDC}:  "
-        f"Tasks {bcolors.BOLD}{[j.name for j in tasks]}{bcolors.ENDC} have stopped."
-    )

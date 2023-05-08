@@ -1,8 +1,6 @@
-from contextlib import asynccontextmanager
-import threading
 from typing import List
 
-from fastapi import BackgroundTasks, FastAPI, Request, Depends
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -20,7 +18,7 @@ from core.fastapi.middlewares import (
     ResponseLogMiddleware,
 )
 from core.helpers.cache import Cache, RedisBackend, CustomKeyMaker
-from core.tasks import between_callback, start_tasks, stop_tasks
+from core.tasks import start_tasks
 
 
 def init_routers(app_: FastAPI) -> None:
@@ -75,19 +73,6 @@ def init_cache() -> None:
     Cache.init(backend=RedisBackend(), key_maker=CustomKeyMaker())
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Start tasks
-    print("Woahh!")
-    # threading.Thread(target=start_tasks, args=(1,))
-    _thread = threading.Thread(target=between_callback)
-    _thread.start()
-    # await start_tasks()
-    yield
-    print("WOOOOOOOOOOO")
-    await stop_tasks()
-
-
 def create_app() -> FastAPI:
     app_ = FastAPI(
         title="MealMatch",
@@ -97,12 +82,12 @@ def create_app() -> FastAPI:
         redoc_url=None if config.ENV == "production" else "/redoc",
         dependencies=[Depends(Logging)],
         middleware=make_middleware(),
-        lifespan=lifespan
     )
 
     init_routers(app_=app_)
     init_listeners(app_=app_)
     init_cache()
+    start_tasks()
     
     app_ = VersionedFastAPI(
         app_,
@@ -113,7 +98,6 @@ def create_app() -> FastAPI:
         app_prefix="/api",
         dependencies=[Depends(Logging)],
         middleware=make_middleware(),
-        lifespan=lifespan
     )
 
     return app_

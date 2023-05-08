@@ -21,8 +21,10 @@ class Task(BaseTask):
         # return delta_t.total_seconds()
         return 5
 
-    async def exec(self) -> None:
+    def exec(self) -> None:
 
-        await SwipeSessionService().update_all_outdated_to_cancelled()
+        async def func():
+            await SwipeSessionService().update_all_outdated_to_cancelled()
 
+        asyncio.run(func())
         

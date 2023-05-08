@@ -1,4 +1,3 @@
-import asyncio
 from datetime import datetime, timedelta
 import threading
 import time
@@ -34,6 +33,7 @@ class BaseTask:
             name (str, optional): The name of the task. Defaults to "Unnamed Task".
         """
         self.name = name
+        self._timer: threading.Timer
         self._running = True
 
     @property
@@ -43,21 +43,23 @@ class BaseTask:
         """
         return None
     
-    async def start(self) -> None:
+    def start(self) -> None:
         """
         Starts the task.
         """
         self._running = True
-        await asyncio.sleep(self.countdown)
-        await self.run()
+        self._timer = threading.Timer(self.countdown, self.run)
+        self._timer.start()
 
-    async def stop(self):
+    def stop(self):
         """
         Stops the task.
         """
         self._running = False
+        if hasattr(self, '_timer'):
+            self._timer.cancel()
 
-    async def run(self) -> None:
+    def run(self) -> None:
         """
         Runs the task and prints task status and execution time.
         """
@@ -66,7 +68,7 @@ class BaseTask:
 
         try:
             start = time.time()
-            await self.exec()
+            self.exec()
 
             end = time.time()
             time_spent = end - start
@@ -94,15 +96,16 @@ class BaseTask:
                 f" - Error: {e}"
             )
             print(failure_message)
-            await self.stop()
+            self.stop()
             raise e
 
         else:
-            await asyncio.sleep(self.countdown)
             if self._running:
-                await self.run()
+                # print(f"Restarting {self.name} in {self.countdown} seconds")
+                self._timer = threading.Timer(self.countdown, self.run)
+                self._timer.start()
 
-    async def exec(self) -> None:
+    def exec(self) -> None:
         """
         Placeholder method for defining task behavior.
         """
