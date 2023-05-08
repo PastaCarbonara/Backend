@@ -34,6 +34,16 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str, user_id: str
     await SwipeSessionWebsocketService().handler(websocket, session_id, user_id)
 
 
+
+@swipe_session_v1_router.get(
+    "/test",
+    responses={"400": {"model": ExceptionResponseSchema}},
+)
+@version(1)
+async def test():
+    await SwipeSessionService().update_all_outdated_to_cancelled()
+
+
 @swipe_session_v1_router.get(
     "/actions_docs",
     response_model=ActionDocsSchema,

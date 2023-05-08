@@ -1,3 +1,5 @@
+from datetime import datetime
+from operator import or_
 from sqlalchemy import and_, distinct, func, join, select, update
 from sqlalchemy.orm import joinedload, aliased
 from core.db import session
@@ -55,6 +57,31 @@ class SwipeSessionRepository(BaseRepo):
             .values(status=SwipeSessionEnum.PAUSED)
         )
         await session.execute(query)
+
+    async def update_all_outdated_to_cancelled(self) -> None:
+        cur_date = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+        query = (
+            select(self.model)
+            .where(
+                and_(
+                    SwipeSession.session_date < cur_date,
+                    or_(
+                        SwipeSession.status == SwipeSessionEnum.READY,
+                        SwipeSession.status == SwipeSessionEnum.IN_PROGRESS,
+                    )
+                )
+            )
+            .options(
+                joinedload(self.model.swipes),
+            )
+        )
+        result = await session.execute(query)
+        sessions = result.scalars().unique().all()
+
+        for i in sessions:
+            i.status = SwipeSessionEnum.CANCELLED
+
+        await session.commit()
 
     async def get_matches(self, session_id: int) -> int:
         group_size = (
