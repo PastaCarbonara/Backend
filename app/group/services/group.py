@@ -1,8 +1,9 @@
+"""Group service module"""
+
 from typing import List
-from sqlalchemy import or_, select, and_
+from sqlalchemy import select, and_
 from sqlalchemy.orm import joinedload
 from app.group.schemas.group import CreateGroupSchema
-from app.image.exception.image import FileNotFoundException
 from app.image.interface.image import ObjectStorageInterface
 from app.image.services.image import ImageService
 from app.swipe_session.services.swipe_session import SwipeSessionService
@@ -17,6 +18,21 @@ class GroupService:
         self.swipe_session_serv = SwipeSessionService()
 
     async def is_member(self, group_id: int, user_id: int) -> bool:
+        """
+        Check if user is a member of a group
+        
+        Parameters
+        ----------
+        group_id : int
+            The group id
+        user_id : int
+            The user id
+        
+        Returns
+        -------
+        bool
+            True if user is a member of the group, False otherwise
+        """
         result = await session.execute(
             select(GroupMember).where(
                 and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id)
@@ -29,6 +45,21 @@ class GroupService:
         return True
 
     async def is_admin(self, group_id: int, user_id: int) -> bool:
+        """
+        Check if user is an admin of a group
+        
+        Parameters
+        ----------
+        group_id : int
+            The group id
+        user_id : int
+            The user id
+        
+        Returns
+        -------
+        bool
+            True if user is an admin of the group, False otherwise
+        """
         result = await session.execute(
             select(GroupMember).where(
                 and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id)
@@ -41,6 +72,14 @@ class GroupService:
         return user.is_admin
 
     async def get_group_list(self) -> List[Group]:
+        """
+        Get a list of all groups
+
+        Returns
+        -------
+        List[Group]
+            A list of all groups
+        """
         query = select(Group).options(
             joinedload(Group.users)
             .joinedload(GroupMember.user)
@@ -59,6 +98,19 @@ class GroupService:
         return groups
 
     async def get_groups_by_user(self, user_id) -> list[Group]:
+        """
+        Get a list of groups that a user is a member of
+
+        Parameters
+        ----------
+        user_id : int
+            The user id
+
+        Returns
+        -------
+        list[Group]
+            A list of groups that the user is a member of
+        """
         query = (
             select(Group)
             .join(Group.users)
@@ -88,6 +140,23 @@ class GroupService:
         user_id: int,
         object_storage: ObjectStorageInterface,
     ) -> int:
+        """
+        Create a group
+
+        Parameters
+        ----------
+        request : CreateGroupSchema
+            The request body
+        user_id : int
+            The user id
+        object_storage : ObjectStorageInterface
+            The object storage interface
+
+        Returns
+        -------
+        int
+            The group id
+        """
         # Check if file exists
         await ImageService(object_storage).get_image_by_name(request.filename)
 
@@ -106,6 +175,19 @@ class GroupService:
         return db_group.id
 
     async def get_group_by_id(self, group_id: int) -> Group:
+        """
+        Get a group by id
+
+        Parameters
+        ----------
+        group_id : int
+            The group id
+        
+        Returns
+        -------
+        Group
+            The group
+        """
         query = (
             select(Group)
             .where(Group.id == group_id)
@@ -128,6 +210,16 @@ class GroupService:
 
     @Transactional()
     async def join_group(self, group_id, user_id) -> None:
+        """
+        Join a group
+
+        Parameters
+        ----------
+        group_id : int
+            The group id
+        user_id : int
+            The user id
+        """
         group = await self.get_group_by_id(group_id)
 
         if not group:
