@@ -4,7 +4,7 @@ from httpx import AsyncClient
 from fastapi.testclient import TestClient
 from starlette.testclient import WebSocketTestSession
 import pytest
-import app.swipe_session.exception.swipe_session as exc
+import core.exceptions.websocket as exc
 
 from core.db.enums import SwipeSessionEnum as sse
 from core.db.enums import SwipeSessionActionEnum as ssae

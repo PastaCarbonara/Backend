@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta
+import json
 
 
-cur_date = datetime.today()
-cur_date_2 = datetime.today().replace(hour=0, microsecond=0, minute=0, second=0)
+data = '{"x": "lmao}'
 
-print(cur_date, cur_date_2)
-print(cur_date < cur_date_2)
+data_json = json.loads(data)
+
+print(data_json)
