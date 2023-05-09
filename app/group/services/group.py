@@ -1,8 +1,11 @@
+"""
+Class business logic for groups
+"""
+
 from typing import List
-from sqlalchemy import or_, select, and_
+from sqlalchemy import select, and_
 from sqlalchemy.orm import joinedload
 from app.group.schemas.group import CreateGroupSchema
-from app.image.exception.image import FileNotFoundException
 from app.image.interface.image import ObjectStorageInterface
 from app.image.services.image import ImageService
 from app.swipe_session.services.swipe_session import SwipeSessionService
@@ -13,10 +16,51 @@ from core.exceptions.group import GroupNotFoundException
 
 
 class GroupService:
+    """
+    This class provides business logic for managing groups.
+
+    Methods
+    -------
+    __init__()
+        Initializes the SwipeSessionService instance.
+    is_member(group_id: int, user_id: int) -> bool
+        Checks if a given user is a member of a given group.
+    is_admin(group_id: int, user_id: int) -> bool
+        Checks if a given user is an admin of a given group.
+    get_group_list() -> List[Group]
+        Gets a list of all groups.
+    get_groups_by_user(user_id) -> list[Group]
+        Gets a list of groups for a given user.
+    create_group(request: CreateGroupSchema, user_id: int, object_storage: ObjectStorageInterface) 
+    -> int
+        Creates a new group with the given data and adds the user as an admin.
+    get_group_by_id(group_id: int) -> Group
+        Gets a group by ID.
+    join_group(group_id, user_id) -> None
+        Adds a user to a group.
+    """
     def __init__(self):
+        """
+        Initializes the SwipeSessionService instance.
+        """
         self.swipe_session_serv = SwipeSessionService()
 
     async def is_member(self, group_id: int, user_id: int) -> bool:
+        """
+        Checks if a given user is a member of a given group.
+
+        Parameters
+        ----------
+        group_id : int
+            ID of the group to check.
+        user_id : int
+            ID of the user to check.
+
+        Returns
+        -------
+        bool
+            True if the user is a member of the group, False otherwise.
+        """
         result = await session.execute(
             select(GroupMember).where(
                 and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id)
@@ -29,6 +73,21 @@ class GroupService:
         return True
 
     async def is_admin(self, group_id: int, user_id: int) -> bool:
+        """
+        Checks if a given user is an admin of a given group.
+
+        Parameters
+        ----------
+        group_id : int
+            ID of the group to check.
+        user_id : int
+            ID of the user to check.
+
+        Returns
+        -------
+        bool
+            True if the user is an admin of the group, False otherwise.
+        """
         result = await session.execute(
             select(GroupMember).where(
                 and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id)
@@ -41,6 +100,14 @@ class GroupService:
         return user.is_admin
 
     async def get_group_list(self) -> List[Group]:
+        """
+        Gets a list of all groups.
+
+        Returns
+        -------
+        List[Group]
+            A list of all groups.
+        """
         query = select(Group).options(
             joinedload(Group.users)
             .joinedload(GroupMember.user)
@@ -51,7 +118,7 @@ class GroupService:
         )
         result = await session.execute(query)
         groups: list[Group] = result.unique().scalars().all()
-        
+
         for group in groups:
             for swipe_session in group.swipe_sessions:
                 swipe_session.matches = await self.swipe_session_serv.get_matches(swipe_session.id)
@@ -59,6 +126,15 @@ class GroupService:
         return groups
 
     async def get_groups_by_user(self, user_id) -> list[Group]:
+        """
+        Get a list of groups that a user is a member of.
+
+        Args:
+            user_id (int): The ID of the user to get groups for.
+
+        Returns:
+            list[Group]: A list of Group objects that the user is a member of.
+        """
         query = (
             select(Group)
             .join(Group.users)
@@ -74,7 +150,7 @@ class GroupService:
         )
         result = await session.execute(query)
         groups: list[Group] = result.unique().scalars().all()
-        
+
         for group in groups:
             for swipe_session in group.swipe_sessions:
                 swipe_session.matches = await self.swipe_session_serv.get_matches(swipe_session.id)
@@ -88,6 +164,18 @@ class GroupService:
         user_id: int,
         object_storage: ObjectStorageInterface,
     ) -> int:
+        """
+        Create a new group.
+
+        Args:
+            request (CreateGroupSchema): The schema containing the data for the new group.
+            user_id (int): The ID of the user creating the group.
+            object_storage (ObjectStorageInterface): An object storage interface for storing 
+            the group's image.
+
+        Returns:
+            int: The ID of the newly created group.
+        """
         # Check if file exists
         await ImageService(object_storage).get_image_by_name(request.filename)
 
@@ -106,6 +194,15 @@ class GroupService:
         return db_group.id
 
     async def get_group_by_id(self, group_id: int) -> Group:
+        """
+        Get a group by its ID.
+
+        Args:
+            group_id (int): The ID of the group to retrieve.
+
+        Returns:
+            Group: The Group object with the specified ID.
+        """
         query = (
             select(Group)
             .where(Group.id == group_id)
@@ -128,6 +225,16 @@ class GroupService:
 
     @Transactional()
     async def join_group(self, group_id, user_id) -> None:
+        """
+        Add a user to a group.
+
+        Args:
+            group_id (int): The ID of the group to join.
+            user_id (int): The ID of the user to add to the group.
+
+        Raises:
+            GroupNotFoundException: If the specified group does not exist.
+        """
         group = await self.get_group_by_id(group_id)
 
         if not group:

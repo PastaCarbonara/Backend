@@ -3,7 +3,7 @@ Module for working with the websocket for the swipesessions.
 """
 
 import json
-from fastapi import WebSocket, WebSocketDisconnect, WebSocketException # , status # 
+from fastapi import WebSocket, WebSocketDisconnect, WebSocketException
 from pydantic import ValidationError
 from starlette.websockets import WebSocketState
 from app.group.services.group import GroupService
@@ -315,7 +315,8 @@ class SwipeSessionWebsocketService:
 
         Args:
             websocket: WebSocket object representing the active WebSocket connection.
-            session_id: An integer representing the ID of the swipe session to broadcast the packet to.
+            session_id: An integer representing the ID of the swipe session to broadcast the 
+            packet to.
             recipe_id: An integer representing the ID of the recipe that was matched.
 
         Returns:

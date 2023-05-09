@@ -1,3 +1,7 @@
+"""
+Class business logic for swipe sessions
+"""
+
 from datetime import date, datetime
 from typing import List
 from sqlalchemy import update
@@ -19,20 +23,23 @@ from .action_docs import actions
 class SwipeSessionService:
     """
     This class represents the service layer for the SwipeSession model.
-    It interacts with the SwipeSessionRepository and RecipeService to perform CRUD operations on the SwipeSession model.
+    It interacts with the SwipeSessionRepository and RecipeService to perform 
+    CRUD operations on the SwipeSession model.
     """
     def __init__(self) -> None:
         """
         Constructor method for SwipeSessionService class.
 
-        Initializes a new instance of SwipeSessionService and sets up SwipeSessionRepository and RecipeService objects.
+        Initializes a new instance of SwipeSessionService and sets up SwipeSessionRepository 
+        and RecipeService objects.
         """
         self.repo = SwipeSessionRepository()
         self.recipe_serv = RecipeService()
 
     async def get_swipe_session_list(self) -> List[SwipeSession]:
         """
-        This method retrieves all swipe sessions from the repository and gets their associated matches.
+        This method retrieves all swipe sessions from the repository and gets their associated 
+        matches.
 
         Returns:
             A list of SwipeSession objects.
@@ -46,7 +53,8 @@ class SwipeSessionService:
 
     async def get_swipe_sessions_by_group(self, group_id: int) -> list[SwipeSession]:
         """
-        This method retrieves all swipe sessions associated with a particular group from the repository and gets their associated matches.
+        This method retrieves all swipe sessions associated with a particular group from the 
+        repository and gets their associated matches.
 
         Args:
             group_id: An integer representing the ID of the group.
@@ -63,7 +71,8 @@ class SwipeSessionService:
 
     async def get_swipe_session_by_id(self, swipe_session_id: int) -> SwipeSession:
         """
-        This method retrieves a swipe session with a particular ID from the repository and gets its associated matches.
+        This method retrieves a swipe session with a particular ID from the repository and gets 
+        its associated matches.
 
         Args:
             swipe_session_id: An integer representing the ID of the swipe session.
@@ -85,7 +94,7 @@ class SwipeSessionService:
         Returns:
             A datetime object.
         """
-        if type(session_date) == date:
+        if isinstance(session_date, date):
             session_date = datetime.combine(session_date, datetime.min.time())
         else:
             if not session_date:
@@ -107,7 +116,8 @@ class SwipeSessionService:
 
     async def get_matches(self, swipe_session_id: int) -> list[Recipe]:
         """
-        This method retrieves all matches for a particular swipe session from the repository and returns them as a list of Recipe objects.
+        This method retrieves all matches for a particular swipe session from the repository and 
+        returns them as a list of Recipe objects.
 
         Args:
             swipe_session_id: An integer representing the ID of the swipe session.
@@ -192,7 +202,7 @@ class SwipeSessionService:
             None
         """
         if not group_id:
-            raise Exception("Not implemented :,)")
+            raise Exception("Not implemented :,)") # pylint: disable=broad-exception-raised
 
         db_swipe_session = SwipeSession(
             group_id=group_id, user_id=user.id, **request.dict()
@@ -210,6 +220,7 @@ class SwipeSessionService:
         Get the available actions for a swipe session.
 
         Returns:
-            dict: A dictionary containing information about the available actions for a swipe session.
+            dict: A dictionary containing information about the available actions for a swipe 
+            session.
         """
         return actions

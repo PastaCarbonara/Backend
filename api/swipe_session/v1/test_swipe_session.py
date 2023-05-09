@@ -1,11 +1,14 @@
+# pylint: skip-file
+
+import pytest
+
 from typing import Dict
-from fastapi import Response
 from httpx import AsyncClient
+from fastapi import Response
 from fastapi.testclient import TestClient
 from starlette.testclient import WebSocketTestSession
-import pytest
-import core.exceptions.websocket as exc
 
+import core.exceptions.websocket as exc
 from core.db.enums import SwipeSessionEnum as sse
 from core.db.enums import SwipeSessionActionEnum as ssae
 from core.exceptions.base import UnauthorizedException
@@ -31,7 +34,7 @@ def send_swipe(ws: WebSocketTestSession, recipe_id: int, like: bool):
 
 
 def send_message(ws: WebSocketTestSession, message: str):
-    packet = {"action": ssae.SESSION_MESSAGE, "payload": {"message": message}}
+    packet = {"action": ssae.POOL_MESSAGE, "payload": {"message": message}}
     ws.send_json(packet)
 
 
@@ -78,11 +81,11 @@ async def test_get_all_sessions_authorized(
     client: AsyncClient, admin_token_headers: Dict[str, str]
 ):
     res = await client.get("/api/v1/swipe_sessions", headers=await admin_token_headers)
-    sessions = res.json()
+    swipe_sessions = res.json()
 
     assert res.status_code == 200
     assert len(sessions) == 3
-    assert not any([i.get("status") != sse.READY for i in sessions])
+    assert not any(i.get("status") != sse.READY for i in swipe_sessions)
 
 
 @pytest.mark.asyncio
@@ -124,9 +127,9 @@ async def test_update_session(
     res = fastapi_client.get(
         f"/api/v1/groups/{group_id}/swipe_sessions", headers=headers
     )
-    sessions = res.json()
+    swipe_sessions = res.json()
 
-    payload = {"id": sessions[0].get("id"), "status": sse.IN_PROGRESS}
+    payload = {"id": swipe_sessions[0].get("id"), "status": sse.IN_PROGRESS}
 
     res = fastapi_client.patch(
         f"/api/v1/groups/{group_id}/swipe_sessions", json=payload, headers=headers
@@ -134,7 +137,7 @@ async def test_update_session(
     swipe_session = res.json()
 
     assert res.status_code == 200
-    assert swipe_session.get("status") != sessions[0].get("status")
+    assert swipe_session.get("status") != swipe_sessions[0].get("status")
     assert swipe_session.get("status") == sse.IN_PROGRESS
 
     res = fastapi_client.patch(
@@ -155,7 +158,7 @@ async def test_websocket_invalid_id(
     users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
-    sessions = res.json()
+    swipe_sessions = res.json()
 
     assert users[0].get("id") is not None, "THE USER DTO MIGHT HAVE CHANGED!!!!"
 
@@ -168,7 +171,7 @@ async def test_websocket_invalid_id(
 
     # bad user id
     with fastapi_client.websocket_connect(
-        f"/api/v1/swipe_sessions/{sessions[0].get('id')}/1"
+        f"/api/v1/swipe_sessions/{swipe_sessions[0].get('id')}/1"
     ) as ws:
         ws: WebSocketTestSession
         data = ws.receive_json()
@@ -204,9 +207,9 @@ async def test_not_in_group(
     users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
-    sessions = res.json()
+    swipe_sessions = res.json()
 
-    cur_session = sessions[0]
+    cur_session = swipe_sessions[0]
 
     normal_user = users[1]
     normal_user_url = (
@@ -236,9 +239,9 @@ async def test_inactive_session(
     users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
-    sessions = res.json()
+    swipe_sessions = res.json()
 
-    cur_session = sessions[1]
+    cur_session = swipe_sessions[1]
 
     normal_user = users[1]
     normal_user_url = (
@@ -268,9 +271,9 @@ async def test_invalid_json(
     users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
-    sessions = res.json()
+    swipe_sessions = res.json()
 
-    cur_session = sessions[0]
+    cur_session = swipe_sessions[0]
 
     admin = users[0]
     admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
@@ -303,9 +306,9 @@ async def test_invalid_action(
     users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
-    sessions = res.json()
+    swipe_sessions = res.json()
 
-    cur_session = sessions[0]
+    cur_session = swipe_sessions[0]
 
     admin = users[0]
     admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
@@ -338,9 +341,9 @@ async def test_invalid_status_update(
     users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
-    sessions = res.json()
+    swipe_sessions = res.json()
 
-    cur_session = sessions[0]
+    cur_session = swipe_sessions[0]
 
     admin = users[0]
     admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
@@ -373,9 +376,9 @@ async def test_invalid_recipe(
     users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
-    sessions = res.json()
+    swipe_sessions = res.json()
 
-    cur_session = sessions[0]
+    cur_session = swipe_sessions[0]
 
     admin = users[0]
     admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
@@ -410,9 +413,9 @@ async def test_invalid_message(
     users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
-    sessions = res.json()
+    swipe_sessions = res.json()
 
-    cur_session = sessions[0]
+    cur_session = swipe_sessions[0]
 
     admin = users[0]
     admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
@@ -448,36 +451,36 @@ async def test_update_session_to_active(
     headers = await admin_token_headers
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
-    sessions = res.json()
+    swipe_sessions = res.json()
 
-    assert sessions[1].get("status") == sse.READY
-    assert sessions[2].get("status") == sse.READY
+    assert swipe_sessions[1].get("status") == sse.READY
+    assert swipe_sessions[2].get("status") == sse.READY
 
-    payload = {"id": sessions[2].get("id"), "status": sse.IN_PROGRESS}
+    payload = {"id": swipe_sessions[2].get("id"), "status": sse.IN_PROGRESS}
     res = fastapi_client.patch(
-        f"/api/v1/groups/{sessions[2].get('group_id')}/swipe_sessions",
+        f"/api/v1/groups/{swipe_sessions[2].get('group_id')}/swipe_sessions",
         json=payload,
         headers=headers,
     )
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
-    sessions = res.json()
+    swipe_sessions = res.json()
 
-    assert sessions[1].get("status") == sse.READY
-    assert sessions[2].get("status") == sse.IN_PROGRESS
+    assert swipe_sessions[1].get("status") == sse.READY
+    assert swipe_sessions[2].get("status") == sse.IN_PROGRESS
 
-    payload = {"id": sessions[1].get("id"), "status": sse.IN_PROGRESS}
+    payload = {"id": swipe_sessions[1].get("id"), "status": sse.IN_PROGRESS}
     res = fastapi_client.patch(
-        f"/api/v1/groups/{sessions[1].get('group_id')}/swipe_sessions",
+        f"/api/v1/groups/{swipe_sessions[1].get('group_id')}/swipe_sessions",
         json=payload,
         headers=headers,
     )
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
-    sessions = res.json()
+    swipe_sessions = res.json()
 
-    assert sessions[1].get("status") == sse.IN_PROGRESS
-    assert sessions[2].get("status") == sse.PAUSED
+    assert swipe_sessions[1].get("status") == sse.IN_PROGRESS
+    assert swipe_sessions[2].get("status") == sse.PAUSED
 
 
 @pytest.mark.asyncio
@@ -491,9 +494,9 @@ async def test_swipe_session(
     users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
-    sessions = res.json()
+    swipe_sessions = res.json()
 
-    cur_session = sessions[1]
+    cur_session = swipe_sessions[1]
 
     admin = users[0]
     admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
@@ -541,10 +544,10 @@ async def test_swipe_session(
         data_1 = ws_admin.receive_json()
         data_2 = ws_normal_user.receive_json()
 
-        assert data_1.get("action") == ssae.SESSION_MESSAGE
+        assert data_1.get("action") == ssae.POOL_MESSAGE
         assert data_1.get("payload").get("message") == "Message!"
 
-        assert data_2.get("action") == ssae.SESSION_MESSAGE
+        assert data_2.get("action") == ssae.POOL_MESSAGE
         assert data_2.get("payload").get("message") == "Message!"
 
         # Send session message
@@ -553,10 +556,10 @@ async def test_swipe_session(
         data_1 = ws_admin.receive_json()
         data_2 = ws_normal_user.receive_json()
 
-        assert data_1.get("action") == ssae.SESSION_MESSAGE
+        assert data_1.get("action") == ssae.POOL_MESSAGE
         assert data_1.get("payload").get("message") == "Message!"
 
-        assert data_2.get("action") == ssae.SESSION_MESSAGE
+        assert data_2.get("action") == ssae.POOL_MESSAGE
         assert data_2.get("payload").get("message") == "Message!"
 
         # Send global message

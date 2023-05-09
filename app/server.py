@@ -45,7 +45,7 @@ def init_listeners(app_: FastAPI) -> None:
         if request:
             # pass pylint test >:D
             ...
-        
+
         return JSONResponse(
             status_code=exc.code,
             content={"error_code": exc.error_code, "message": exc.message},
@@ -116,7 +116,7 @@ def create_app() -> FastAPI:
     init_listeners(app_=app_)
     init_cache()
     start_tasks()
-    
+
     app_ = VersionedFastAPI(
         app_,
         init_func=init_listeners,
