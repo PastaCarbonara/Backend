@@ -159,8 +159,9 @@ class RecipeService:
             name=recipe.name,
             filename=recipe.filename,
             description=recipe.description,
-            preparing_time=recipe.preparing_time,
+            preparation_time=recipe.preparation_time,
             instructions=recipe.instructions,
+            materials = recipe.materials,
             creator_id=user_id,
         )
 
