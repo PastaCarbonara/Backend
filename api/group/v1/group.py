@@ -1,11 +1,7 @@
-import json
-from typing import List
+from fastapi import APIRouter, Depends, Request
 
-from pydantic import ValidationError
 from app.group.schemas.group import GroupSchema, CreateGroupSchema
 from app.group.services.group import GroupService
-
-from fastapi import APIRouter, Depends, Query, Request
 from app.recipe.schemas.recipe import GetFullRecipeResponseSchema
 from app.swipe_session.schemas.swipe_session import (
     CreateSwipeSessionSchema,
@@ -13,22 +9,19 @@ from app.swipe_session.schemas.swipe_session import (
     UpdateSwipeSessionSchema,
 )
 from app.swipe_session.services.swipe_session import SwipeSessionService
+
 from core.exceptions import ExceptionResponseSchema, GroupNotFoundException
-from core.exceptions.group import GroupJoinConflictException
 from core.fastapi.dependencies.hashid import get_path_group_id, get_path_session_id
 from core.fastapi.dependencies.object_storage import get_object_storage
 from core.fastapi.dependencies.user import get_current_user
-from core.fastapi_versioning import version
-
-
 from core.fastapi.dependencies.permission import (
-    AllowAll,
     IsGroupAdmin,
     PermissionDependency,
     IsAdmin,
     IsAuthenticated,
     IsGroupMember,
 )
+from core.fastapi_versioning import version
 
 
 group_v1_router = APIRouter()
@@ -115,7 +108,10 @@ async def create_swipe_session(
     session_id = await SwipeSessionService().create_swipe_session(
         request, user, group_id
     )
-    return await SwipeSessionService().get_swipe_session_by_id(session_id)
+    print(session_id)
+    x= await SwipeSessionService().get_swipe_session_by_id(session_id)
+    print(x)
+    return x
 
 
 @group_v1_router.patch(
@@ -130,9 +126,7 @@ async def update_swipe_session(
     group_id: int = Depends(get_path_group_id),
     user=Depends(get_current_user),
 ):
-    session_id = await SwipeSessionService().update_swipe_session(
-        request, user, group_id
-    )
+    session_id = await SwipeSessionService().update_swipe_session(request, group_id)
     return await SwipeSessionService().get_swipe_session_by_id(session_id)
 
 

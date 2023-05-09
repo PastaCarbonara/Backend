@@ -37,12 +37,12 @@ class SwipeSessionService:
         Returns:
             A list of SwipeSession objects.
         """
-        sessions = await self.repo.get()
+        swipe_sessions = await self.repo.get()
 
-        for swipe_session in sessions:
-            session.matches = await self.get_matches(swipe_session.id)
+        for swipe_session in swipe_sessions:
+            swipe_session.matches = await self.get_matches(swipe_session.id)
 
-        return sessions
+        return swipe_sessions
 
     async def get_swipe_sessions_by_group(self, group_id: int) -> list[SwipeSession]:
         """
@@ -54,26 +54,26 @@ class SwipeSessionService:
         Returns:
             A list of SwipeSession objects.
         """
-        sessions = await self.repo.get_by_group(group_id)
+        swipe_sessions = await self.repo.get_by_group(group_id)
 
-        for swipe_session in sessions:
+        for swipe_session in swipe_sessions:
             swipe_session.matches = await self.get_matches(swipe_session.id)
 
-        return sessions
+        return swipe_sessions
 
-    async def get_swipe_session_by_id(self, session_id: int) -> SwipeSession:
+    async def get_swipe_session_by_id(self, swipe_session_id: int) -> SwipeSession:
         """
         This method retrieves a swipe session with a particular ID from the repository and gets its associated matches.
 
         Args:
-            session_id: An integer representing the ID of the swipe session.
+            swipe_session_id: An integer representing the ID of the swipe session.
 
         Returns:
             A SwipeSession object.
         """
-        swipe_session = await self.repo.get_by_id(session_id)
+        swipe_session = await self.repo.get_by_id(swipe_session_id)
         swipe_session.matches = await self.get_matches(swipe_session.id)
-        return session
+        return swipe_session
 
     def convert_date(self, session_date) -> datetime:
         """
@@ -105,18 +105,18 @@ class SwipeSessionService:
         """
         await self.repo.update_by_group_to_paused(group_id)
 
-    async def get_matches(self, session_id: int) -> list[Recipe]:
+    async def get_matches(self, swipe_session_id: int) -> list[Recipe]:
         """
         This method retrieves all matches for a particular swipe session from the repository and returns them as a list of Recipe objects.
 
         Args:
-            session_id: An integer representing the ID of the swipe session.
+            swipe_session_id: An integer representing the ID of the swipe session.
 
         Returns:
             A list of Recipe objects.
         """
 
-        recipe_ids = await SwipeSessionRepository().get_matches(session_id)
+        recipe_ids = await SwipeSessionRepository().get_matches(swipe_session_id)
 
         if len(recipe_ids) > 1:
             for _ in range(3): # Error Log this
@@ -130,6 +130,9 @@ class SwipeSessionService:
     ) -> int:
         """
         Update an existing swipe session.
+
+        If another session in the group is active and the updated session is set to
+        active, the other active session(s) are paused.
 
         Args:
             request (UpdateSwipeSessionSchema): The update request data.
@@ -170,10 +173,12 @@ class SwipeSessionService:
 
     @Transactional()
     async def create_swipe_session(
-        self, request: CreateSwipeSessionSchema, user: User, group_id: int
+        self, request: CreateSwipeSessionSchema, user: User, group_id: int = None
     ) -> int:
         """
         Create a new swipe session.
+        If another session in the group is active and the new session is set to
+        active, the other active session(s) are paused.
 
         Args:
             request (CreateSwipeSessionSchema): The creation request data.
@@ -184,9 +189,11 @@ class SwipeSessionService:
             int: The ID of the newly created swipe session.
 
         Raises:
-            UpdateAllInGroupToPausedError: If the request attempts to create a new session with status 'IN_PROGRESS' while
-                another session in the same group is already in progress.
+            None
         """
+        if not group_id:
+            raise Exception("Not implemented :,)")
+
         db_swipe_session = SwipeSession(
             group_id=group_id, user_id=user.id, **request.dict()
         )

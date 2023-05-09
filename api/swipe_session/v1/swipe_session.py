@@ -1,7 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Query, Request, WebSocket
-from app.swipe_session.repository.swipe_session import SwipeSessionRepository
+from fastapi import APIRouter, Depends, WebSocket
 from app.swipe_session.schemas.swipe_session import (
     ActionDocsSchema,
     CreateSwipeSessionSchema,
@@ -15,10 +14,8 @@ from app.swipe_session.services.swipe_session_websocket import (
 
 from core.exceptions import ExceptionResponseSchema
 from core.fastapi.dependencies import (
-    AllowAll,
     IsAdmin,
     PermissionDependency,
-    IsGroupAdmin,
     IsAuthenticated,
 )
 from core.fastapi.dependencies.permission import IsAuthenticated, IsSessionOwner

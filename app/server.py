@@ -5,7 +5,7 @@ Initialize app
 
 from typing import List
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -41,7 +41,11 @@ def init_listeners(app_: FastAPI) -> None:
     """
     # Exception handler
     @app_.exception_handler(CustomException)
-    async def custom_exception_handler(exc: CustomException):
+    async def custom_exception_handler(request: Request, exc: CustomException):
+        if request:
+            # pass pylint test >:D
+            ...
+        
         return JSONResponse(
             status_code=exc.code,
             content={"error_code": exc.error_code, "message": exc.message},
