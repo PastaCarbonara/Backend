@@ -56,9 +56,6 @@ class SwipeSessionService:
     async def update_all_in_group_to_paused(self, group_id) -> None:
         await self.repo.update_by_group_to_paused(group_id)
 
-    async def update_all_outdated_to_cancelled(self) -> None:
-        await self.repo.update_all_outdated_to_cancelled()
-
     async def get_matches(self, session_id: int) -> list[Recipe]:
         """Get all matches in swipe session
         
