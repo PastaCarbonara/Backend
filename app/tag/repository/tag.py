@@ -1,3 +1,7 @@
+"""
+The module contains a repository class that defines database operations for tags. 
+"""
+
 from typing import List
 from sqlalchemy import select
 from core.db import session

@@ -31,3 +31,7 @@ Checking test coverage
 `coverage run -m pytest`
 
 `coverage html`
+
+or
+
+`pytest --cov=app --cov=api --cov-report=html --cov-fail-under=85`

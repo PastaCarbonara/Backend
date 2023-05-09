@@ -164,6 +164,9 @@ class SwipeSession(Base, TimestampMixin):
     )
     group: Mapped["Group"] = relationship(back_populates="swipe_sessions")
 
+    def __repr__(self) -> str:
+        return f"SwipeSession({self.id}, {self.session_date}, {self.status})"
+
 
 class Swipe(Base):
     __tablename__ = "swipe"
