@@ -124,7 +124,7 @@ class Recipe(Base, TimestampMixin):
             + f"name='{self.name}' "
             + f"description='{self.description}' "
             + f"instructions='{self.instructions}' "
-            + f"preparing_time='{self.preparing_time}' "
+            + f"preparation_time='{self.preparation_time}' "
             + f"image='{self.image}' "
             + f"creator_id='{self.creator_id}' "
         )

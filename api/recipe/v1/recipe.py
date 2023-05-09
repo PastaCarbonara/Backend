@@ -34,7 +34,9 @@ recipe_v1_router = APIRouter()
 )
 @version(1)
 async def get_recipe_list(limit: int = 10, offset: int = 0):
-    return await RecipeService().get_recipe_list(limit, offset)
+    # return {"total_count": 0, "recipes": []}
+    return await RecipeService().get_paginated_recipe_list(limit, offset)
+
 
 
 @recipe_v1_router.get(

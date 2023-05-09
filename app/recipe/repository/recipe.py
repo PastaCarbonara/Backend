@@ -11,6 +11,7 @@ from core.db.models import (
     RecipeIngredient,
     RecipeTag,
     RecipeJudgement,
+    User,
 )
 
 
@@ -47,7 +48,7 @@ class RecipeRepository:
         query = select(Recipe).options(
             joinedload(Recipe.tags).joinedload(RecipeTag.tag),
             joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
-            joinedload(Recipe.creator),
+            joinedload(Recipe.creator).joinedload(User.account_auth),
             joinedload(Recipe.judgements),
             joinedload(Recipe.image),
         )
@@ -78,7 +79,7 @@ class RecipeRepository:
             .options(
                 joinedload(Recipe.tags).joinedload(RecipeTag.tag),
                 joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
-                joinedload(Recipe.creator),
+                joinedload(Recipe.creator).joinedload(User.account_auth),
                 joinedload(Recipe.judgements),
                 joinedload(Recipe.image),
             )

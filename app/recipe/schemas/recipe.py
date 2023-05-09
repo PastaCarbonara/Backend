@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 from .judgement import JudgementSchema
 
-from .user import UserSchema
+from app.user.schemas import UserSchema
 from .tag import RecipeTagSchema, FlattenedRecipeTagSchema
 from .ingredient import CreateRecipeIngredientSchema, FlattenedRecipeIngredientSchema
 from app.image.schemas import ImageSchema
@@ -41,8 +41,9 @@ class GetFullRecipeResponseSchema(BaseModel):
         orm_mode = True
 
 class GetFullRecipePaginatedResponseSchema(BaseModel):
-    count: int = Field(..., description="Count of recipes")
+    total_count: int = Field(..., description="Total amount of recipes")
     recipes: List[GetFullRecipeResponseSchema] = Field(..., description="Recipes")
+    
 
 class CreateRecipeSchema(BaseModel):
     name: str = Field(..., description="Recipe name")

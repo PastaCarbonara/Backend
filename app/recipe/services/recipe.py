@@ -1,6 +1,7 @@
 """Recipe service module."""
 
-from typing import List
+from typing import List, Dict
+from app.user.schemas.user import AccountAuthSchema, UserSchema
 from core.db.models import RecipeIngredient, Recipe, RecipeTag
 from core.db import Transactional
 from core.exceptions import RecipeNotFoundException, UserNotFoundException
@@ -48,7 +49,7 @@ class RecipeService:
         self.recipe_repository = RecipeRepository()
         self.user_service = UserService()
 
-    async def get_recipe_list(self, limit, offset) -> GetFullRecipePaginatedResponseSchema:
+    async def get_paginated_recipe_list(self, limit, offset) -> Dict[str,str]:
         """Get a list of recipes.
 
         Returns
@@ -56,10 +57,8 @@ class RecipeService:
         List[Recipe]
             A list of recipes.
         """
-        recipes, count = await self.recipe_repository.get_recipes(limit, offset)
-        print(recipes[0].creator_id)
-        recipes = [GetFullRecipeResponseSchema(**recipe.__dict__) for recipe in recipes]
-        return GetFullRecipePaginatedResponseSchema(count=count, recipes=recipes)
+        recipes, total_count = await self.recipe_repository.get_recipes(limit, offset)
+        return {"total_count": total_count, "recipes": recipes}
     
     async def get_recipe_by_id(self, recipe_id: int) -> Recipe:
         """Get a recipe by id.
