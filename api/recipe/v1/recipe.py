@@ -49,7 +49,7 @@ async def get_recipe_by_id(recipe_id: int):
     "/{recipe_id}/judge",
     response_model_exclude={"id"},
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[AllowAll]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
 async def judge_recipe(

@@ -130,6 +130,10 @@ class Recipe(Base, TimestampMixin):
             + f"image='{self.image}' "
             + f"creator_id='{self.creator_id}' "
         )
+    
+    @hybrid_property
+    def likes(self):
+        return len([judgement for judgement in self.judgements if judgement.like])
 
 
 class Tag(Base):
