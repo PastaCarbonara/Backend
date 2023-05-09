@@ -1,3 +1,7 @@
+"""
+Script for testing the codebase on linting with a threshold
+"""
+
 import sys
 from pylint import lint
 

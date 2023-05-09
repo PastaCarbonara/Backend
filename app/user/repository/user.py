@@ -1,6 +1,10 @@
+"""
+The module contains a repository class that defines database operations for user. 
+"""
+
 from typing import List
 import uuid
-from sqlalchemy import select, or_, and_
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from core.db.models import AccountAuth, User
 from core.db import session
@@ -8,8 +12,23 @@ from core.db.transactional import Transactional
 
 
 class UserRepository:
+    """Repository class for accessing and manipulating User objects in the database."""
+
     @Transactional()
     async def create_user(self, display_name: str, ctoken: uuid.UUID) -> None:
+        """Create a new user.
+
+        Parameters
+        ----------
+        display_name : str
+            Display name for the user.
+        ctoken : uuid.UUID
+            Client token for the user.
+
+        Returns
+        -------
+        None
+        """
         user = User(display_name=display_name, client_token=ctoken)
         session.add(user)
         await session.flush()
@@ -17,10 +36,37 @@ class UserRepository:
 
     @Transactional()
     async def create_account_auth(self, user_id, username, password):
+        """Create an account authentication instance for a user.
+
+        Parameters
+        ----------
+        user_id : int
+            User id.
+        username : str
+            Account username.
+        password : str
+            Account password.
+
+        Returns
+        -------
+        None
+        """
         user = await self.get_user_by_id(user_id)
         user.account_auth = AccountAuth(username=username, password=password)
 
     async def get_user_by_client_token(self, ctoken: uuid.UUID) -> User:
+        """Retrieve a user by client token.
+
+        Parameters
+        ----------
+        ctoken : uuid.UUID
+            Client token for the user.
+
+        Returns
+        -------
+        User
+            User instance.
+        """
         query = (
             select(User)
             .where(User.client_token == ctoken)
@@ -87,4 +133,17 @@ class UserRepository:
 
     @Transactional()
     async def set_admin(self, user: User, is_admin: bool):
+        """Set the admin status of a user.
+
+        Parameters
+        ----------
+        user : User
+            User instance.
+        is_admin : bool
+            Whether or not the user is an admin.
+
+        Returns
+        -------
+        None
+        """
         user.is_admin = is_admin

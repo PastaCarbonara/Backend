@@ -1,7 +1,5 @@
-from datetime import datetime
-from operator import or_
 from sqlalchemy import and_, distinct, func, join, select, update
-from sqlalchemy.orm import joinedload, aliased
+from sqlalchemy.orm import joinedload
 from core.db import session
 from core.db.enums import SwipeSessionEnum
 from core.db.models import (
@@ -14,16 +12,40 @@ from core.repository.base import BaseRepo
 
 
 class SwipeSessionRepository(BaseRepo):
+    """Repository class for `SwipeSession` model.
+
+    This class provides methods to interact with the `SwipeSession` model in the database.
+
+    Args:
+        BaseRepo (class): The base repository class from which this class inherits.
+
+    Attributes:
+        model (class): The `SwipeSession` model class.
+
+    """
     def __init__(self):
         super().__init__(SwipeSession)
 
     async def get(self):
+        """Retrieve all swipe sessions with their swipes.
+
+        Returns:
+            list[SwipeSession]: List of `SwipeSession` instances with their `swipes`.
+        """
         query = select(self.model).options(joinedload(self.model.swipes))
 
         result = await session.execute(query)
         return result.unique().scalars().all()
 
     async def get_by_group(self, group_id) -> list[SwipeSession]:
+        """Retrieve all swipe sessions for a group.
+
+        Args:
+            group_id (int): ID of the group.
+
+        Returns:
+            list[SwipeSession]: List of `SwipeSession` instances for the group with their `swipes`.
+        """
         query = (
             select(self.model)
             .where(self.model.group_id == group_id)
@@ -34,10 +56,18 @@ class SwipeSessionRepository(BaseRepo):
         result = await session.execute(query)
         return result.scalars().unique().all()
 
-    async def get_by_id(self, id: int) -> SwipeSession:
+    async def get_by_id(self, swipe_id: int) -> SwipeSession:
+        """Retrieve a swipe session by ID.
+
+        Args:
+            swipe_id (int): ID of the swipe session.
+
+        Returns:
+            SwipeSession: The `SwipeSession` instance with the specified ID.
+        """
         query = (
             select(self.model)
-            .where(self.model.id == id)
+            .where(self.model.id == swipe_id)
             .options(
                 joinedload(self.model.swipes),
             )
@@ -46,6 +76,11 @@ class SwipeSessionRepository(BaseRepo):
         return result.scalars().first()
 
     async def update_by_group_to_paused(self, group_id: int) -> None:
+        """Update swipe sessions for a group to `PAUSED` status.
+
+        Args:
+            group_id (int): ID of the group.
+        """
         query = (
             update(self.model)
             .where(
@@ -59,6 +94,14 @@ class SwipeSessionRepository(BaseRepo):
         await session.execute(query)
 
     async def get_matches(self, session_id: int) -> int:
+        """Retrieve recipe IDs that have a match for a swipe session.
+
+        Args:
+            session_id (int): ID of the swipe session.
+
+        Returns:
+            int: List of recipe IDs that have a match for the swipe session.
+        """
         group_size = (
             select(func.count(distinct(GroupMember.user_id)))
             .where(GroupMember.group_id == Group.id)

@@ -1,9 +1,18 @@
+"""
+Documentation for the types of connection codes the server accepts
+and returns.
+"""
+
+
 import enum
 
 
 class STANDARDS(str, enum.Enum):
-    RESPONSE_NOT_IMPLEMENTED = "Response for this action is not implemented" 
-    REQUEST_NOT_IMPLEMENTED = "Request for this action is not implemented" 
+    """
+    Standard messages.
+    """
+    RESPONSE_NOT_IMPLEMENTED = "Response for this action is not implemented"
+    REQUEST_NOT_IMPLEMENTED = "Request for this action is not implemented"
 
 
 actions = {

@@ -1,13 +1,16 @@
 """Image Service for handling image related logic."""
 
 from typing import List
-from azure.core.exceptions import ResourceNotFoundError
 from tempfile import NamedTemporaryFile
+from azure.core.exceptions import ResourceNotFoundError
 from PIL import Image
 from sqlalchemy.exc import IntegrityError
 from fastapi import UploadFile
+
 from core.db.models import File
 from core.db import Transactional
+from core.config import config
+
 from app.image.exception.image import (
     InvalidImageException,
     CorruptImageException,
@@ -23,7 +26,6 @@ from app.image.exception.image import (
     AzureImageDeleteNotFoundException,
     ImageDependecyException,
 )
-from core.config import config
 
 ALLOWED_TYPES = ["image/jpeg", "image/png"]
 
@@ -70,6 +72,18 @@ class ImageService:
         self.image_repository = ImageRepository()
 
     async def get_image_by_name(self, filename) -> File:
+        """
+        Retrieves an image by filename from the image repository.
+
+        Args:
+            filename (str): The name of the image file to retrieve.
+
+        Returns:
+            File: The image file that matches the provided filename.
+
+        Raises:
+            FileNotFoundException: If no image is found with the provided filename.
+        """
         image = await self.image_repository.get_image_by_name(filename)
 
         if not image:
