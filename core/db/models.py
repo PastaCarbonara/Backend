@@ -1,4 +1,6 @@
-from datetime import date, datetime
+"""Database models."""
+
+from datetime import datetime
 from typing import List
 import uuid
 from sqlalchemy import (

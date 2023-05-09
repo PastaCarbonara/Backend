@@ -1,27 +1,23 @@
 """Endpoints for recipe.
 """
-
-from typing import List
-
 from fastapi import APIRouter, Depends
 from core.exceptions import ExceptionResponseSchema
 from core.fastapi.dependencies.user import get_current_user
 from core.fastapi_versioning import version
+from core.fastapi.dependencies.permission import (
+    AllowAll,
+    PermissionDependency,
+    IsAuthenticated,
+)
 
 from app.recipe.schemas import (
     JudgeRecipeSchema,
     GetFullRecipeResponseSchema,
-    CreateRecipeIngredientSchema,
     GetFullRecipePaginatedResponseSchema,
     CreateRecipeSchema,
 )
 from app.recipe.services import RecipeService
-from core.fastapi.dependencies.permission import (
-    AllowAll,
-    PermissionDependency,
-    IsAdmin,
-    IsAuthenticated,
-)
+
 
 
 recipe_v1_router = APIRouter()
