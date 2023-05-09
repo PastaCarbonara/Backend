@@ -1,7 +1,7 @@
 """ Recipe repository. """
 
 from typing import List
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload
 from core.db import session
 from core.db.models import (
@@ -36,7 +36,7 @@ class RecipeRepository:
         Get a recipe judgement by recipe id and user id.
     """
 
-    async def get_recipes(self) -> List[Recipe]:
+    async def get_recipes(self, limit: int, offset: int) -> List[Recipe]:
         """Get a list of recipes.
 
         Returns
@@ -51,8 +51,13 @@ class RecipeRepository:
             joinedload(Recipe.judgements),
             joinedload(Recipe.image),
         )
+        # apply limit and offset
+        query = query.limit(limit).offset(offset)
         result = await session.execute(query)
-        return result.unique().scalars().all()
+        # get count of all recipes in database
+        result_count = await session.execute(func.count(Recipe.id))
+        # return recipes and count
+        return result.unique().scalars().all(), result_count.scalar()
 
     async def get_recipe_by_id(self, recipe_id) -> Recipe:
         """Get a recipe by id.

@@ -12,6 +12,7 @@ from app.recipe.schemas import (
     JudgeRecipeSchema,
     GetFullRecipeResponseSchema,
     CreateRecipeIngredientSchema,
+    GetFullRecipePaginatedResponseSchema,
     CreateRecipeSchema,
 )
 from app.recipe.services import RecipeService
@@ -29,11 +30,11 @@ recipe_v1_router = APIRouter()
 @recipe_v1_router.get(
     "",
     responses={"400": {"model": ExceptionResponseSchema}},
-    response_model=List[GetFullRecipeResponseSchema],
+    response_model=GetFullRecipePaginatedResponseSchema,
 )
 @version(1)
-async def get_recipe_list():
-    return await RecipeService().get_recipe_list()
+async def get_recipe_list(limit: int = 10, offset: int = 0):
+    return await RecipeService().get_recipe_list(limit, offset)
 
 
 @recipe_v1_router.get(

@@ -40,6 +40,9 @@ class GetFullRecipeResponseSchema(BaseModel):
     class Config:
         orm_mode = True
 
+class GetFullRecipePaginatedResponseSchema(BaseModel):
+    count: int = Field(..., description="Count of recipes")
+    recipes: List[GetFullRecipeResponseSchema] = Field(..., description="Recipes")
 
 class CreateRecipeSchema(BaseModel):
     name: str = Field(..., description="Recipe name")

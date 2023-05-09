@@ -6,7 +6,7 @@ from core.db import Transactional
 from core.exceptions import RecipeNotFoundException, UserNotFoundException
 from app.ingredient.repository.ingredient import IngredientRepository
 from app.tag.repository.tag import TagRepository
-from app.recipe.schemas import CreateRecipeSchema, CreateRecipeIngredientSchema
+from app.recipe.schemas import CreateRecipeSchema, CreateRecipeIngredientSchema, GetFullRecipePaginatedResponseSchema, GetFullRecipeResponseSchema
 from app.image.repository.image import ImageRepository
 from app.image.exception.image import FileNotFoundException
 from app.recipe.repository.recipe import RecipeRepository
@@ -48,7 +48,7 @@ class RecipeService:
         self.recipe_repository = RecipeRepository()
         self.user_service = UserService()
 
-    async def get_recipe_list(self) -> List[Recipe]:
+    async def get_recipe_list(self, limit, offset) -> GetFullRecipePaginatedResponseSchema:
         """Get a list of recipes.
 
         Returns
@@ -56,8 +56,11 @@ class RecipeService:
         List[Recipe]
             A list of recipes.
         """
-        return await self.recipe_repository.get_recipes()
-
+        recipes, count = await self.recipe_repository.get_recipes(limit, offset)
+        print(recipes[0].creator_id)
+        recipes = [GetFullRecipeResponseSchema(**recipe.__dict__) for recipe in recipes]
+        return GetFullRecipePaginatedResponseSchema(count=count, recipes=recipes)
+    
     async def get_recipe_by_id(self, recipe_id: int) -> Recipe:
         """Get a recipe by id.
 
