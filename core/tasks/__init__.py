@@ -34,6 +34,10 @@ def get_tasks(session) -> list[BaseTask]:
 
 
 def start_tasks() -> None:
+    if config.ENV == "test":
+        print("Cannot run tasks in test environment")
+        return
+
     # Not using the config's connection string as that uses async.
     engine = create_engine(f"postgresql+psycopg2://{os.getenv('DU')}:{os.getenv('DP')}@{os.getenv('H')}:{os.getenv('P')}/{os.getenv('DB')}")
     Session = sessionmaker(engine)

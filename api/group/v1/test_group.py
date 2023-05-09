@@ -145,9 +145,11 @@ async def test_get_group_unauthorized_not_part_of_group(
     normal_user_token_headers: Dict[str, str],
 ):
     groups = await groups
+    print(groups)
     res = await client.get(
         f"/api/v1/groups/{groups[0].get('id')}", headers=await normal_user_token_headers
     )
+    print(res.json())
 
     assert res.status_code == 401
 

@@ -67,7 +67,7 @@ async def create_group(
     response_model=GroupSchema,
     dependencies=[
         Depends(
-            PermissionDependency([[IsAuthenticated], [IsAuthenticated, IsGroupMember]])
+            PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupMember]])
         )
     ],
 )
