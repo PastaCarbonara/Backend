@@ -31,6 +31,7 @@ class Config(BaseSettings):
     IMAGE_MAX_SIZE = 5 * 1024 * 1024  # 5 MB
     PRIVATE_KEY_PASSWORD: str = os.getenv("PRIVATE_KEY_PASSWORD")
     TOKEN_EXPIRE_PERIOD: int = 3600
+    TASK_CAPTURE_EXCEPTIONS: bool = os.getenv('TASK_CAPTURE_EXCEPTIONS')
 
 
 class DevelopmentConfig(Config):
@@ -59,6 +60,7 @@ class ProductionConfig(Config):
     WRITER_DB_URL: str = f"postgresql+asyncpg://fastapi:fastapi@localhost:3303/prod"
     READER_DB_URL: str = f"postgresql+asyncpg://fastapi:fastapi@localhost:3303/prod"
     TOKEN_EXPIRE_PERIOD: int = os.getenv("TOKEN_EXPIRE_PERIOD")
+    TASK_CAPTURE_EXCEPTIONS: bool = False
 
 
 class TestConfig(Config):

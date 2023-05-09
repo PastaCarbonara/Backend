@@ -9,39 +9,43 @@ class BaseTask:
     """
     A base class for defining recurring tasks.
 
-    Args:
-        name (str, optional): The name of the task. Defaults to "Unnamed Task".
+    ## Args:
+        `session` (Session): The session used for querying the database.
+        `name` (str, optional): The name of the task. Defaults to "Unnamed Task".
 
-    Attributes:
-        name (str): The name of the task.
-        _timer (threading.Timer): The timer object used for scheduling task runs.
-        _running (bool): A flag indicating whether the task is currently running.
+    ## Attributes:
+        `name` (str): The name of the task.
+        `_timer` (threading.Timer): The timer object used for scheduling task runs.
+        `_running` (bool): A flag indicating whether the task is currently running.
 
-    Methods:
-        start(): Starts the task.
-        stop(): Stops the task.
-        run(): Runs the task.
-        exec(): Placeholder method for defining task behavior.
-        countdown(): Property method that returns the time interval between task runs.
+    ## Methods:
+        `start()`: Starts the task.
+        `stop()`: Stops the task.
+        `run()`: Runs the task.
+        `exec()`: Placeholder method for defining task behavior.
+        `countdown()`: Placeholder property method that returns the time interval between task runs in seconds.
     """
     
-    def __init__(self, name: str = "Unnamed Task") -> None:
+    def __init__(self, session, capture_exceptions: bool = True, name: str = "Unnamed Task") -> None:
         """
         Initializes a new BaseTask instance.
 
-        Args:
-            name (str, optional): The name of the task. Defaults to "Unnamed Task".
+        ## Args:
+            `session` (Session): The session used for querying the database.
+            `name` (str, optional): The name of the task. Defaults to "Unnamed Task".
         """
+        self.session = session
+        self.capture_exceptions = capture_exceptions
         self.name = name
         self._timer: threading.Timer
         self._running = True
 
     @property
-    def countdown(self):
+    def countdown(self) -> int:
         """
-        Returns the time interval between task runs.
+        Placeholder propery; returns the time interval between task runs in seconds.
         """
-        return None
+        raise Exception(f"Countdown on '{self.name}' is undefined")
     
     def start(self) -> None:
         """
@@ -86,18 +90,23 @@ class BaseTask:
 
         except Exception as e:
             # Log this
-            end = time.time()
-            time_spent = end - start
 
-            failure_message = (
-                f"{bcolors.FAIL}{bcolors.BOLD}{bcolors.UNDERLINE}TASK FAILED{bcolors.ENDC}"
-                f"{bcolors.ENDC}{bcolors.BOLD}: {self.name}{bcolors.ENDC}"
-                f" - Time spent: {bcolors.BOLD}{str(round(time_spent, 2))}{bcolors.ENDC}s"
-                f" - Error: {e}"
-            )
-            print(failure_message)
-            self.stop()
+            if self.capture_exceptions:
+                end = time.time()
+                time_spent = end - start
+
+                failure_message = (
+                    f"{bcolors.FAIL}{bcolors.BOLD}{bcolors.UNDERLINE}TASK FAILED{bcolors.ENDC}"
+                    f"{bcolors.ENDC}{bcolors.BOLD}: {self.name}{bcolors.ENDC}"
+                    f" - Time spent: {bcolors.BOLD}{str(round(time_spent, 2))}{bcolors.ENDC}s"
+                    f" - Error: {e}"
+                )
+                print(failure_message)
+                self.stop()
+                return e
+            
             raise e
+            
 
         else:
             if self._running:
@@ -110,3 +119,16 @@ class BaseTask:
         Placeholder method for defining task behavior.
         """
         pass
+
+
+class Task(BaseTask):
+    def __init__(self, session, capture_exceptions) -> None:
+        name = "Example Task"
+        super().__init__(session, capture_exceptions, name)
+
+    @property
+    def countdown(self) -> int:
+        return 0
+
+    def exec(self) -> None:
+        ...

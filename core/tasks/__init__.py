@@ -4,11 +4,18 @@ import glob
 import importlib.util
 import sys
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from core.config import config
+
 from core.tasks.base_task import BaseTask
 from core.helpers import bcolors
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-def get_tasks() -> list[BaseTask]:
+def get_tasks(session) -> list[BaseTask]:
     paths_to_tasks = glob.glob(f"{os.getcwd()}\\core\\tasks\\task_*.py")
     tasks: list[BaseTask] = []
 
@@ -21,28 +28,27 @@ def get_tasks() -> list[BaseTask]:
         sys.modules["module.name"] = module
         spec.loader.exec_module(module)
 
-        tasks.append(module.Task())
+        tasks.append(module.Task(session=session, capture_exceptions=config.TASK_CAPTURE_EXCEPTIONS))
 
     return tasks
 
 
 def start_tasks() -> None:
-    tasks = get_tasks()
+    # Not using the config's connection string as that uses async.
+    engine = create_engine(f"postgresql+psycopg2://{os.getenv('DU')}:{os.getenv('DP')}@{os.getenv('H')}:{os.getenv('P')}/{os.getenv('DB')}")
+    Session = sessionmaker(engine)
 
-    for task in tasks:
-        task.start()
+    with Session() as session:
+        tasks = get_tasks(session)
 
-    # print(
-    #     f"{bcolors.OKGREEN}INFO{bcolors.ENDC}:  "
-    #     f"Tasks {bcolors.BOLD}{[j.name for j in tasks]}{bcolors.ENDC} have started."
-    # )
+        for task in tasks:
+            task.start()
 
-    for task in tasks:
-        next_iteration = datetime.today() + timedelta(seconds=task.countdown)
-        next_iteration = next_iteration.replace(microsecond=0)
+            next_iteration = datetime.today() + timedelta(seconds=task.countdown)
+            next_iteration = next_iteration.replace(microsecond=0)
 
-        print(
-            f"{bcolors.OKGREEN}INFO{bcolors.ENDC}:  "
-            f"Task {bcolors.BOLD}{task.name}{bcolors.ENDC}"
-            f" starts at: {bcolors.BOLD}{next_iteration}{bcolors.ENDC}"
-        )
+            print(
+                f"{bcolors.OKGREEN}INFO{bcolors.ENDC}:  "
+                f"Task {bcolors.BOLD}{task.name}{bcolors.ENDC}"
+                f" starts at: {bcolors.BOLD}{next_iteration}{bcolors.ENDC}"
+            )
