@@ -31,9 +31,7 @@ class GetFullRecipeResponseSchema(BaseModel):
     ingredients: List[FlattenedRecipeIngredientSchema] = Field(
         ..., description="Ingridients for the recipe"
     )
-    judgements: List[JudgementSchema] = Field(
-        ..., description="Judgements of the recipe"
-    )
+    likes: int = Field(..., description="Likes of the recipe")
 
     class Config:
         orm_mode = True

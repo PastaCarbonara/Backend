@@ -34,7 +34,7 @@ async def test_judge_recipe(client: AsyncClient, admin_token_headers: Dict[str, 
     )
     assert response.status_code == 200
     response = await client.get("/api/v1/recipes/1", headers=admin_token_headers)
-    assert len(response.json().get("judgements")) == 1
+    assert response.json().get("likes") == 1
 
 
 @pytest.mark.asyncio
