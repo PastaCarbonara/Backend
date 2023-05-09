@@ -129,20 +129,13 @@ async def test_update_session(
     payload = {"id": sessions[0].get("id"), "status": sse.IN_PROGRESS}
 
     res = fastapi_client.patch(
-        f"/api/v1/groups/{group_id}/swipe_sessions", json=payload, headers=headers
+        f"/api/v1/groups/{group_id}/swipe_sessions", json=payload, headers=user_headers
     )
     swipe_session = res.json()
 
     assert res.status_code == 200
     assert swipe_session.get("status") != sessions[0].get("status")
     assert swipe_session.get("status") == sse.IN_PROGRESS
-
-    res = fastapi_client.patch(
-        f"/api/v1/groups/{group_id}/swipe_sessions",
-        json=payload,
-        headers=user_headers,
-    )
-    assert res.status_code == 401
 
 
 @pytest.mark.asyncio

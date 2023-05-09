@@ -1,15 +1,15 @@
 """Recipe service module."""
 
-from typing import List
+from typing import List, Dict
 from core.db.models import RecipeIngredient, Recipe, RecipeTag
 from core.db import Transactional
 from core.exceptions import RecipeNotFoundException, UserNotFoundException
 from app.ingredient.repository.ingredient import IngredientRepository
 from app.tag.repository.tag import TagRepository
 from app.recipe.schemas import CreateRecipeSchema, CreateRecipeIngredientSchema
+from app.recipe.repository.recipe import RecipeRepository
 from app.image.repository.image import ImageRepository
 from app.image.exception.image import FileNotFoundException
-from app.recipe.repository.recipe import RecipeRepository
 from app.user.services.user import UserService
 
 
@@ -48,7 +48,7 @@ class RecipeService:
         self.recipe_repository = RecipeRepository()
         self.user_service = UserService()
 
-    async def get_recipe_list(self) -> List[Recipe]:
+    async def get_paginated_recipe_list(self, limit, offset) -> Dict[str,str]:
         """Get a list of recipes.
 
         Returns
@@ -56,7 +56,8 @@ class RecipeService:
         List[Recipe]
             A list of recipes.
         """
-        return await self.recipe_repository.get_recipes()
+        recipes, total_count = await self.recipe_repository.get_recipes(limit, offset)
+        return {"total_count": total_count, "recipes": recipes}
 
     async def get_recipe_by_id(self, recipe_id: int) -> Recipe:
         """Get a recipe by id.
@@ -159,8 +160,9 @@ class RecipeService:
             name=recipe.name,
             filename=recipe.filename,
             description=recipe.description,
-            preparing_time=recipe.preparing_time,
+            preparation_time=recipe.preparation_time,
             instructions=recipe.instructions,
+            materials = recipe.materials,
             creator_id=user_id,
         )
 

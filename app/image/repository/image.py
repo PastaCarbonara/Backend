@@ -47,7 +47,7 @@ class ImageRepository:
         query = select(File)
         result = await session.execute(query)
         return result.scalars().all()
-
+    
     async def get_image_by_name(self, filename: str) -> File:
         """
         Get the File object corresponding to the given filename.

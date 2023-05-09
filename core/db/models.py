@@ -1,4 +1,6 @@
-from datetime import date, datetime
+"""Database models."""
+
+from datetime import datetime
 from typing import List
 import uuid
 from sqlalchemy import (
@@ -106,13 +108,12 @@ class Recipe(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(50))
     description: Mapped[str] = mapped_column()
     instructions = Column(JSON, nullable=False)
-    preparing_time: Mapped[int | None] = mapped_column()
+    materials = Column(JSON, nullable=True)
+    preparation_time: Mapped[int | None] = mapped_column()
     filename: Mapped[str] = mapped_column(
         ForeignKey("file.filename", ondelete="CASCADE")
     )
     creator_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"))
-
-    # ingredients = Column(JSON, nullable=False)
     image: Mapped[File] = relationship(back_populates="recipe")
     ingredients: Mapped[List[RecipeIngredient]] = relationship(back_populates="recipe")
     tags: Mapped[List[RecipeTag]] = relationship(back_populates="recipe")
@@ -125,7 +126,7 @@ class Recipe(Base, TimestampMixin):
             + f"name='{self.name}' "
             + f"description='{self.description}' "
             + f"instructions='{self.instructions}' "
-            + f"preparing_time='{self.preparing_time}' "
+            + f"preparation_time='{self.preparation_time}' "
             + f"image='{self.image}' "
             + f"creator_id='{self.creator_id}' "
         )

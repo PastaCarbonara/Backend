@@ -49,7 +49,7 @@ async def test_create_recipe(client: AsyncClient, admin_token_headers: Dict[str,
             "ingredients": [{"name": "test", "amount": 1, "unit": "test"}],
             "instructions": ["test"],
             "tags": ["test"],
-            "preparing_time": 30,
+            "preparation_time": 30,
         },
         headers=await admin_token_headers,
     )

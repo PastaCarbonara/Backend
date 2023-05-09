@@ -53,7 +53,7 @@ def seed_db():
                 "Add topping",
                 "Enjoy",
             ],
-            preparing_time=30,
+            preparation_time=30,
             filename="image_1",
             creator=admin,
         )
@@ -62,7 +62,7 @@ def seed_db():
             name="Guacamole",
             description="Green sauce.",
             instructions=["Peel the avocado", "Peel the garlic", "Add ALL the pepper"],
-            preparing_time=15,
+            preparation_time=15,
             filename="image_2",
             creator=admin,
         )
