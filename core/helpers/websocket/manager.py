@@ -2,25 +2,34 @@
 Connection manager for websockets
 """
 
+import json
 from fastapi import WebSocket, status
+from pydantic import ValidationError
+from pydantic.main import ModelMetaclass
 from core.db.enums import WebsocketActionEnum
 from core.exceptions.base import CustomException
-from core.exceptions.websocket import AccessDeniedException, ConnectionCode, NoMessageException
+from core.exceptions.websocket import (
+    AccessDeniedException,
+    ActionNotFoundException,
+    ConnectionCode,
+    JSONSerializableException,
+    NoMessageException,
+)
 from core.helpers.schemas.websocket import WebsocketPacketSchema
-
 
 
 class WebsocketConnectionManager:
     """
     Manages WebSocket connections.
 
-    Maintains active connections for each pool ID, and provides methods 
-    to connect, disconnect, and send packets to clients. Also provides 
+    Maintains active connections for each pool ID, and provides methods
+    to connect, disconnect, and send packets to clients. Also provides
     methods to get information about active pools of connections.
     """
+
     def __init__(self):
         """
-        Initializes WebsocketConnectionManager with an empty dictionary to hold active 
+        Initializes WebsocketConnectionManager with an empty dictionary to hold active
         pools and its connections.
         """
         self.active_pools: dict = {}
@@ -45,6 +54,35 @@ class WebsocketConnectionManager:
 
         return websocket
 
+    async def receive_data(self, websocket: WebSocket, schema: ModelMetaclass):
+        """
+        Receives and validates data from the given websocket.
+
+        Args:
+            websocket (WebSocket): The websocket to receive data from.
+            schema (ModelMetaclass): The schema to validate the received data.
+
+        Returns:
+            Any: The deserialized and validated data packet.
+
+        Raises:
+            JSONSerializableException: If the received data cannot be decoded to a JSON object.
+            ActionNotFoundException: If the received data fails to validate against the given schema.
+        """
+        data = await websocket.receive_text()
+
+        try:
+            data_json = json.loads(data)
+        except json.decoder.JSONDecodeError as exc:
+            raise JSONSerializableException from exc
+
+        try:
+            packet = schema(**data_json)
+        except ValidationError as exc:
+            raise ActionNotFoundException from exc
+
+        return packet
+
     async def deny(
         self, websocket: WebSocket, exception: CustomException = AccessDeniedException
     ) -> None:
@@ -53,7 +91,7 @@ class WebsocketConnectionManager:
 
         Args:
             websocket (WebSocket): The WebSocket connection to deny access to.
-            exception (CustomException): The exception to raise to indicate the reason 
+            exception (CustomException): The exception to raise to indicate the reason
             for the access denial.
         """
         await websocket.accept()
@@ -64,12 +102,12 @@ class WebsocketConnectionManager:
         """
         Removes a WebSocket connection from the active pools list for a given pool ID.
 
-        If the active pools list for the pool ID becomes empty, removes the pool ID 
+        If the active pools list for the pool ID becomes empty, removes the pool ID
         from the active pools dictionary.
 
         Args:
             pool_id (str): The ID of the pool from which to remove the WebSocket connection.
-            websocket (WebSocket): The WebSocket connection to remove from the active 
+            websocket (WebSocket): The WebSocket connection to remove from the active
             pools list.
         """
         self.active_pools[pool_id].remove(websocket)
@@ -86,7 +124,7 @@ class WebsocketConnectionManager:
 
     async def disconnect_pool(self, pool_id, packet) -> None:
         """
-        Sends a packet to all WebSocket connections in a given pool and removes each connection 
+        Sends a packet to all WebSocket connections in a given pool and removes each connection
         from the active pools list.
 
         Args:
@@ -121,7 +159,9 @@ class WebsocketConnectionManager:
             return
 
         payload = {"message": message}
-        packet = WebsocketPacketSchema(action=WebsocketActionEnum.GLOBAL_MESSAGE, payload=payload)
+        packet = WebsocketPacketSchema(
+            action=WebsocketActionEnum.GLOBAL_MESSAGE, payload=payload
+        )
 
         await self.global_broadcast(packet)
 
@@ -133,7 +173,7 @@ class WebsocketConnectionManager:
 
         Args:
             websocket: WebSocket object representing the active WebSocket connection.
-            pool_id: An integer representing the ID of the pool to broadcast 
+            pool_id: An integer representing the ID of the pool to broadcast
             the message to.
             message: A string representing the message to broadcast.
 
@@ -145,7 +185,9 @@ class WebsocketConnectionManager:
             return
 
         payload = {"message": message}
-        packet = WebsocketPacketSchema(action=WebsocketActionEnum.POOL_MESSAGE, payload=payload)
+        packet = WebsocketPacketSchema(
+            action=WebsocketActionEnum.POOL_MESSAGE, payload=payload
+        )
 
         await self.pool_broadcast(pool_id, packet)
 
@@ -157,18 +199,22 @@ class WebsocketConnectionManager:
 
         Args:
             websocket: WebSocket object representing the active WebSocket connection.
-            exception: A CustomException or ConnectionCode object representing the error to 
+            exception: A CustomException or ConnectionCode object representing the error to
             report to the client.
 
         Returns:
             None.
         """
         payload = {"status_code": exception.code, "message": exception.message}
-        packet = WebsocketPacketSchema(action=WebsocketActionEnum.CONNECTION_CODE, payload=payload)
+        packet = WebsocketPacketSchema(
+            action=WebsocketActionEnum.CONNECTION_CODE, payload=payload
+        )
 
         await self.personal_packet(websocket, packet)
 
-    async def personal_packet(self, websocket: WebSocket, packet: WebsocketPacketSchema) -> None:
+    async def personal_packet(
+        self, websocket: WebSocket, packet: WebsocketPacketSchema
+    ) -> None:
         """
         Sends a packet to a single WebSocket connection.
 
@@ -199,7 +245,7 @@ class WebsocketConnectionManager:
             await connection.send_json(packet.dict())
 
     def get_connection_count(self, pool_id: str | None = None) -> int:
-        """"Gets the total number of active websocket connections across all pools, or the number of
+        """ "Gets the total number of active websocket connections across all pools, or the number of
         connections for a specific pool if pool_id is provided.
 
         Args:

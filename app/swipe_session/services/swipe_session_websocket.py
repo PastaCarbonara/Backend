@@ -2,7 +2,6 @@
 Module for working with the websocket for the swipesessions.
 """
 
-import json
 from fastapi import WebSocket, WebSocketDisconnect, WebSocketException
 from pydantic import ValidationError
 from starlette.websockets import WebSocketState
@@ -19,23 +18,21 @@ from app.swipe_session.schemas.swipe_session import (
 from app.swipe_session.services.swipe_session import SwipeSessionService
 from core.exceptions.hashids import IncorrectHashIDException
 from core.exceptions.websocket import (
-    ActionNotFoundException,
     ActionNotImplementedException,
     AlreadySwipedException,
     ClosingConnection,
     InactiveException,
     InvalidIdException,
-    JSONSerializableException,
     StatusNotFoundException,
     SuccessfullConnection,
     ValidationException,
 )
 from core.db.enums import SwipeSessionActionEnum as ACTIONS, SwipeSessionEnum
 from core.db.models import SwipeSession, User
-from core.exceptions.base import UnauthorizedException
+from core.exceptions.base import CustomException, UnauthorizedException
 from core.exceptions.recipe import RecipeNotFoundException
 from core.helpers.hashid import check_id
-from core.helpers.websocket_manager import WebsocketConnectionManager
+from core.helpers.websocket.manager import WebsocketConnectionManager
 
 
 manager = WebsocketConnectionManager()
@@ -61,22 +58,6 @@ class SwipeSessionWebsocketService:
     -> None:
         Handles updates on the session status and broadcasts the update to all users in the session.
 
-    handle_global_message(websocket: WebSocket, message: str) -> None:
-        Handles the broadcasting of global messages to all WebSocket clients.
-
-    handle_global_packet(packet: SwipeSessionPacketSchema) -> None:
-        Handles the broadcasting of global packets to all WebSocket clients.
-
-    handle_session_message(websocket: WebSocket, session_id: int, message: str) -> None:
-        Handles the broadcasting of session messages to all WebSocket clients in the same session.
-
-    handle_session_packet(session_id: int, packet: SwipeSessionPacketSchema) -> None:
-        Handles the broadcasting of session packets to all WebSocket clients in the same session.
-
-    handle_connection_code(websocket, exception: CustomException | ConnectionCode) -> None:
-        Handles the creation of custom WebSocket packets containing the code and message of the 
-        error.
-
     handle_recipe_swipe(websocket: WebSocket, session: SwipeSession, user: User, packet: 
     SwipeSessionPacketSchema) -> None:
         Handles the creation of swipe requests to recipes in a session and broadcasts the request 
@@ -95,7 +76,7 @@ class SwipeSessionWebsocketService:
         self.manager = manager
 
     async def handler(
-        self, websocket: WebSocket, session_id: str, user_id: int
+        self, websocket: WebSocket, session_id: str, access_token: str
     ) -> None:
         """
         The handler function for WebSocket protocol, receives a WebSocket instance and the session 
@@ -107,13 +88,16 @@ class SwipeSessionWebsocketService:
             The WebSocket instance.
         session_id: str
             The session ID.
-        user_id: int
+        access_token: int
             The user ID.
 
         Returns:
         --------
         None
         """
+        print(access_token)
+        user_id = 1
+        # get user and session
         try:
             user = await check_id(user_id, UserService().get_user_by_id)
             session = await check_id(
@@ -123,10 +107,12 @@ class SwipeSessionWebsocketService:
             await self.manager.deny(websocket, InvalidIdException)
             return
 
+        # check session
         if session.status != SwipeSessionEnum.IN_PROGRESS:
             await self.manager.deny(websocket, InactiveException)
             return
 
+        # check user in group
         if session.group_id:
             if not await GroupService().is_member(session.group_id, user.id):
                 await self.manager.deny(websocket, InvalidIdException)
@@ -134,6 +120,7 @@ class SwipeSessionWebsocketService:
 
         websocket = await self.manager.connect(websocket, session.id)
 
+        # confirm user and session
         if not user or not session:
             await self.manager.handle_connection_code(websocket, InvalidIdException)
             await self.manager.disconnect(session.id, websocket)
@@ -146,23 +133,10 @@ class SwipeSessionWebsocketService:
                 # NOTE! DO NOT 'RETURN' IF YOU WISH TO 'CONTINUE'
                 # Learned it the hard way, and took me a day.
 
-                data = await websocket.receive_text()
-
-                # Gate keepers/Guard clauses
                 try:
-                    data_json = json.loads(data)
-                except json.decoder.JSONDecodeError:
-                    await self.manager.handle_connection_code(
-                        websocket, JSONSerializableException
-                    )
-                    continue
-
-                try:
-                    packet = SwipeSessionPacketSchema(**data_json)
-                except ValidationError:
-                    await self.manager.handle_connection_code(
-                        websocket, ActionNotFoundException
-                    )
+                    packet = await self.manager.receive_data(websocket, SwipeSessionPacketSchema)
+                except CustomException as exc:
+                    await self.manager.handle_connection_code(websocket, exc)
                     continue
 
                 # Handlers
