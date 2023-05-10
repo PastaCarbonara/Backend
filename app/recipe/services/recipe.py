@@ -1,11 +1,13 @@
 """Recipe service module."""
 
 from typing import List, Dict
-from core.db.models import RecipeIngredient, Recipe, RecipeTag
+from core.db.models import RecipeIngredient, Recipe, RecipeTag, User
 from core.db import Transactional
 from core.exceptions import RecipeNotFoundException, UserNotFoundException
+from core.exceptions.base import UnauthorizedException
 from app.ingredient.repository.ingredient import IngredientRepository
 from app.tag.repository.tag import TagRepository
+from app.tag.schemas import CreateTagSchema
 from app.recipe.schemas import CreateRecipeSchema, CreateRecipeIngredientSchema
 from app.recipe.repository.recipe import RecipeRepository
 from app.image.repository.image import ImageRepository
@@ -202,7 +204,7 @@ class RecipeService:
             )
             recipe.ingredients = recipe_ingredients
 
-    async def set_tags_of_recipe(self, recipe: Recipe, tags: List[int]) -> None:
+    async def set_tags_of_recipe(self, recipe: Recipe, tags: List[CreateTagSchema]) -> None:
         """set tags of a recipe instance
 
         Parameters
@@ -214,9 +216,19 @@ class RecipeService:
         """
         recipe_tags = []
         for tag in tags:
-            tag_object = await self.tag_repository.get_tag_by_name(tag)
+            tag_object = await self.tag_repository.get_tag_by_name(tag.name)
             if not tag_object:
-                tag_object = await self.tag_repository.create_tag(tag)
+                tag_object = await self.tag_repository.create_tag(tag.name, tag.tag_type)
             recipe_tags.append(RecipeTag(tag=tag_object, recipe=recipe))
 
         recipe.tags = recipe_tags
+
+    @Transactional()
+    async def delete_recipe(self, recipe_id: int, user: User):
+        recipe = await self.recipe_repository.get_recipe_by_id(recipe_id)
+        if not recipe:
+            raise RecipeNotFoundException()
+        if recipe.creator_id != user.id and not user.is_admin:
+            raise UnauthorizedException()
+        await self.recipe_repository.delete_recipe(recipe)
+        return "Ok"

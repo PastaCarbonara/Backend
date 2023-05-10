@@ -30,7 +30,6 @@ recipe_v1_router = APIRouter()
 )
 @version(1)
 async def get_recipe_list(limit: int = 10, offset: int = 0):
-    # return {"total_count": 0, "recipes": []}
     return await RecipeService().get_paginated_recipe_list(limit, offset)
 
 
@@ -43,6 +42,17 @@ async def get_recipe_list(limit: int = 10, offset: int = 0):
 @version(1)
 async def get_recipe_by_id(recipe_id: int):
     return await RecipeService().get_recipe_by_id(recipe_id)
+
+@recipe_v1_router.delete(
+    "/{recipe_id}",
+    responses={"400": {"model": ExceptionResponseSchema}},
+    status_code=204,
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
+)
+@version(1)
+async def delete_recipe(recipe_id: int, user = Depends(get_current_user)):
+    await RecipeService().delete_recipe(recipe_id, user)
+    return {"message": "Recipe deleted successfully."}
 
 
 @recipe_v1_router.post(
@@ -83,13 +93,4 @@ async def create_recipe(request: CreateRecipeSchema, user=Depends(get_current_us
 #     return await RecipeService().get_recipe_by_id(recipe_id)
 
 
-# @recipe_v1_router.delete(
-#     "/{recipe_id}",
-#     responses={"400": {"model": ExceptionResponseSchema}},
-#     status_code=204,
-#     dependencies=[Depends(PermissionDependency([[IsAuthenticated, ProvidesUserID]]))],
-# )
-# @version(1)
-# async def delete_recipe(recipe_id: int):
-#     await RecipeService().delete_recipe(recipe_id)
-#     return {"message": "Recipe deleted successfully."}
+

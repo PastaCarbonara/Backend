@@ -2,6 +2,7 @@ from typing import List
 from pydantic import BaseModel, Field
 from app.user.schemas import UserSchema
 from app.image.schemas import ImageSchema
+from app.tag.schemas import CreateTagSchema
 from .judgement import JudgementSchema
 from .tag import RecipeTagSchema, FlattenedRecipeTagSchema
 from .ingredient import CreateRecipeIngredientSchema, FlattenedRecipeIngredientSchema
@@ -47,7 +48,7 @@ class CreateRecipeSchema(BaseModel):
     filename: str = Field(..., description="image")
     preparation_time: int = Field(..., description="Time in minutes")
 
-    tags: List[str] = Field(..., description="Tags of the recipe")
+    tags: List[CreateTagSchema] = Field(..., description="Tags of the recipe")
     instructions: List[str] = Field(..., description="Instructions for the recipe")
     materials: List[str] = Field(None, description="Materials for the recipe")
     ingredients: List[CreateRecipeIngredientSchema] = Field(

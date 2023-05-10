@@ -73,7 +73,7 @@ class TagService:
         if tag:
             raise TagAlreadyExistsException
 
-        return await self.tag_repository.create_tag(request.name)
+        return await self.tag_repository.create_tag(request.name, request.tag_type)
 
     async def get_tag_by_id(self, tag_id: int) -> Tag:
         """
@@ -146,7 +146,7 @@ class TagService:
         if not tag:
             raise TagNotFoundException
         try:
-            tag = await self.tag_repository.update_tag(tag, request.name)
+            tag = await self.tag_repository.update_tag(tag, request.name, request.tag_type)
         except IntegrityError as exc:
             raise TagAlreadyExistsException from exc
         return tag

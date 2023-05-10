@@ -11,7 +11,7 @@ from core.db.models import Tag
 class TagRepository:
     """Repository for tag related database operations"""
 
-    async def create_tag(self, name: str) -> Tag:
+    async def create_tag(self, name: str, tag_type: str) -> Tag:
         """
         Creates a new tag with the given data and returns the ID of the new tag.
 
@@ -26,7 +26,7 @@ class TagRepository:
             The new tag.
         """
 
-        db_tag = Tag(name=name)
+        db_tag = Tag(name=name, tag_type=tag_type)
         session.add(db_tag)
         await session.flush()
         return db_tag
@@ -80,7 +80,7 @@ class TagRepository:
         result = await session.execute(query)
         return result.scalars().first()
 
-    async def update_tag(self, tag: Tag, name: str) -> Tag:
+    async def update_tag(self, tag: Tag, name: str, tag_type: str) -> Tag:
         """
         Updates the tag with the given ID with the given data.
 
@@ -97,6 +97,7 @@ class TagRepository:
             The updated tag.
         """
         tag.name = name
+        tag.tag_type = tag_type
         await session.flush()
         return tag
 
