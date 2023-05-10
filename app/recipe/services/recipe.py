@@ -1,9 +1,10 @@
 """Recipe service module."""
 
 from typing import List, Dict
-from core.db.models import RecipeIngredient, Recipe, RecipeTag
+from core.db.models import RecipeIngredient, Recipe, RecipeTag, User
 from core.db import Transactional
 from core.exceptions import RecipeNotFoundException, UserNotFoundException
+from core.exceptions.base import UnauthorizedException
 from app.ingredient.repository.ingredient import IngredientRepository
 from app.tag.repository.tag import TagRepository
 from app.tag.schemas import CreateTagSchema
@@ -221,3 +222,13 @@ class RecipeService:
             recipe_tags.append(RecipeTag(tag=tag_object, recipe=recipe))
 
         recipe.tags = recipe_tags
+
+    @Transactional()
+    async def delete_recipe(self, recipe_id: int, user: User):
+        recipe = await self.recipe_repository.get_recipe_by_id(recipe_id)
+        if not recipe:
+            raise RecipeNotFoundException()
+        if recipe.creator_id != user.id and not user.is_admin:
+            raise UnauthorizedException()
+        await self.recipe_repository.delete_recipe(recipe)
+        return "Ok"

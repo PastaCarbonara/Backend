@@ -227,4 +227,4 @@ class RecipeRepository:
         recipe_id : int
             The id of the recipe to delete.
         """
-        session.delete(recipe)
+        await session.delete(recipe)

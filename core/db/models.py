@@ -66,7 +66,7 @@ class RecipeIngredient(Base):
         ForeignKey("recipe.id", ondelete="CASCADE"), primary_key=True
     )
     ingredient_id: Mapped[int] = mapped_column(
-        ForeignKey("ingredient.id"), primary_key=True
+        ForeignKey("ingredient.id", ondelete="CASCADE"), primary_key=True
     )
     unit: Mapped[str] = mapped_column()
     amount: Mapped[float] = mapped_column()
@@ -124,8 +124,8 @@ class Recipe(Base, TimestampMixin):
     )
     creator_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"))
     image: Mapped[File] = relationship(back_populates="recipe")
-    ingredients: Mapped[List[RecipeIngredient]] = relationship(back_populates="recipe")
-    tags: Mapped[List[RecipeTag]] = relationship(back_populates="recipe")
+    ingredients: Mapped[List[RecipeIngredient]] = relationship(back_populates="recipe", cascade="all, delete")
+    tags: Mapped[List[RecipeTag]] = relationship(back_populates="recipe", cascade="all, delete")
     creator: Mapped[User] = relationship(back_populates="recipes")
     judgements: Mapped[RecipeJudgement] = relationship(back_populates="recipe")
 
@@ -152,7 +152,7 @@ class Tag(Base):
     name: Mapped[str] = mapped_column(String(50), unique=True)
     tag_type: Mapped[TagType] = mapped_column()
 
-    recipes: Mapped[RecipeTag] = relationship(back_populates="tag")
+    recipes: Mapped[RecipeTag] = relationship(back_populates="tag", cascade="all, delete")
     users: Mapped[UserTag] = relationship(back_populates="tag")
 
 
@@ -162,7 +162,7 @@ class Ingredient(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50), unique=True)
 
-    recipes: Mapped[RecipeIngredient] = relationship(back_populates="ingredient")
+    recipes: Mapped[RecipeIngredient] = relationship(back_populates="ingredient", cascade="all, delete")
 
 
 class SwipeSession(Base, TimestampMixin):
