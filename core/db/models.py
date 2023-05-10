@@ -15,7 +15,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.ext.hybrid import hybrid_property
 from core.db import Base
 from core.db.mixins import TimestampMixin
-from core.db.enums import SwipeSessionEnum
+from core.db.enums import SwipeSessionEnum, TagType
 from core.config import config
 
 
@@ -46,6 +46,7 @@ class User(Base, TimestampMixin):
     recipes: Mapped[List["Recipe"]] = relationship(back_populates="creator")
     judged_recipes: Mapped[List[RecipeJudgement]] = relationship(back_populates="user")
     groups: Mapped[List["GroupMember"]] = relationship(back_populates="user")
+    filters: Mapped[List["UserTag"]] = relationship(back_populates="user")
 
 
 class AccountAuth(Base, TimestampMixin):
@@ -87,6 +88,14 @@ class RecipeTag(Base):
     recipe: Mapped["Recipe"] = relationship(back_populates="tags")
     tag: Mapped["Tag"] = relationship(back_populates="recipes")
 
+class UserTag(Base):
+    __tablename__ = "user_tag"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
+    tag_id: Mapped[int] = mapped_column(ForeignKey("tag.id", ondelete="CASCADE"), primary_key=True)
+
+    user: Mapped["User"] = relationship(back_populates="filters")
+    tag: Mapped["Tag"] = relationship(back_populates="users")
 
 class File(Base):
     __tablename__ = "file"
@@ -141,8 +150,10 @@ class Tag(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50), unique=True)
+    tag_type: Mapped[TagType] = mapped_column()
 
     recipes: Mapped[RecipeTag] = relationship(back_populates="tag")
+    users: Mapped[UserTag] = relationship(back_populates="tag")
 
 
 class Ingredient(Base):

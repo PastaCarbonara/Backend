@@ -25,3 +25,9 @@ class SwipeSessionEnum(str, BaseEnum):
     IN_PROGRESS = "Is bezig"
     PAUSED = "Gepauzeerd"
     READY = "Staat klaar"
+
+class TagType(str, BaseEnum):
+    ALLERGIES = "Allergieën"
+    CUISINE = "Keuken"
+    DIET = "Dieet"
+
