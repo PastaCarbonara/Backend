@@ -1,6 +1,6 @@
-from typing import Annotated, List
+from typing import List
 
-from fastapi import APIRouter, Cookie, Depends, WebSocket
+from fastapi import APIRouter,Depends, WebSocket
 from app.swipe_session.schemas.swipe_session import (
     ActionDocsSchema,
     CreateSwipeSessionSchema,
