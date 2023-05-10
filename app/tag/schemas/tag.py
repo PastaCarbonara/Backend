@@ -53,4 +53,4 @@ class CreateTagSchema(BaseModel):
     """
 
     name: str
-    type: TagType
+    tag_type: TagType

@@ -66,7 +66,7 @@ def seed_db():
             filename="image_2",
             creator=admin,
         )
-        tags = [Tag(name="tag1"), Tag(name="tag2"), Tag(name="tag3")]
+        tags = [Tag(name="tag1", tag_type="Keuken"), Tag(name="tag2", tag_type="Keuken"), Tag(name="tag3", tag_type="Keuken")]
         ingredients = [
             Ingredient(name="ingredient1"),
             Ingredient(name="ingredient2"),

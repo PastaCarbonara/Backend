@@ -6,6 +6,7 @@ from core.db import Transactional
 from core.exceptions import RecipeNotFoundException, UserNotFoundException
 from app.ingredient.repository.ingredient import IngredientRepository
 from app.tag.repository.tag import TagRepository
+from app.tag.schemas import CreateTagSchema
 from app.recipe.schemas import CreateRecipeSchema, CreateRecipeIngredientSchema
 from app.recipe.repository.recipe import RecipeRepository
 from app.image.repository.image import ImageRepository
@@ -202,7 +203,7 @@ class RecipeService:
             )
             recipe.ingredients = recipe_ingredients
 
-    async def set_tags_of_recipe(self, recipe: Recipe, tags: List[int]) -> None:
+    async def set_tags_of_recipe(self, recipe: Recipe, tags: List[CreateTagSchema]) -> None:
         """set tags of a recipe instance
 
         Parameters
@@ -214,9 +215,9 @@ class RecipeService:
         """
         recipe_tags = []
         for tag in tags:
-            tag_object = await self.tag_repository.get_tag_by_name(tag)
+            tag_object = await self.tag_repository.get_tag_by_name(tag.name)
             if not tag_object:
-                tag_object = await self.tag_repository.create_tag(tag)
+                tag_object = await self.tag_repository.create_tag(tag.name, tag.tag_type)
             recipe_tags.append(RecipeTag(tag=tag_object, recipe=recipe))
 
         recipe.tags = recipe_tags
