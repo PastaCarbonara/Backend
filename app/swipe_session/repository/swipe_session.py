@@ -1,3 +1,7 @@
+"""
+Class containing crud logic for swipe session
+"""
+
 from sqlalchemy import and_, distinct, func, join, select, update
 from sqlalchemy.orm import joinedload
 from core.db import session
@@ -56,18 +60,18 @@ class SwipeSessionRepository(BaseRepo):
         result = await session.execute(query)
         return result.scalars().unique().all()
 
-    async def get_by_id(self, swipe_id: int) -> SwipeSession:
+    async def get_by_id(self, model_id: int) -> SwipeSession:
         """Retrieve a swipe session by ID.
 
         Args:
-            swipe_id (int): ID of the swipe session.
+            id (int): ID of the swipe session.
 
         Returns:
             SwipeSession: The `SwipeSession` instance with the specified ID.
         """
         query = (
             select(self.model)
-            .where(self.model.id == swipe_id)
+            .where(self.model.id == model_id)
             .options(
                 joinedload(self.model.swipes),
             )
@@ -103,7 +107,7 @@ class SwipeSessionRepository(BaseRepo):
             int: List of recipe IDs that have a match for the swipe session.
         """
         group_size = (
-            select(func.count(distinct(GroupMember.user_id)))
+            select(func.count(distinct(GroupMember.user_id))) # pylint: disable=not-callable
             .where(GroupMember.group_id == Group.id)
             .where(SwipeSession.id == session_id)
             .select_from(join(GroupMember, Group).join(SwipeSession))
@@ -117,12 +121,12 @@ class SwipeSessionRepository(BaseRepo):
             .where(
                 and_(
                     SwipeSession.id == session_id,
-                    Swipe.like == True,
+                    Swipe.like is True,
                 )
             )
             .group_by(Swipe.recipe_id)
             .having(
-                func.count(distinct(Swipe.user_id)) == group_size
+                func.count(distinct(Swipe.user_id)) == group_size # noqa pylint: disable=not-callable
             )
         )
         result = await session.execute(query)

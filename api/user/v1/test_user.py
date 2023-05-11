@@ -1,8 +1,10 @@
-from fastapi import Response
+# pylint: skip-file
+
+from typing import Dict
 import pytest
 from httpx import AsyncClient
+from fastapi import Response
 from fastapi.testclient import TestClient
-from typing import Dict
 
 
 @pytest.mark.asyncio
@@ -16,7 +18,6 @@ async def test_create_user(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_create_existing_user(client: AsyncClient):
-    # response should be 400 since admin exists
     response: Response = await client.post(
         "/api/v1/users",
         json={"username": "admin", "password": "admin"},
@@ -59,9 +60,6 @@ async def test_get_user_groups(
 
     res = fastapi_client.get("/api/v1/users", headers=admin_headers)
     users = res.json()
-
-    res = fastapi_client.get("/api/v1/groups", headers=admin_headers)
-    groups = res.json()
 
     res = fastapi_client.get(
         f"/api/v1/users/{users[0].get('id')}/groups", headers=admin_headers

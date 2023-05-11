@@ -1,6 +1,6 @@
 from datetime import date
 from typing import Any, List
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 from app.swipe_session.schemas.recipe import RecipeSchema
 from app.swipe_session.schemas.swipe import SwipeSchema
 
@@ -36,6 +36,6 @@ class SwipeSessionSchema(BaseModel):
         orm_mode = True
 
 
-class PacketSchema(BaseModel):
+class SwipeSessionPacketSchema(BaseModel):
     action: SwipeSessionActionEnum
     payload: Any | None = None

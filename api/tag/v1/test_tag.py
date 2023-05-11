@@ -1,7 +1,8 @@
-"""Tests for the tag endpoints"""
+# pylint: skip-file
+
 import pytest
-from httpx import AsyncClient
 from typing import Dict
+from httpx import AsyncClient
 
 
 @pytest.mark.asyncio

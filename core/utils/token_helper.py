@@ -27,10 +27,10 @@ class TokenHelper:
                 config.JWT_SECRET_KEY,
                 config.JWT_ALGORITHM,
             )
-        except jwt.exceptions.DecodeError:
-            raise DecodeTokenException
-        except jwt.exceptions.ExpiredSignatureError:
-            raise ExpiredTokenException
+        except jwt.exceptions.DecodeError as exc:
+            raise DecodeTokenException from exc
+        except jwt.exceptions.ExpiredSignatureError as exc:
+            raise ExpiredTokenException from exc
 
     @staticmethod
     def decode_expired_token(token: str) -> dict:

@@ -1,3 +1,7 @@
+"""
+Module to encode and decode integers.
+"""
+
 import os
 from hashids import Hashids
 
@@ -10,9 +14,9 @@ min_length = int(os.getenv('HASH_MIN_LEN'))
 hashids = Hashids(salt=salt, min_length=min_length)
 
 
-def encode(id):
+def encode(id_to_hash):
     """Hashids encode function"""
-    return hashids.encode(id)
+    return hashids.encode(id_to_hash)
 
 
 def decode(hashed_ids):
@@ -20,19 +24,19 @@ def decode(hashed_ids):
     try:
         return hashids.decode(hashed_ids)
 
-    except Exception:
-        raise IncorrectHashIDException
-    
-        
+    except Exception as exc:
+        raise IncorrectHashIDException from exc
+
+
 def decode_single(hashed_ids) -> int:
     """Decode, return single ID"""
     real_ids = ()
 
     real_ids = decode(hashed_ids)
-    
+
     if len(real_ids) < 1:
         raise IncorrectHashIDException
-        
+
     return real_ids[0]
 
 
