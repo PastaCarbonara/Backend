@@ -102,7 +102,7 @@ class RecipeService:
             raise RecipeNotFoundException
 
         try:
-            await self.user_service.get_user_by_id(user_id)
+            await self.user_service.get_by_id(user_id)
         except UserNotFoundException as exc:
             raise UserNotFoundException() from exc
 
@@ -134,7 +134,7 @@ class RecipeService:
         image = await self.image_repository.get_image_by_name(recipe.filename)
         if not image:
             raise FileNotFoundException()
-        await self.user_service.get_user_by_id(user_id)
+        await self.user_service.get_by_id(user_id)
         db_recipe = await self.create_recipe_object(recipe, user_id)
         await self.set_ingredients_of_recipe(db_recipe, recipe.ingredients)
         await self.set_tags_of_recipe(db_recipe, recipe.tags)

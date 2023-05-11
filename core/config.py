@@ -30,8 +30,9 @@ class Config(BaseSettings):
     OBJECT_STORAGE_INTERFACE: str = "azure"
     IMAGE_MAX_SIZE = 5 * 1024 * 1024  # 5 MB
     PRIVATE_KEY_PASSWORD: str = os.getenv("PRIVATE_KEY_PASSWORD")
-    TOKEN_EXPIRE_PERIOD: int = 3600
-    TASK_CAPTURE_EXCEPTIONS: bool = os.getenv('TASK_CAPTURE_EXCEPTIONS')
+    ACCESS_TOKEN_EXPIRE_PERIOD: int = 3600
+    REFRESH_TOKEN_EXPIRE_PERIOD: int = 3600 * 24
+    TASK_CAPTURE_EXCEPTIONS: bool = os.getenv("TASK_CAPTURE_EXCEPTIONS")
 
 
 class DevelopmentConfig(Config):
@@ -40,7 +41,8 @@ class DevelopmentConfig(Config):
     AZURE_BLOB_ACCOUNT_URL: str = os.getenv("AZURE_BLOB_ACCOUNT_URL")
     IMAGE_CONTAINER_NAME: str = os.getenv("IMAGE_CONTAINER_NAME")
     AZURE_BLOB_CONNECTION_STRING: str = os.getenv("AZURE_BLOB_CONNECTION_STRING")
-    TOKEN_EXPIRE_PERIOD: int = os.getenv("TOKEN_EXPIRE_PERIOD")
+    ACCESS_TOKEN_EXPIRE_PERIOD: int = os.getenv("ACCESS_TOKEN_EXPIRE_PERIOD")
+    REFRESH_TOKEN_EXPIRE_PERIOD: int = os.getenv("REFRESH_TOKEN_EXPIRE_PERIOD")
 
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
@@ -52,20 +54,21 @@ class LocalConfig(Config):
     AZURE_BLOB_ACCOUNT_URL: str = os.getenv("AZURE_BLOB_ACCOUNT_URL")
     IMAGE_CONTAINER_NAME: str = os.getenv("IMAGE_CONTAINER_NAME")
     AZURE_BLOB_CONNECTION_STRING: str = os.getenv("AZURE_BLOB_CONNECTION_STRING")
-    TOKEN_EXPIRE_PERIOD: int = 3600 * 24
+    ACCESS_TOKEN_EXPIRE_PERIOD: int = 3600 * 24
 
 
 class ProductionConfig(Config):
     DEBUG: str = False
-    WRITER_DB_URL: str = f"postgresql+asyncpg://fastapi:fastapi@localhost:3303/prod"
-    READER_DB_URL: str = f"postgresql+asyncpg://fastapi:fastapi@localhost:3303/prod"
-    TOKEN_EXPIRE_PERIOD: int = os.getenv("TOKEN_EXPIRE_PERIOD")
+    WRITER_DB_URL: str = "postgresql+asyncpg://fastapi:fastapi@localhost:3303/prod"
+    READER_DB_URL: str = "postgresql+asyncpg://fastapi:fastapi@localhost:3303/prod"
+    ACCESS_TOKEN_EXPIRE_PERIOD: int = os.getenv("ACCESS_TOKEN_EXPIRE_PERIOD")
+    REFRESH_TOKEN_EXPIRE_PERIOD: int = os.getenv("REFRESH_TOKEN_EXPIRE_PERIOD")
     TASK_CAPTURE_EXCEPTIONS: bool = False
 
 
 class TestConfig(Config):
-    WRITER_DB_URL: str = f"sqlite+aiosqlite:///./test.db"
-    READER_DB_URL: str = f"sqlite+aiosqlite:///./test.db"
+    WRITER_DB_URL: str = "sqlite+aiosqlite:///./test.db"
+    READER_DB_URL: str = "sqlite+aiosqlite:///./test.db"
 
 
 def get_config():

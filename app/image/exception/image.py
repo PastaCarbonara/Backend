@@ -41,19 +41,19 @@ class AzureImageDeleteNotFoundException(AzureImageDeleteException):
     message = "Azure image not found"
 
 
-class ImageDependecyException(CustomException):
+class FileDependecyException(CustomException):
     code = 409
-    error_code = "IMAGE_DEPENDENCY"
+    error_code = "FILE__IS_IN_USE"
     message = "The image is being used."
 
 
 class DuplicateFileNameException(CustomException):
     code = 400
-    error_code = "DUPLICATE_FILENAME"
-    message = "THIS_FILE_ALREADY_EXISTS"
+    error_code = "FILE__DUPLICATE_FILENAME"
+    message = "Filename already in use"
 
 
 class FileNotFoundException(CustomException):
     code = 400
-    error_code = "FILE_NOT_FOUND"
-    message = "THIS_FILE_NOT_FOUND"
+    error_code = "FILE__NOT_FOUND"
+    message = "File not found"

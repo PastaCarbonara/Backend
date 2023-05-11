@@ -31,7 +31,7 @@ class GroupService:
         Gets a list of all groups.
     get_groups_by_user(user_id) -> list[Group]
         Gets a list of groups for a given user.
-    create_group(request: CreateGroupSchema, user_id: int, object_storage: ObjectStorageInterface) 
+    create_group(request: CreateGroupSchema, user_id: int, object_storage: ObjectStorageInterface)
     -> int
         Creates a new group with the given data and adds the user as an admin.
     get_group_by_id(group_id: int) -> Group
@@ -39,6 +39,7 @@ class GroupService:
     join_group(group_id, user_id) -> None
         Adds a user to a group.
     """
+
     def __init__(self):
         """
         Initializes the SwipeSessionService instance.
@@ -112,16 +113,18 @@ class GroupService:
             joinedload(Group.users)
             .joinedload(GroupMember.user)
             .joinedload(User.account_auth),
-            joinedload(Group.swipe_sessions)
-            .joinedload(SwipeSession.swipes),
-            joinedload(Group.image)
+            joinedload(Group.users).joinedload(GroupMember.user).joinedload(User.image),
+            joinedload(Group.swipe_sessions).joinedload(SwipeSession.swipes),
+            joinedload(Group.image),
         )
         result = await session.execute(query)
         groups: list[Group] = result.unique().scalars().all()
 
         for group in groups:
             for swipe_session in group.swipe_sessions:
-                swipe_session.matches = await self.swipe_session_serv.get_matches(swipe_session.id)
+                swipe_session.matches = await self.swipe_session_serv.get_matches(
+                    swipe_session.id
+                )
 
         return groups
 
@@ -143,9 +146,11 @@ class GroupService:
                 joinedload(Group.users)
                 .joinedload(GroupMember.user)
                 .joinedload(User.account_auth),
-                joinedload(Group.swipe_sessions)
-                .joinedload(SwipeSession.swipes),
-                joinedload(Group.image)
+                joinedload(Group.users)
+                .joinedload(GroupMember.user)
+                .joinedload(User.image),
+                joinedload(Group.swipe_sessions).joinedload(SwipeSession.swipes),
+                joinedload(Group.image),
             )
         )
         result = await session.execute(query)
@@ -153,7 +158,9 @@ class GroupService:
 
         for group in groups:
             for swipe_session in group.swipe_sessions:
-                swipe_session.matches = await self.swipe_session_serv.get_matches(swipe_session.id)
+                swipe_session.matches = await self.swipe_session_serv.get_matches(
+                    swipe_session.id
+                )
 
         return groups
 
@@ -215,16 +222,20 @@ class GroupService:
                 joinedload(Group.users)
                 .joinedload(GroupMember.user)
                 .joinedload(User.account_auth),
-                joinedload(Group.swipe_sessions)
-                .joinedload(SwipeSession.swipes),
-                joinedload(Group.image)
+                joinedload(Group.users)
+                .joinedload(GroupMember.user)
+                .joinedload(User.image),
+                joinedload(Group.swipe_sessions).joinedload(SwipeSession.swipes),
+                joinedload(Group.image),
             )
         )
         result = await session.execute(query)
         group: Group = result.unique().scalars().first()
 
         for swipe_session in group.swipe_sessions:
-            swipe_session.matches = await self.swipe_session_serv.get_matches(swipe_session.id)
+            swipe_session.matches = await self.swipe_session_serv.get_matches(
+                swipe_session.id
+            )
 
         return group
 
@@ -248,6 +259,6 @@ class GroupService:
         group.users.append(
             GroupMember(
                 is_admin=False,
-                user=await UserService().get_user_by_id(user_id),
+                user=await UserService().get_by_id(user_id),
             )
         )

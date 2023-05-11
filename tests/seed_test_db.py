@@ -13,18 +13,19 @@ def seed_db():
     Session = sessionmaker(engine)
 
     with Session() as session:
-        admin = User(display_name="admin", is_admin=True, client_token=uuid.uuid4())
-        admin.account_auth = AccountAuth(
-            username="admin", password=get_password_hash("admin")
-        )
-        normal_user = User(display_name="normal_user", client_token=uuid.uuid4())
-        normal_user.account_auth = AccountAuth(
-            username="normal_user", password=get_password_hash("normal_user")
-        )
-        
         image_1 = File(filename="image_1")
         image_2 = File(filename="image_2")
         image_3 = File(filename="image_3")
+        image_4 = File(filename="image_4")
+        
+        admin = User(display_name="admin", is_admin=True, client_token=uuid.uuid4(), filename="image_4")
+        admin.account_auth = AccountAuth(
+            username="admin", password=get_password_hash("admin")
+        )
+        normal_user = User(display_name="normal_user", client_token=uuid.uuid4(), filename="image_4")
+        normal_user.account_auth = AccountAuth(
+            username="normal_user", password=get_password_hash("normal_user")
+        )
 
         group_1 = Group(name="group_1", filename="image_3")
         group_1.users.append(GroupMember(user=admin, is_admin=True))
@@ -86,6 +87,7 @@ def seed_db():
                 image_1,
                 image_2,
                 image_3,
+                image_4,
                 recipe_1,
                 recipe_2,
                 *tags,
