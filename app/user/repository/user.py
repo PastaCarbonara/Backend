@@ -10,6 +10,7 @@ from core.db.models import AccountAuth, User
 from core.db import session
 from core.db.transactional import Transactional
 from core.repository.base import BaseRepo
+from core.repository.enum import SynchronizeSessionEnum
 
 
 class UserRepository(BaseRepo):
@@ -36,6 +37,11 @@ class UserRepository(BaseRepo):
         session.add(user)
         await session.flush()
         return user.id
+    
+    
+    @Transactional()
+    async def update_by_id(self, model_id: int, params: dict, synchronize_session: SynchronizeSessionEnum = False):
+        return await super().update_by_id(model_id, params, synchronize_session)
 
     @Transactional()
     async def create_account_auth(self, user_id, username, password):

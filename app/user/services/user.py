@@ -40,17 +40,16 @@ class UserService:
             The list of all users.
         """
         return await self.repo.get_user_list()
-    
+
     async def update(self, updated_user: UpdateUserSchema):
         user_dict = updated_user.dict()
-        if not updated_user.filename:
-            del user_dict["filename"]
 
-        elif not await self.image_repo.get_image_by_name(updated_user.filename):
+        if updated_user.filename and not await self.image_repo.get_image_by_name(
+            updated_user.filename
+        ):
             raise FileNotFoundException
 
-        print(user_dict)
-        # await self.repo.update_by_id(model_id=updated_user.id, params=user_dict)
+        await self.repo.update_by_id(model_id=updated_user.id, params=user_dict)
         return updated_user.id
 
     async def get_by_display_name(self, display_name) -> User:

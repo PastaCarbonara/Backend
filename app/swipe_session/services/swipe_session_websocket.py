@@ -99,7 +99,7 @@ class SwipeSessionWebsocketService:
         user_id = 1
         # get user and session
         try:
-            user = await check_id(user_id, UserService().get_user_by_id)
+            user = await check_id(user_id, UserService().get_by_id)
             session = await check_id(
                 session_id, SwipeSessionService().get_swipe_session_by_id
             )
