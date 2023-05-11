@@ -56,28 +56,20 @@ async def test_create_recipe(client: AsyncClient, admin_token_headers: Dict[str,
     assert response.status_code == 200
 
 
-# @pytest.mark.asyncio
-# async def test_update_recipe(client: AsyncClient, admin_token_headers: Dict[str, str]):
-#     """Test that the update recipe endpoint returns a recipe"""
-#     response = await client.put(
-#         "/api/v1/recipes/1",
-#         json={
-#             "title": "test",
-#             "description": "test",
-#             "ingredients": ["test"],
-#             "instructions": ["test"],
-#         },
-#         headers=await admin_token_headers,
-#     )
-#     assert response.status_code == 200
-#     assert isinstance(response.json(), dict)
 
+@pytest.mark.asyncio
+async def test_delete_recipe(client: AsyncClient, admin_token_headers: Dict[str, str]):
+    """Test that the delete recipe endpoint returns a recipe"""
+    response = await client.delete(
+        "/api/v1/recipes/1", headers=await admin_token_headers
+    )
+    assert response.status_code == 204
+    
+@pytest.mark.asyncio
+async def test_delete_recipe_unauthorized(client: AsyncClient, normal_user_token_headers: Dict[str, str]):
+    """Test that the delete recipe endpoint returns a recipe"""
+    response = await client.delete(
+        "/api/v1/recipes/2", headers=await normal_user_token_headers
+    )
+    assert response.status_code == 401
 
-# @pytest.mark.asyncio
-# async def test_delete_recipe(client: AsyncClient, admin_token_headers: Dict[str, str]):
-#     """Test that the delete recipe endpoint returns a recipe"""
-#     response = await client.delete(
-#         "/api/v1/recipes/1", headers=await admin_token_headers
-#     )
-#     print(response.json())
-#     assert response.status_code == 204
