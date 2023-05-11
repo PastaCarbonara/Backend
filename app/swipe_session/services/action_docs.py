@@ -85,8 +85,8 @@ actions = {
             "parameters": {}
         }
     },
-    "SESSION_MESSAGE": {
-        "info": "Action for sending a message to all connected users within a session.",
+    "POOL_MESSAGE": {
+        "info": "Action for sending a message to all connected users within a pool.",
         "expected_request": {
             "parameters": {
                 "action": "string",

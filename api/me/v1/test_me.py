@@ -1,7 +1,7 @@
+# pylint: skip-file
+
 import pytest
-from fastapi import Response
 from httpx import AsyncClient
-from fastapi.testclient import TestClient
 from typing import Dict
 
 

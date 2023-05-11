@@ -158,9 +158,9 @@ class PermissionDependency(SecurityBase):
                 if not await cls.has_permission(request=request):
                     exceptions[i].append(cls.exception)
 
-        if any(len(exceptions[i]) == 0 for i in exceptions):
+        if any(len(excs) == 0 for _, excs in exceptions.items()):
             return
 
-        for i in exceptions:
-            if len(exceptions[i]) > 0:
-                raise exceptions[i][0]
+        for _, excs in exceptions.items():
+            if len(excs) > 0:
+                raise excs[0]

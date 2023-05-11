@@ -1,4 +1,6 @@
-"""Group service module"""
+"""
+Class business logic for groups
+"""
 
 from typing import List
 from sqlalchemy import select, and_
@@ -14,24 +16,50 @@ from core.exceptions.group import GroupNotFoundException
 
 
 class GroupService:
+    """
+    This class provides business logic for managing groups.
+
+    Methods
+    -------
+    __init__()
+        Initializes the SwipeSessionService instance.
+    is_member(group_id: int, user_id: int) -> bool
+        Checks if a given user is a member of a given group.
+    is_admin(group_id: int, user_id: int) -> bool
+        Checks if a given user is an admin of a given group.
+    get_group_list() -> List[Group]
+        Gets a list of all groups.
+    get_groups_by_user(user_id) -> list[Group]
+        Gets a list of groups for a given user.
+    create_group(request: CreateGroupSchema, user_id: int, object_storage: ObjectStorageInterface) 
+    -> int
+        Creates a new group with the given data and adds the user as an admin.
+    get_group_by_id(group_id: int) -> Group
+        Gets a group by ID.
+    join_group(group_id, user_id) -> None
+        Adds a user to a group.
+    """
     def __init__(self):
+        """
+        Initializes the SwipeSessionService instance.
+        """
         self.swipe_session_serv = SwipeSessionService()
 
     async def is_member(self, group_id: int, user_id: int) -> bool:
         """
-        Check if user is a member of a group
-        
+        Checks if a given user is a member of a given group.
+
         Parameters
         ----------
         group_id : int
-            The group id
+            ID of the group to check.
         user_id : int
-            The user id
-        
+            ID of the user to check.
+
         Returns
         -------
         bool
-            True if user is a member of the group, False otherwise
+            True if the user is a member of the group, False otherwise.
         """
         result = await session.execute(
             select(GroupMember).where(
@@ -46,19 +74,19 @@ class GroupService:
 
     async def is_admin(self, group_id: int, user_id: int) -> bool:
         """
-        Check if user is an admin of a group
-        
+        Checks if a given user is an admin of a given group.
+
         Parameters
         ----------
         group_id : int
-            The group id
+            ID of the group to check.
         user_id : int
-            The user id
-        
+            ID of the user to check.
+
         Returns
         -------
         bool
-            True if user is an admin of the group, False otherwise
+            True if the user is an admin of the group, False otherwise.
         """
         result = await session.execute(
             select(GroupMember).where(
@@ -73,12 +101,12 @@ class GroupService:
 
     async def get_group_list(self) -> List[Group]:
         """
-        Get a list of all groups
+        Gets a list of all groups.
 
         Returns
         -------
         List[Group]
-            A list of all groups
+            A list of all groups.
         """
         query = select(Group).options(
             joinedload(Group.users)
@@ -90,7 +118,7 @@ class GroupService:
         )
         result = await session.execute(query)
         groups: list[Group] = result.unique().scalars().all()
-        
+
         for group in groups:
             for swipe_session in group.swipe_sessions:
                 swipe_session.matches = await self.swipe_session_serv.get_matches(swipe_session.id)
@@ -99,17 +127,13 @@ class GroupService:
 
     async def get_groups_by_user(self, user_id) -> list[Group]:
         """
-        Get a list of groups that a user is a member of
+        Get a list of groups that a user is a member of.
 
-        Parameters
-        ----------
-        user_id : int
-            The user id
+        Args:
+            user_id (int): The ID of the user to get groups for.
 
-        Returns
-        -------
-        list[Group]
-            A list of groups that the user is a member of
+        Returns:
+            list[Group]: A list of Group objects that the user is a member of.
         """
         query = (
             select(Group)
@@ -126,7 +150,7 @@ class GroupService:
         )
         result = await session.execute(query)
         groups: list[Group] = result.unique().scalars().all()
-        
+
         for group in groups:
             for swipe_session in group.swipe_sessions:
                 swipe_session.matches = await self.swipe_session_serv.get_matches(swipe_session.id)
@@ -176,17 +200,13 @@ class GroupService:
 
     async def get_group_by_id(self, group_id: int) -> Group:
         """
-        Get a group by id
+        Get a group by its ID.
 
-        Parameters
-        ----------
-        group_id : int
-            The group id
-        
-        Returns
-        -------
-        Group
-            The group
+        Args:
+            group_id (int): The ID of the group to retrieve.
+
+        Returns:
+            Group: The Group object with the specified ID.
         """
         query = (
             select(Group)
@@ -211,14 +231,14 @@ class GroupService:
     @Transactional()
     async def join_group(self, group_id, user_id) -> None:
         """
-        Join a group
+        Add a user to a group.
 
-        Parameters
-        ----------
-        group_id : int
-            The group id
-        user_id : int
-            The user id
+        Args:
+            group_id (int): The ID of the group to join.
+            user_id (int): The ID of the user to add to the group.
+
+        Raises:
+            GroupNotFoundException: If the specified group does not exist.
         """
         group = await self.get_group_by_id(group_id)
 

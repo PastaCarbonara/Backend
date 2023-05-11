@@ -1,10 +1,8 @@
-"""Tests for the image endpoints"""
+# pylint: skip-file
+
 import pytest
 from httpx import AsyncClient
 from typing import Dict
-from PIL import Image
-import random
-import os
 
 
 @pytest.mark.asyncio

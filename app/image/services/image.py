@@ -3,7 +3,7 @@
 from typing import List
 from tempfile import NamedTemporaryFile
 from azure.core.exceptions import ResourceNotFoundError
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from sqlalchemy.exc import IntegrityError
 from fastapi import UploadFile
 
@@ -225,8 +225,19 @@ class ImageService:
         try:
             img = Image.open(file.file)
             img.verify()
-        except Exception:
+
+        except FileNotFoundError:
             return True
+
+        except UnidentifiedImageError:
+            return True
+
+        except KeyError:
+            return True
+
+        except ValueError:
+            return True
+
         return False
 
     async def is_image_to_large(self, file: UploadFile) -> bool:

@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 from typing import Dict
 from fastapi import Response
 from httpx import AsyncClient
