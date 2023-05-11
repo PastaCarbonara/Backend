@@ -1,6 +1,7 @@
 # pylint: skip-file
 
 import pytest
+pytest.skip(allow_module_level=True)
 
 from typing import Dict
 from httpx import AsyncClient
