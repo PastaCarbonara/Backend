@@ -49,6 +49,7 @@ class RecipeRepository:
             joinedload(Recipe.tags).joinedload(RecipeTag.tag),
             joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
             joinedload(Recipe.creator).joinedload(User.account_auth),
+            joinedload(Recipe.creator).joinedload(User.image),
             joinedload(Recipe.judgements),
             joinedload(Recipe.image),
         )
@@ -80,6 +81,7 @@ class RecipeRepository:
                 joinedload(Recipe.tags).joinedload(RecipeTag.tag),
                 joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
                 joinedload(Recipe.creator).joinedload(User.account_auth),
+                joinedload(Recipe.creator).joinedload(User.image),
                 joinedload(Recipe.judgements),
                 joinedload(Recipe.image),
             )

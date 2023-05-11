@@ -12,7 +12,7 @@ async def test_get_images(client: AsyncClient, admin_token_headers: Dict[str, st
     response = await client.get("/api/v1/images", headers=admin_token_headers)
     assert response.status_code == 200
     filenames = [image["filename"] for image in response.json()]
-    assert filenames == ["image_1", "image_2", "image_3"]
+    assert filenames == ["image_1", "image_2", "image_3", "image_4"]
 
 
 @pytest.mark.asyncio

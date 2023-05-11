@@ -49,6 +49,7 @@ class BaseRepo(Generic[Model]):
         :param synchronize_session: An optional parameter specifying the level of synchronization 
         to use.
         """
+        print(params)
         query = (
             update(self.model)
             .where(self.model.id == model_id)

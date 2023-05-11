@@ -15,7 +15,7 @@ class FilterService:
     @Transactional()
     async def store_filter(self, user_id: int, user_filter: int):
         """Store a filter for a user."""
-        user = await self.user_repository.get_user_by_id(user_id)
+        user = await self.user_repository.get_by_id(user_id)
         if not user:
             raise UserNotFoundException()
         await self.filter_repository.store_filter(user_id, user_filter)
@@ -23,7 +23,7 @@ class FilterService:
     @Transactional()
     async def store_filters(self, user_id, user_filters: list[int]):
         """Store filters for a user."""
-        user = await self.user_repository.get_user_by_id(user_id)
+        user = await self.user_repository.get_by_id(user_id)
         if not user:
             raise UserNotFoundException()
 
@@ -41,14 +41,14 @@ class FilterService:
 
     @Transactional()
     async def delete_filter(self, user_id, tag_id):
-        user = await self.user_repository.get_user_by_id(user_id)
+        user = await self.user_repository.get_by_id(user_id)
         if not user:
             raise UserNotFoundException()
         await self.filter_repository.delete_filter_user(user_id, tag_id)
 
     async def get_all_filters_user(self, user_id) -> list[Tag]:
         """Get all filters for a user."""
-        user = await self.user_repository.get_user_by_id(user_id)
+        user = await self.user_repository.get_by_id(user_id)
         if not user:
             raise UserNotFoundException()
         return await self.filter_repository.get_all_filters_user(user_id)

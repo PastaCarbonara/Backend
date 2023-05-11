@@ -52,7 +52,7 @@ class AuthService:
         Returns:
             TokensSchema: A pair of JSON Web Tokens (access and refresh tokens).
         """
-        user = await self.user_serv.get_user_by_display_name(username)
+        user = await self.user_serv.get_by_display_name(username)
         if not user:
             raise UserNotFoundException()
         if not verify_password(password, user.account_auth.password):
@@ -78,7 +78,7 @@ class AuthService:
         except ValueError as exc:
             raise BadUUIDException from exc
 
-        user = await self.user_serv.get_user_by_client_token(ctoken=ctoken)
+        user = await self.user_serv.get_by_client_token(ctoken=ctoken)
 
         if not user:
             user_id = await self.user_serv.create_user_with_client_token(
