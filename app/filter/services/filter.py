@@ -6,7 +6,6 @@ from core.db import Transactional
 from core.db.models import Tag
 
 
-
 class FilterService:
     def __init__(self):
         self.filter_repository: FilterRepository = FilterRepository()
@@ -31,11 +30,14 @@ class FilterService:
         filters = await self.filter_repository.get_all_filters_user(user_id)
         tags = await self.tag_repository.get_tags()
 
-        new_filters = [filter for filter in user_filters if filter not in [filter.id for filter in filters]
-                        and filter in [tag.id for tag in tags]]
+        new_filters = [
+            filter
+            for filter in user_filters
+            if filter not in [filter.id for filter in filters]
+            and filter in [tag.id for tag in tags]
+        ]
 
         await self.filter_repository.store_filters(user_id, new_filters)
-
 
     @Transactional()
     async def delete_filter(self, user_id, tag_id):
@@ -50,4 +52,3 @@ class FilterService:
         if not user:
             raise UserNotFoundException()
         return await self.filter_repository.get_all_filters_user(user_id)
-    
