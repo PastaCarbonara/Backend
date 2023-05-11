@@ -1,7 +1,5 @@
-from sqlalchemy import and_, or_, update, select
-from sqlalchemy.orm import outerjoin
-from core.db.enums import SwipeSessionEnum
-from core.db.models import SwipeSession, File, Recipe, Group, User
+from sqlalchemy import and_, select
+from core.db.models import File
 from core.tasks.base_task import BaseTask
 import asyncio
 from datetime import datetime, timedelta
@@ -17,7 +15,6 @@ class Task(BaseTask):
     @property
     def countdown(self):
         # Everyday at 01:00:00
-        return 9
         x = datetime.today()
         y = x.replace(day=x.day, hour=1, minute=0, second=0, microsecond=0)
         if x > y:
@@ -29,7 +26,9 @@ class Task(BaseTask):
     def exec(self) -> None:
         # check if files are referenced in recipe, group, user if not delete from database and blob storage
 
-        query = select(File).where(and_(File.group == None, File.recipe == None))
+        query = select(File).where(
+            and_(File.group == None, File.recipe == None, File.user == None)
+        )
         files_not_referenced = self.session.execute(query).scalars().all()
         print(len(files_not_referenced))
         for file in files_not_referenced:
