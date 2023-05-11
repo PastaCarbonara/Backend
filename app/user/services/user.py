@@ -37,7 +37,7 @@ class UserService:
         """
         return await self.user_repository.get_user_list()
 
-    async def get_user_by_display_name(self, display_name) -> User:
+    async def get_by_display_name(self, display_name) -> User:
         """Get the user with the given display name.
 
         Parameters
@@ -55,9 +55,9 @@ class UserService:
         UserNotFoundException
             If the user with the given display name does not exist.
         """
-        return await self.user_repository.get_user_by_display_name(display_name)
+        return await self.user_repository.get_by_display_name(display_name)
 
-    async def get_user_by_client_token(self, ctoken) -> User:
+    async def get_by_client_token(self, ctoken) -> User:
         """Get the user with the given client token.
 
         Parameters
@@ -75,9 +75,9 @@ class UserService:
         UserNotFoundException
             If the user with the given client token does not exist.
         """
-        return await self.user_repository.get_user_by_client_token(ctoken)
+        return await self.user_repository.get_by_client_token(ctoken)
 
-    async def get_user_by_id(self, user_id: int) -> User:
+    async def get_by_id(self, user_id: int) -> User:
         """Get a user by id.
 
         Parameters
@@ -95,7 +95,7 @@ class UserService:
         UserNotFoundException
             If the user with the given id does not exist.
         """
-        user = await self.user_repository.get_user_by_id(user_id)
+        user = await self.user_repository.get_by_id(user_id)
         if not user:
             raise UserNotFoundException()
         return user
@@ -120,7 +120,7 @@ class UserService:
         DuplicateUsernameException
             If a user with the given username already exists.
         """
-        user = await self.user_repository.get_user_by_display_name(username)
+        user = await self.user_repository.get_by_display_name(username)
         if user:
             raise DuplicateUsernameException()
         hashed_pwd = get_password_hash(password)
@@ -156,7 +156,7 @@ class UserService:
         if not display_name:
             display_name = generate_name()
 
-        if await self.get_user_by_client_token(ctoken):
+        if await self.get_by_client_token(ctoken):
             raise DuplicateClientTokenException
 
         return await self.user_repository.create_user(display_name, ctoken)
@@ -176,7 +176,7 @@ class UserService:
         UserNotFoundException
             If the user with the given id does not exist.
         """
-        user = await self.get_user_by_id(user_id)
+        user = await self.get_by_id(user_id)
         await self.user_repository.set_admin(user, is_admin)
 
     async def is_admin(self, user_id: int) -> bool:
@@ -197,5 +197,5 @@ class UserService:
         UserNotFoundException
             If the user with the given id does not exist.
         """
-        user = await self.get_user_by_id(user_id)
+        user = await self.get_by_id(user_id)
         return user.is_admin

@@ -1,11 +1,11 @@
-from typing import Any
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
+from app.image.schemas.image import ImageSchema
 from core.fastapi.schemas import HashId
 
 
 class AccountAuthSchema(BaseModel):
     username: str = Field(..., description="Username")
-    
+
     class Config:
         orm_mode = True
 
@@ -14,8 +14,9 @@ class UserSchema(BaseModel):
     id: HashId
     display_name: str
     is_admin: bool
+    image: ImageSchema
     account_auth: AccountAuthSchema = None
-    
+
     class Config:
         orm_mode = True
 

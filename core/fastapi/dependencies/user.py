@@ -20,7 +20,6 @@ async def get_current_user(request: Request) -> User:
         User object.
     """
     user = request.user
-    print(user)
 
     if not user:
         return None

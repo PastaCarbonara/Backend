@@ -248,6 +248,6 @@ class GroupService:
         group.users.append(
             GroupMember(
                 is_admin=False,
-                user=await UserService().get_user_by_id(user_id),
+                user=await UserService().get_by_id(user_id),
             )
         )
