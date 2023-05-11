@@ -127,7 +127,7 @@ class Recipe(Base, TimestampMixin):
     ingredients: Mapped[List[RecipeIngredient]] = relationship(back_populates="recipe", cascade="all, delete")
     tags: Mapped[List[RecipeTag]] = relationship(back_populates="recipe", cascade="all, delete")
     creator: Mapped[User] = relationship(back_populates="recipes")
-    judgements: Mapped[RecipeJudgement] = relationship(back_populates="recipe")
+    judgements: Mapped[RecipeJudgement] = relationship(back_populates="recipe", cascade="all, delete")
 
     def __repr__(self) -> str:
         return (
@@ -170,7 +170,7 @@ class SwipeSession(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     session_date: Mapped[datetime] = mapped_column(
-        default=func.now(), server_default=func.now()
+        default=func.now(), server_default=func.now() # pylint: disable=not-callable
     )
     status: Mapped[SwipeSessionEnum] = mapped_column(default=SwipeSessionEnum.READY)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
