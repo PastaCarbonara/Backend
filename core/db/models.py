@@ -42,7 +42,7 @@ class User(Base, TimestampMixin):
     is_admin: Mapped[bool] = mapped_column(default=False)
     client_token: Mapped[uuid.UUID] = mapped_column(unique=True, nullable=False)
     filename: Mapped[str] = mapped_column(
-        ForeignKey("file.filename", ondelete="CASCADE")
+        ForeignKey("file.filename", ondelete="CASCADE"), nullable=True
     )
 
     image: Mapped["File"] = relationship(back_populates="user")

@@ -24,7 +24,7 @@ from app.image.exception.image import (
     AzureImageDeleteException,
     FileNotFoundException,
     AzureImageDeleteNotFoundException,
-    ImageDependecyException,
+    FileDependecyException,
 )
 
 ALLOWED_TYPES = ["image/jpeg", "image/png"]
@@ -160,7 +160,7 @@ class ImageService:
         ------
         FileNotFoundException:
             If the image is not found in the repository.
-        ImageDependecyException:
+        FileDependecyException:
             If the image is used by another entity.
         AzureImageDeleteException:
             If the image could not be deleted from the object storage.
@@ -172,7 +172,7 @@ class ImageService:
         try:
             await self.image_repository.delete_image(image)
         except IntegrityError as exc:
-            raise ImageDependecyException() from exc
+            raise FileDependecyException() from exc
         try:
             await self.object_storage_interface.delete_image(filename)
         except ResourceNotFoundError as exc:

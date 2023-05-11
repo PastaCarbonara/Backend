@@ -105,8 +105,6 @@ class UserRepository(BaseRepo):
         )
         result = await session.execute(query)
         return result.scalars().first()
-    
-    # async def update
 
     async def get_by_display_name(self, display_name: str) -> User:
         """Get user by username.
