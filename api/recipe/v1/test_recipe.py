@@ -35,7 +35,7 @@ async def test_judge_recipe(client: AsyncClient, admin_token_headers: Dict[str, 
     )
     assert response.status_code == 200
     response = await client.get("/api/v1/recipes/1", headers=admin_token_headers)
-    assert len(response.json().get("judgements")) == 1
+    assert response.json().get("likes") == 1
 
 
 @pytest.mark.asyncio
@@ -49,8 +49,8 @@ async def test_create_recipe(client: AsyncClient, admin_token_headers: Dict[str,
             "description": "test",
             "ingredients": [{"name": "test", "amount": 1, "unit": "test"}],
             "instructions": ["test"],
-            "tags": ["test"],
-            "preparing_time": 30,
+            "tags": [{"name":"dogshit","tag_type":"Keuken"}],
+            "preparation_time": 30,
         },
         headers=await admin_token_headers,
     )

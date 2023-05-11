@@ -1,4 +1,6 @@
-from datetime import date, datetime
+"""Database models."""
+
+from datetime import datetime
 from typing import List
 import uuid
 from sqlalchemy import (
@@ -13,7 +15,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.ext.hybrid import hybrid_property
 from core.db import Base
 from core.db.mixins import TimestampMixin
-from core.db.enums import SwipeSessionEnum
+from core.db.enums import SwipeSessionEnum, TagType
 from core.config import config
 
 
@@ -44,6 +46,7 @@ class User(Base, TimestampMixin):
     recipes: Mapped[List["Recipe"]] = relationship(back_populates="creator")
     judged_recipes: Mapped[List[RecipeJudgement]] = relationship(back_populates="user")
     groups: Mapped[List["GroupMember"]] = relationship(back_populates="user")
+    filters: Mapped[List["UserTag"]] = relationship(back_populates="user")
 
 
 class AccountAuth(Base, TimestampMixin):
@@ -63,7 +66,7 @@ class RecipeIngredient(Base):
         ForeignKey("recipe.id", ondelete="CASCADE"), primary_key=True
     )
     ingredient_id: Mapped[int] = mapped_column(
-        ForeignKey("ingredient.id"), primary_key=True
+        ForeignKey("ingredient.id", ondelete="CASCADE"), primary_key=True
     )
     unit: Mapped[str] = mapped_column()
     amount: Mapped[float] = mapped_column()
@@ -85,6 +88,14 @@ class RecipeTag(Base):
     recipe: Mapped["Recipe"] = relationship(back_populates="tags")
     tag: Mapped["Tag"] = relationship(back_populates="recipes")
 
+class UserTag(Base):
+    __tablename__ = "user_tag"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
+    tag_id: Mapped[int] = mapped_column(ForeignKey("tag.id", ondelete="CASCADE"), primary_key=True)
+
+    user: Mapped["User"] = relationship(back_populates="filters")
+    tag: Mapped["Tag"] = relationship(back_populates="users")
 
 class File(Base):
     __tablename__ = "file"
@@ -106,16 +117,15 @@ class Recipe(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(50))
     description: Mapped[str] = mapped_column()
     instructions = Column(JSON, nullable=False)
-    preparing_time: Mapped[int | None] = mapped_column()
+    materials = Column(JSON, nullable=True)
+    preparation_time: Mapped[int | None] = mapped_column()
     filename: Mapped[str] = mapped_column(
         ForeignKey("file.filename", ondelete="CASCADE")
     )
     creator_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"))
-
-    # ingredients = Column(JSON, nullable=False)
     image: Mapped[File] = relationship(back_populates="recipe")
-    ingredients: Mapped[List[RecipeIngredient]] = relationship(back_populates="recipe")
-    tags: Mapped[List[RecipeTag]] = relationship(back_populates="recipe")
+    ingredients: Mapped[List[RecipeIngredient]] = relationship(back_populates="recipe", cascade="all, delete")
+    tags: Mapped[List[RecipeTag]] = relationship(back_populates="recipe", cascade="all, delete")
     creator: Mapped[User] = relationship(back_populates="recipes")
     judgements: Mapped[RecipeJudgement] = relationship(back_populates="recipe")
 
@@ -125,10 +135,14 @@ class Recipe(Base, TimestampMixin):
             + f"name='{self.name}' "
             + f"description='{self.description}' "
             + f"instructions='{self.instructions}' "
-            + f"preparing_time='{self.preparing_time}' "
+            + f"preparation_time='{self.preparation_time}' "
             + f"image='{self.image}' "
             + f"creator_id='{self.creator_id}' "
         )
+    
+    @hybrid_property
+    def likes(self):
+        return len([judgement for judgement in self.judgements if judgement.like])
 
 
 class Tag(Base):
@@ -136,8 +150,10 @@ class Tag(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50), unique=True)
+    tag_type: Mapped[TagType] = mapped_column()
 
-    recipes: Mapped[RecipeTag] = relationship(back_populates="tag")
+    recipes: Mapped[RecipeTag] = relationship(back_populates="tag", cascade="all, delete")
+    users: Mapped[UserTag] = relationship(back_populates="tag")
 
 
 class Ingredient(Base):
@@ -146,7 +162,7 @@ class Ingredient(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50), unique=True)
 
-    recipes: Mapped[RecipeIngredient] = relationship(back_populates="ingredient")
+    recipes: Mapped[RecipeIngredient] = relationship(back_populates="ingredient", cascade="all, delete")
 
 
 class SwipeSession(Base, TimestampMixin):

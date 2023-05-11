@@ -165,16 +165,21 @@ class GroupService:
         object_storage: ObjectStorageInterface,
     ) -> int:
         """
-        Create a new group.
+        Create a group
 
-        Args:
-            request (CreateGroupSchema): The schema containing the data for the new group.
-            user_id (int): The ID of the user creating the group.
-            object_storage (ObjectStorageInterface): An object storage interface for storing 
-            the group's image.
+        Parameters
+        ----------
+        request : CreateGroupSchema
+            The request body
+        user_id : int
+            The user id
+        object_storage : ObjectStorageInterface
+            The object storage interface
 
-        Returns:
-            int: The ID of the newly created group.
+        Returns
+        -------
+        int
+            The group id
         """
         # Check if file exists
         await ImageService(object_storage).get_image_by_name(request.filename)
