@@ -147,7 +147,7 @@ class SwipeSessionWebsocketService:
             await self.manager.handle_connection_code(websocket, exc)
             await websocket.close()
             return
-        
+
         user, swipe_session = await self.get_user_and_swipe_session(
             access_token=access_token, swipe_session_id=swipe_session_id
         )
@@ -207,7 +207,7 @@ class SwipeSessionWebsocketService:
         swipe_session_id = decode_single(swipe_session_id)
 
         # By calling "check_auth" with "IsSessionMember", we already know that these exist
-        user = await UserService().get_user_by_id(user_id)
+        user = await UserService().get_by_id(user_id)
         swipe_session = await SwipeSessionService().get_swipe_session_by_id(
             swipe_session_id
         )
@@ -444,6 +444,7 @@ class SwipeSessionWebsocketService:
             full_recipe = GetFullRecipeResponseSchema(**recipe.__dict__)
         except Exception as e:
             print(e)
+            raise e
         payload = {"message": "A match has been found", "recipe": full_recipe}
         packet = SwipeSessionPacketSchema(action=ACTIONS.RECIPE_MATCH, payload=payload)
 

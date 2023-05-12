@@ -27,17 +27,15 @@ class JwtService:
         """
         TokenHelper.decode(token=token)
 
-    async def create_refresh_token(
+    async def refresh_tokens(
         self,
-        access_token: str,
         refresh_token: str,
     ) -> TokensSchema:
         """
         Create a new refresh token
 
         Args:
-            access_token (str): The access token to include in the new refresh token
-            refresh_token (str): The old refresh token to use as a template for the new 
+            refresh_token (str): The old refresh token to use as a template for the new
             refresh token
 
         Returns:
@@ -47,20 +45,19 @@ class JwtService:
             DecodeTokenException: If the old refresh token cannot be decoded
             UnauthorizedException: If the new token ID cannot be generated
         """
-        access_token = TokenHelper.decode(token=access_token)
         refresh_token = TokenHelper.decode(token=refresh_token)
 
-        if refresh_token.get("token_id") is None:
+        if refresh_token.get("jti") is None:
             raise DecodeTokenException
 
         if refresh_token.get("sub") != "refresh":
             raise DecodeTokenException
 
-        user_id = decode_single(access_token.get("user_id"))
+        user_id = decode_single(refresh_token.get("user_id"))
         user_id = encode(user_id)
 
         try:
-            token_id = token_checker.generate_add(refresh_token.get("token_id"))
+            jti = token_checker.generate_add(refresh_token.get("jti"))
 
         except ValueError as exc:
             raise UnauthorizedException from exc
@@ -69,11 +66,9 @@ class JwtService:
             raise DecodeTokenException from exc
 
         return TokensSchema(
-            access_token=TokenHelper.encode(
-                payload={"user_id": access_token.get("user_id")}
-            ),
-            refresh_token=TokenHelper.encode(
-                payload={"sub": "refresh", "token_id": token_id}
+            access_token=TokenHelper.encode_access(payload={"user_id": user_id}),
+            refresh_token=TokenHelper.encode_refresh(
+                payload={"jti": jti, "user_id": user_id}
             ),
         )
 
@@ -90,8 +85,6 @@ class JwtService:
         user_id = encode(int(user_id))
 
         return TokensSchema(
-            access_token=TokenHelper.encode(payload={"user_id": user_id}),
-            refresh_token=TokenHelper.encode(
-                payload={"sub": "refresh", "token_id": token_checker.generate_add()}
-            ),
+            access_token=TokenHelper.encode_access(payload={"user_id": user_id}),
+            refresh_token=TokenHelper.encode_refresh(payload={"user_id": user_id}),
         )
