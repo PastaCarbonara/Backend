@@ -13,7 +13,7 @@ from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 
-html = """
+HTML = """
 <!DOCTYPE html>
 <html>
     <head>
@@ -60,11 +60,11 @@ html = """
 
 @app.get("/")
 async def get():
-    return HTMLResponse(html)
+    return HTMLResponse(HTML)
 
 
 async def get_cookie_or_token(
-    websocket: WebSocket,
+    # websocket: WebSocket,
     access_token: Annotated[str | None, Cookie()] = None,
     token: Annotated[str | None, Query()] = None,
 ):

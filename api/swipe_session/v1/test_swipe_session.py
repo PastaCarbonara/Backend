@@ -1,7 +1,6 @@
 # pylint: skip-file
 
 import pytest
-pytest.skip(allow_module_level=True)
 
 from typing import Dict
 from httpx import AsyncClient
@@ -24,6 +23,10 @@ def assert_status_code(data, exception):
 
     assert payload.get("status_code") == exception.code
     assert payload.get("message") == exception.message
+
+
+def strip_headers(header: str):
+    return header.get("Authorization").split(" ")[1]
 
 
 def send_swipe(ws: WebSocketTestSession, recipe_id: int, like: bool):
@@ -64,7 +67,10 @@ async def test_action_docs(client: AsyncClient):
 
     assert res.status_code == 200
     assert type(docs) == dict
-    assert [action for action in docs.get("actions")] == [action for action in ssae]
+
+    assert len(docs.get("actions")) == len([action.value for action in ssae])
+    for action in ssae:
+        assert action.value in [action for action in docs.get("actions")]
 
 
 @pytest.mark.asyncio
@@ -85,7 +91,7 @@ async def test_get_all_sessions_authorized(
     swipe_sessions = res.json()
 
     assert res.status_code == 200
-    assert len(sessions) == 3
+    assert len(swipe_sessions) == 3
     assert not any(i.get("status") != sse.READY for i in swipe_sessions)
 
 
@@ -114,11 +120,9 @@ async def test_create_session(
 @pytest.mark.asyncio
 async def test_update_session(
     admin_token_headers: Dict[str, str],
-    normal_user_token_headers: Dict[str, str],
     fastapi_client: TestClient,
 ):
     headers = await admin_token_headers
-    user_headers = await normal_user_token_headers
 
     res = fastapi_client.get("/api/v1/groups", headers=headers)
     groups = res.json()
@@ -133,7 +137,7 @@ async def test_update_session(
     payload = {"id": swipe_sessions[0].get("id"), "status": sse.IN_PROGRESS}
 
     res = fastapi_client.patch(
-        f"/api/v1/groups/{group_id}/swipe_sessions", json=payload, headers=user_headers
+        f"/api/v1/groups/{group_id}/swipe_sessions", json=payload, headers=headers
     )
     swipe_session = res.json()
 
@@ -148,33 +152,20 @@ async def test_websocket_invalid_id(
     admin_token_headers: Dict[str, str],
 ):
     headers = await admin_token_headers
-    res = fastapi_client.get("/api/v1/users", headers=headers)
-    users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
     swipe_sessions = res.json()
 
-    assert users[0].get("id") is not None, "THE USER DTO MIGHT HAVE CHANGED!!!!"
-
     # both bad session and user id
-    with fastapi_client.websocket_connect("/api/v1/swipe_sessions/1/1") as ws:
+    with fastapi_client.websocket_connect("/api/v1/swipe_sessions/1?token=1") as ws:
         ws: WebSocketTestSession
         data = ws.receive_json()
 
-        assert_status_code(data, exc.InvalidIdException)
-
-    # bad user id
-    with fastapi_client.websocket_connect(
-        f"/api/v1/swipe_sessions/{swipe_sessions[0].get('id')}/1"
-    ) as ws:
-        ws: WebSocketTestSession
-        data = ws.receive_json()
-
-        assert_status_code(data, exc.InvalidIdException)
+        assert_status_code(data, UnauthorizedException)
 
     # bad session id
     with fastapi_client.websocket_connect(
-        f"/api/v1/swipe_sessions/1/{users[0].get('id')}"
+        f"/api/v1/swipe_sessions/1?token={strip_headers(headers)}"
     ) as ws:
         ws: WebSocketTestSession
         data = ws.receive_json()
@@ -183,7 +174,7 @@ async def test_websocket_invalid_id(
 
     # session inactive
     with fastapi_client.websocket_connect(
-        f"/api/v1/swipe_sessions/{sessions[0].get('id')}/{users[0].get('id')}"
+        f"/api/v1/swipe_sessions/{swipe_sessions[0].get('id')}?token={strip_headers(headers)}"
     ) as ws:
         ws: WebSocketTestSession
         data = ws.receive_json()
@@ -195,19 +186,18 @@ async def test_websocket_invalid_id(
 async def test_not_in_group(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
+    normal_user_token_headers: Dict[str, str], 
 ):
     headers = await admin_token_headers
-    res = fastapi_client.get("/api/v1/users", headers=headers)
-    users = res.json()
+    normal_headers = await normal_user_token_headers
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
     swipe_sessions = res.json()
 
     cur_session = swipe_sessions[0]
 
-    normal_user = users[1]
     normal_user_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{normal_user.get('id')}"
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
     )
 
     # i just want the context manager to fit on a single line :,)
@@ -220,26 +210,25 @@ async def test_not_in_group(
 
         data = ws.receive_json()
 
-        assert_status_code(data, exc.InvalidIdException)
+        assert_status_code(data, UnauthorizedException)
 
 
 @pytest.mark.asyncio
 async def test_inactive_session(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
+    normal_user_token_headers: Dict[str, str], 
 ):
     headers = await admin_token_headers
-    res = fastapi_client.get("/api/v1/users", headers=headers)
-    users = res.json()
+    normal_headers = await normal_user_token_headers
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
     swipe_sessions = res.json()
 
     cur_session = swipe_sessions[1]
 
-    normal_user = users[1]
     normal_user_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}/{normal_user.get('id')}"
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
     )
 
     # i just want the context manager to fit on a single line :,)
@@ -261,16 +250,13 @@ async def test_invalid_json(
     admin_token_headers: Dict[str, str],
 ):
     headers = await admin_token_headers
-    res = fastapi_client.get("/api/v1/users", headers=headers)
-    users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
     swipe_sessions = res.json()
 
     cur_session = swipe_sessions[0]
 
-    admin = users[0]
-    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
+    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -296,16 +282,13 @@ async def test_invalid_action(
     admin_token_headers: Dict[str, str],
 ):
     headers = await admin_token_headers
-    res = fastapi_client.get("/api/v1/users", headers=headers)
-    users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
     swipe_sessions = res.json()
 
     cur_session = swipe_sessions[0]
 
-    admin = users[0]
-    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
+    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -331,16 +314,13 @@ async def test_invalid_status_update(
     admin_token_headers: Dict[str, str],
 ):
     headers = await admin_token_headers
-    res = fastapi_client.get("/api/v1/users", headers=headers)
-    users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
     swipe_sessions = res.json()
 
     cur_session = swipe_sessions[0]
 
-    admin = users[0]
-    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
+    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -366,16 +346,12 @@ async def test_invalid_recipe(
     admin_token_headers: Dict[str, str],
 ):
     headers = await admin_token_headers
-    res = fastapi_client.get("/api/v1/users", headers=headers)
-    users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
     swipe_sessions = res.json()
 
     cur_session = swipe_sessions[0]
-
-    admin = users[0]
-    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
+    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -403,16 +379,12 @@ async def test_invalid_message(
     admin_token_headers: Dict[str, str],
 ):
     headers = await admin_token_headers
-    res = fastapi_client.get("/api/v1/users", headers=headers)
-    users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
     swipe_sessions = res.json()
 
     cur_session = swipe_sessions[0]
-
-    admin = users[0]
-    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
+    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -477,150 +449,151 @@ async def test_update_session_to_active(
     assert swipe_sessions[2].get("status") == sse.PAUSED
 
 
-# @pytest.mark.asyncio
-# async def test_swipe_session(
-#     fastapi_client: TestClient,
-#     admin_token_headers: Dict[str, str],
-# ):
-#     headers = await admin_token_headers
+@pytest.mark.asyncio
+async def test_swipe_session(
+    fastapi_client: TestClient,
+    admin_token_headers: Dict[str, str],
+    normal_user_token_headers: Dict[str, str], 
+):
+    headers = await admin_token_headers
+    normal_headers = await normal_user_token_headers
 
-#     res = fastapi_client.get("/api/v1/users", headers=headers)
-#     users = res.json()
+    res = fastapi_client.get("/api/v1/users", headers=headers)
+    users = res.json()
 
-#     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
-#     sessions = res.json()
+    res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
+    sessions = res.json()
 
-#     cur_session = sessions[1]
+    cur_session = sessions[1]
 
-#     admin = users[0]
-#     admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}/{admin.get('id')}"
+    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
 
-#     normal_user = users[1]
-#     normal_user_url = (
-#         f"/api/v1/swipe_sessions/{cur_session.get('id')}/{normal_user.get('id')}"
-#     )
+    normal_user = users[1]
+    normal_user_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
+    )
 
-#     # i just want the context manager to fit on a single line :,)
-#     connect = fastapi_client.websocket_connect
+    # i just want the context manager to fit on a single line :,)
+    connect = fastapi_client.websocket_connect
 
-#     # NOTE to self: receive() functions wait until they receive any data
-#     # and if they do not receive anything, they wait 'til the end of time
-#     with connect(admin_url) as ws_admin, connect(normal_user_url) as ws_normal_user:
-#         ws_admin: WebSocketTestSession
-#         ws_normal_user: WebSocketTestSession
+    # NOTE to self: receive() functions wait until they receive any data
+    # and if they do not receive anything, they wait 'til the end of time
+    with connect(admin_url) as ws_admin, connect(normal_user_url) as ws_normal_user:
+        ws_admin: WebSocketTestSession
+        ws_normal_user: WebSocketTestSession
 
-#         # Check connection
-#         data_1 = ws_admin.receive_json()
-#         data_2 = ws_normal_user.receive_json()
+        # Check connection
+        data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
 
-#         assert_status_code(data_1, exc.SuccessfullConnection)
-#         assert_status_code(data_2, exc.SuccessfullConnection)
+        assert_status_code(data_1, exc.SuccessfullConnection)
+        assert_status_code(data_2, exc.SuccessfullConnection)
 
-#         # Swipe recipes (does not return anything)
-#         send_swipe(ws_admin, 1, False)
-#         send_swipe(ws_normal_user, 1, True)
+        # Swipe recipes (does not return anything)
+        send_swipe(ws_admin, 1, False)
+        send_swipe(ws_normal_user, 1, True)
 
-#         # Swipe already swipe recipe
-#         send_swipe(ws_admin, 1, False)
-#         data_1 = ws_admin.receive_json()
+        # Swipe already swipe recipe
+        send_swipe(ws_admin, 1, False)
+        data_1 = ws_admin.receive_json()
 
-#         assert_status_code(data_1, exc.AlreadySwipedException)
+        assert_status_code(data_1, exc.AlreadySwipedException)
 
-#         # Swipe non existing recipe
-#         send_swipe(ws_admin, 999, False)
-#         data_1 = ws_admin.receive_json()
+        # Swipe non existing recipe
+        send_swipe(ws_admin, 999, False)
+        data_1 = ws_admin.receive_json()
 
-#         assert_status_code(data_1, RecipeNotFoundException)
+        assert_status_code(data_1, RecipeNotFoundException)
 
-#         # Session message
-#         send_message(ws_admin, "Message!")
+        # Session message
+        send_message(ws_admin, "Message!")
 
-#         data_1 = ws_admin.receive_json()
-#         data_2 = ws_normal_user.receive_json()
+        data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
 
-#         assert data_1.get("action") == ssae.SESSION_MESSAGE
-#         assert data_1.get("payload").get("message") == "Message!"
+        assert data_1.get("action") == ssae.POOL_MESSAGE
+        assert data_1.get("payload").get("message") == "Message!"
 
-#         assert data_2.get("action") == ssae.SESSION_MESSAGE
-#         assert data_2.get("payload").get("message") == "Message!"
+        assert data_2.get("action") == ssae.POOL_MESSAGE
+        assert data_2.get("payload").get("message") == "Message!"
 
-#         # Send session message
-#         send_message(ws_normal_user, "Message!")
+        # Send session message
+        send_message(ws_normal_user, "Message!")
 
-#         data_1 = ws_admin.receive_json()
-#         data_2 = ws_normal_user.receive_json()
+        data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
 
-#         assert data_1.get("action") == ssae.SESSION_MESSAGE
-#         assert data_1.get("payload").get("message") == "Message!"
+        assert data_1.get("action") == ssae.POOL_MESSAGE
+        assert data_1.get("payload").get("message") == "Message!"
 
-#         assert data_2.get("action") == ssae.SESSION_MESSAGE
-#         assert data_2.get("payload").get("message") == "Message!"
+        assert data_2.get("action") == ssae.POOL_MESSAGE
+        assert data_2.get("payload").get("message") == "Message!"
 
-#         # Send global message
-#         send_global_message(ws_admin, "Message!")
+        # Send global message
+        send_global_message(ws_admin, "Message!")
 
-#         data_1 = ws_admin.receive_json()
-#         data_2 = ws_normal_user.receive_json()
+        data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
 
-#         assert data_1.get("action") == ssae.GLOBAL_MESSAGE
-#         assert data_1.get("payload").get("message") == "Message!"
+        assert data_1.get("action") == ssae.GLOBAL_MESSAGE
+        assert data_1.get("payload").get("message") == "Message!"
 
-#         assert data_2.get("action") == ssae.GLOBAL_MESSAGE
-#         assert data_2.get("payload").get("message") == "Message!"
+        assert data_2.get("action") == ssae.GLOBAL_MESSAGE
+        assert data_2.get("payload").get("message") == "Message!"
 
-#         # Send unauthorized global message
-#         send_global_message(ws_normal_user, "Message!")
-#         data_2 = ws_normal_user.receive_json()
+        # Send unauthorized global message
+        send_global_message(ws_normal_user, "Message!")
+        data_2 = ws_normal_user.receive_json()
 
-#         assert_status_code(data_2, UnauthorizedException)
+        assert_status_code(data_2, UnauthorizedException)
 
-#         # Status update
-#         send_status_update(ws_admin, sse.PAUSED)
+        # Status update
+        send_status_update(ws_admin, sse.PAUSED)
 
-#         data_1 = ws_admin.receive_json()
-#         data_2 = ws_normal_user.receive_json()
+        data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
 
-#         assert data_1.get("action") == ssae.SESSION_STATUS_UPDATE
-#         assert data_1.get("payload").get("status") == sse.PAUSED
+        assert data_1.get("action") == ssae.SESSION_STATUS_UPDATE
+        assert data_1.get("payload").get("status") == sse.PAUSED
 
-#         assert data_2.get("action") == ssae.SESSION_STATUS_UPDATE
-#         assert data_2.get("payload").get("status") == sse.PAUSED
+        assert data_2.get("action") == ssae.SESSION_STATUS_UPDATE
+        assert data_2.get("payload").get("status") == sse.PAUSED
 
-#         # Unauthorized status update
-#         send_status_update(ws_normal_user, sse.IN_PROGRESS)
-#         data_2 = ws_normal_user.receive_json()
+        # Unauthorized status update
+        send_status_update(ws_normal_user, sse.IN_PROGRESS)
+        data_2 = ws_normal_user.receive_json()
 
-#         assert_status_code(data_2, UnauthorizedException)
+        assert_status_code(data_2, UnauthorizedException)
 
-#         # Swipe match
-#         send_swipe(ws_normal_user, 2, True)
-#         send_swipe(ws_admin, 2, True)
+        # Swipe match
+        send_swipe(ws_normal_user, 2, True)
+        send_swipe(ws_admin, 2, True)
 
-#         data_1 = ws_admin.receive_json()
-#         data_2 = ws_normal_user.receive_json()
+        data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
 
-#         assert data_1.get("action") == ssae.RECIPE_MATCH
-#         assert data_1.get("payload").get("recipe").get("id") == 2
+        assert data_1.get("action") == ssae.RECIPE_MATCH
+        assert data_1.get("payload").get("recipe").get("id") == 2
 
-#         assert data_2.get("action") == ssae.RECIPE_MATCH
-#         assert data_2.get("payload").get("recipe").get("id") == 2
+        assert data_2.get("action") == ssae.RECIPE_MATCH
+        assert data_2.get("payload").get("recipe").get("id") == 2
         
-#         # should be closing
+        # should be closing
 
-#         data_1 = ws_admin.receive_json()
-#         data_2 = ws_normal_user.receive_json()
+        data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
 
-#         # if data_1.get("action") != ssae.RECIPE_MATCH:
+        # if data_1.get("action") != ssae.RECIPE_MATCH:
         
-#         #     assert data_1.get("action") == ssae.SESSION_STATUS_UPDATE
-#         #     assert data_1.get("payload").get("status") == sse.COMPLETED
+        #     assert data_1.get("action") == ssae.SESSION_STATUS_UPDATE
+        #     assert data_1.get("payload").get("status") == sse.COMPLETED
 
-#         #     assert data_2.get("action") == ssae.SESSION_STATUS_UPDATE
-#         #     assert data_2.get("payload").get("status") == sse.COMPLETED
+        #     assert data_2.get("action") == ssae.SESSION_STATUS_UPDATE
+        #     assert data_2.get("payload").get("status") == sse.COMPLETED
 
-#         # else:
-#         #     wtf
-#         #     ...
-#         #     i dont like this game
-#         #     because the websocket is closing, or something
-#         #     idfk
+        # else:
+        #     wtf
+        #     ...
+        #     i dont like this game
+        #     because the websocket is closing, or something
+        #     idfk

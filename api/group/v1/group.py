@@ -108,17 +108,14 @@ async def create_swipe_session(
     session_id = await SwipeSessionService().create_swipe_session(
         request, user, group_id
     )
-    print(session_id)
-    x= await SwipeSessionService().get_swipe_session_by_id(session_id)
-    print(x)
-    return x
+    return await SwipeSessionService().get_swipe_session_by_id(session_id)
 
 
 @group_v1_router.patch(
     "/{group_id}/swipe_sessions",
     response_model=SwipeSessionSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
+    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupAdmin]]))],
 )
 @version(1)
 async def update_swipe_session(
