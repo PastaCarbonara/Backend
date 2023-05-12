@@ -1,7 +1,7 @@
 from app.filter.repository.filter import FilterRepository
 from app.tag.repository.tag import TagRepository
 from app.user.repository.user import UserRepository
-from app.user.exception.user import UserNotFoundException
+from app.user.exceptions.user import UserNotFoundException
 from core.db import Transactional
 from core.db.models import Tag
 

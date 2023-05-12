@@ -308,8 +308,12 @@ class SwipeSessionWebsocketService:
             await self.handle_session_match(
                 websocket, swipe_session.id, packet.payload["recipe_id"]
             )
+            packet = SwipeSessionPacketSchema(
+                action=ACTIONS.SESSION_STATUS_UPDATE,
+                payload={"status": SwipeSessionEnum.COMPLETED},
+            )
             await self.handle_session_status_update(
-                websocket, swipe_session.id, user, SwipeSessionEnum.COMPLETED
+                packet, websocket, user, swipe_session
             )
 
             exception = ClosingConnection
@@ -366,6 +370,7 @@ class SwipeSessionWebsocketService:
         Returns:
             None.
         """
+
         if not await GroupService().is_admin(swipe_session.group_id, user.id):
             return await self.manager.handle_connection_code(
                 websocket, UnauthorizedException
@@ -439,12 +444,8 @@ class SwipeSessionWebsocketService:
             )
             return
 
-        print(recipe.__dict__)
-        try:
-            full_recipe = GetFullRecipeResponseSchema(**recipe.__dict__)
-        except Exception as e:
-            print(e)
-            raise e
+        full_recipe = GetFullRecipeResponseSchema(**recipe.to_dict())
+
         payload = {"message": "A match has been found", "recipe": full_recipe}
         packet = SwipeSessionPacketSchema(action=ACTIONS.RECIPE_MATCH, payload=payload)
 

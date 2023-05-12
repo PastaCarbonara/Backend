@@ -18,6 +18,7 @@ from core.db.mixins import TimestampMixin
 from core.db.enums import SwipeSessionEnum, TagType
 from core.config import config
 
+# pylint: disable=too-few-public-methods
 
 class RecipeJudgement(Base, TimestampMixin):
     __tablename__ = "recipe_judgement"
@@ -159,6 +160,11 @@ class Recipe(Base, TimestampMixin):
     def likes(self):
         return len([judgement for judgement in self.judgements if judgement.like])
 
+    def to_dict(self) -> dict:
+        result = self.__dict__
+        result["likes"] = self.likes
+        return result
+
 
 class Tag(Base):
     __tablename__ = "tag"
@@ -189,7 +195,7 @@ class SwipeSession(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     session_date: Mapped[datetime] = mapped_column(
-        default=func.now(), server_default=func.now()
+        default=func.now(), server_default=func.now() # pylint: disable=not-callable
     )
     status: Mapped[SwipeSessionEnum] = mapped_column(default=SwipeSessionEnum.READY)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))

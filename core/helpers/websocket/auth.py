@@ -92,7 +92,7 @@ class IsSessionMember(BaseWebsocketPermission):
             return False
 
         try:
-            await UserService().get_user_by_id(user_id)
+            await UserService().get_by_id(user_id)
             swipe_session = await SwipeSessionService().get_swipe_session_by_id(
                 swipe_session_id
             )

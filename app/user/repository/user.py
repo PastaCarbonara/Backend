@@ -15,6 +15,7 @@ from core.repository.enum import SynchronizeSessionEnum
 
 class UserRepository(BaseRepo):
     """Repository class for accessing and manipulating User objects in the database."""
+
     def __init__(self):
         super().__init__(User)
 
@@ -37,10 +38,14 @@ class UserRepository(BaseRepo):
         session.add(user)
         await session.flush()
         return user.id
-    
-    
+
     @Transactional()
-    async def update_by_id(self, model_id: int, params: dict, synchronize_session: SynchronizeSessionEnum = False):
+    async def update_by_id(
+        self,
+        model_id: int,
+        params: dict,
+        synchronize_session: SynchronizeSessionEnum = False,
+    ):
         return await super().update_by_id(model_id, params, synchronize_session)
 
     @Transactional()
@@ -145,12 +150,9 @@ class UserRepository(BaseRepo):
         List[User]
             User list.
         """
-        query = (
-            select(User)
-            .options(
-                joinedload(User.account_auth),
-                joinedload(User.image),
-            )
+        query = select(User).options(
+            joinedload(User.account_auth),
+            joinedload(User.image),
         )
         result = await session.execute(query)
         return result.scalars().all()

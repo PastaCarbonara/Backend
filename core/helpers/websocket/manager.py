@@ -149,7 +149,7 @@ class WebsocketConnectionManager:
             websocket (WebSocket): The WebSocket connection to remove from the active
             pools list.
         """
-        
+
         self.active_pools[pool_id].remove(websocket)
         await websocket.close(status.WS_1000_NORMAL_CLOSURE)
 

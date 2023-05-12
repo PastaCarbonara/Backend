@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from core.db.models import Tag
 from core.db import Transactional
 from app.tag.schemas import CreateTagSchema
-from app.tag.exception.tag import (
+from app.tag.exceptions.tag import (
     TagAlreadyExistsException,
     TagNotFoundException,
     TagDependecyException,
