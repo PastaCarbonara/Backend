@@ -44,7 +44,6 @@ class TokenHelper:
                 token,
                 config.JWT_SECRET_KEY,
                 config.JWT_ALGORITHM,
-                algorithms=[config.JWT_ALGORITHM]
             )
         except jwt.exceptions.DecodeError as exc:
             raise DecodeTokenException from exc
@@ -59,7 +58,6 @@ class TokenHelper:
                 config.JWT_SECRET_KEY,
                 config.JWT_ALGORITHM,
                 options={"verify_exp": False},
-                algorithms=[config.JWT_ALGORITHM]
             )
         except jwt.exceptions.DecodeError as exc:
             raise DecodeTokenException from exc
