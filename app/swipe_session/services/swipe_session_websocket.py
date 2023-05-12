@@ -371,7 +371,6 @@ class SwipeSessionWebsocketService:
         Returns:
             None.
         """
-
         if not await GroupService().is_admin(swipe_session.group_id, user.id):
             return await self.manager.handle_connection_code(
                 websocket, UnauthorizedException
@@ -384,10 +383,8 @@ class SwipeSessionWebsocketService:
             )
 
         await SwipeSessionService().update_swipe_session(
-            UpdateSwipeSessionSchema(
-                id=swipe_session.id, status=SwipeSessionEnum.COMPLETED
-            ),
-            user,
+            UpdateSwipeSessionSchema(id=swipe_session.id, status=session_status),
+            swipe_session.group_id,
         )
 
         payload = {"status": session_status}

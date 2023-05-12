@@ -103,9 +103,9 @@ def create_app() -> FastAPI:
     Create app
     """
     app_ = FastAPI(
-        title="MealMatch",
-        description="MealMatch API",
-        version="0.1.0",
+        title="Munchie",
+        description="Munchie API",
+        version="0.4.0",
         docs_url=None if config.ENV == "production" else "/docs",
         redoc_url=None if config.ENV == "production" else "/redoc",
         dependencies=[Depends(Logging)],

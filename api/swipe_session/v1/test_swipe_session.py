@@ -450,7 +450,7 @@ async def test_update_session_to_active(
 
 
 @pytest.mark.asyncio
-async def test_swipe_session(
+async def test_swipe_session_1(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
     normal_user_token_headers: Dict[str, str], 
@@ -459,7 +459,6 @@ async def test_swipe_session(
     normal_headers = await normal_user_token_headers
 
     res = fastapi_client.get("/api/v1/users", headers=headers)
-    users = res.json()
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
     sessions = res.json()
@@ -504,6 +503,43 @@ async def test_swipe_session(
 
         assert_status_code(data_1, RecipeNotFoundException)
 
+
+@pytest.mark.asyncio
+async def test_swipe_session_2(
+    fastapi_client: TestClient,
+    admin_token_headers: Dict[str, str],
+    normal_user_token_headers: Dict[str, str], 
+):
+    headers = await admin_token_headers
+    normal_headers = await normal_user_token_headers
+
+    res = fastapi_client.get("/api/v1/users", headers=headers)
+
+    res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
+    sessions = res.json()
+
+    cur_session = sessions[1]
+
+    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
+
+    normal_user_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
+    )
+
+    # i just want the context manager to fit on a single line :,)
+    connect = fastapi_client.websocket_connect
+
+    # NOTE to self: receive() functions wait until they receive any data
+    # and if they do not receive anything, they wait 'til the end of time
+    with connect(admin_url) as ws_admin, connect(normal_user_url) as ws_normal_user:
+
+        # Check connection
+        data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
+
+        assert_status_code(data_1, exc.SuccessfullConnection)
+        assert_status_code(data_2, exc.SuccessfullConnection)
+
         # Session message
         send_message(ws_admin, "Message!")
 
@@ -546,6 +582,43 @@ async def test_swipe_session(
 
         assert_status_code(data_2, UnauthorizedException)
 
+
+@pytest.mark.asyncio
+async def test_swipe_session_3(
+    fastapi_client: TestClient,
+    admin_token_headers: Dict[str, str],
+    normal_user_token_headers: Dict[str, str], 
+):
+    headers = await admin_token_headers
+    normal_headers = await normal_user_token_headers
+
+    res = fastapi_client.get("/api/v1/users", headers=headers)
+
+    res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
+    sessions = res.json()
+
+    cur_session = sessions[1]
+
+    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
+
+    normal_user_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
+    )
+
+    # i just want the context manager to fit on a single line :,)
+    connect = fastapi_client.websocket_connect
+
+    # NOTE to self: receive() functions wait until they receive any data
+    # and if they do not receive anything, they wait 'til the end of time
+    with connect(admin_url) as ws_admin, connect(normal_user_url) as ws_normal_user:
+
+        # Check connection
+        data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
+
+        assert_status_code(data_1, exc.SuccessfullConnection)
+        assert_status_code(data_2, exc.SuccessfullConnection)
+
         # Status update
         send_status_update(ws_admin, sse.PAUSED)
 
@@ -558,11 +631,63 @@ async def test_swipe_session(
         assert data_2.get("action") == ssae.SESSION_STATUS_UPDATE
         assert data_2.get("payload").get("status") == sse.PAUSED
 
+        # Status update, refert it so it keeps working.
+        send_status_update(ws_admin, sse.IN_PROGRESS)
+
+        data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
+
+        assert data_1.get("action") == ssae.SESSION_STATUS_UPDATE
+        assert data_1.get("payload").get("status") == sse.IN_PROGRESS
+
+        assert data_2.get("action") == ssae.SESSION_STATUS_UPDATE
+        assert data_2.get("payload").get("status") == sse.IN_PROGRESS
+
         # Unauthorized status update
         send_status_update(ws_normal_user, sse.IN_PROGRESS)
         data_2 = ws_normal_user.receive_json()
 
         assert_status_code(data_2, UnauthorizedException)
+
+
+@pytest.mark.asyncio
+async def test_swipe_session_4(
+    fastapi_client: TestClient,
+    admin_token_headers: Dict[str, str],
+    normal_user_token_headers: Dict[str, str], 
+):
+    headers = await admin_token_headers
+    normal_headers = await normal_user_token_headers
+
+    res = fastapi_client.get("/api/v1/users", headers=headers)
+
+    res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
+    sessions = res.json()
+
+    cur_session = sessions[1]
+
+    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
+
+    normal_user_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
+    )
+
+    # i just want the context manager to fit on a single line :,)
+    connect = fastapi_client.websocket_connect
+
+    # NOTE to self: receive() functions wait until they receive any data
+    # and if they do not receive anything, they wait 'til the end of time
+    with connect(admin_url) as ws_admin, connect(normal_user_url) as ws_normal_user:
+
+        # Check connection
+        data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
+
+        print(data_1)
+        print(data_2)
+
+        assert_status_code(data_1, exc.SuccessfullConnection)
+        assert_status_code(data_2, exc.SuccessfullConnection)
 
         # Swipe match
         send_swipe(ws_normal_user, 2, True)
