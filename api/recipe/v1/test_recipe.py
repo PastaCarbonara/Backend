@@ -80,5 +80,4 @@ async def test_create_recipe(client: AsyncClient, admin_token_headers: Dict[str,
 #     response = await client.delete(
 #         "/api/v1/recipes/1", headers=await admin_token_headers
 #     )
-#     print(response.json())
 #     assert response.status_code == 204

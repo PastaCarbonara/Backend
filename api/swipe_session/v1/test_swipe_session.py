@@ -468,7 +468,6 @@ async def test_swipe_session(
 
     admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
 
-    normal_user = users[1]
     normal_user_url = (
         f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
     )

@@ -48,7 +48,6 @@ async def test_upload_and_delete_image(
 
     response = await client.get("/api/v1/images", headers=admin_token_headers)
     filenames = [image["filename"] for image in response.json()]
-    # print(filenames)
     assert response_image_name not in filenames
 
 

@@ -162,20 +162,21 @@ class SwipeSessionWebsocketService:
                     packet: SwipeSessionPacketSchema = await self.manager.receive_data(
                         websocket, SwipeSessionPacketSchema
                     )
+
                 except CustomException as exc:
                     await self.manager.handle_connection_code(websocket, exc)
-                    continue
 
-                func = self.actions.get(
-                    packet.action, self.handle_action_not_implemented
-                )
+                else:
+                    func = self.actions.get(
+                        packet.action, self.handle_action_not_implemented
+                    )
 
-                await func(
-                    packet=packet,
-                    websocket=websocket,
-                    user=user,
-                    swipe_session=swipe_session,
-                )
+                    await func(
+                        packet=packet,
+                        websocket=websocket,
+                        user=user,
+                        swipe_session=swipe_session,
+                    )
 
         except WebSocketDisconnect:
             await self.manager.disconnect(websocket, swipe_session.id)
