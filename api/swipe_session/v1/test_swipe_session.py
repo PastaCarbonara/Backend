@@ -1,5 +1,4 @@
 # pylint: skip-file
-
 import pytest
 
 from typing import Dict
@@ -186,7 +185,7 @@ async def test_websocket_invalid_id(
 async def test_not_in_group(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
-    normal_user_token_headers: Dict[str, str], 
+    normal_user_token_headers: Dict[str, str],
 ):
     headers = await admin_token_headers
     normal_headers = await normal_user_token_headers
@@ -196,9 +195,7 @@ async def test_not_in_group(
 
     cur_session = swipe_sessions[0]
 
-    normal_user_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
-    )
+    normal_user_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -217,7 +214,7 @@ async def test_not_in_group(
 async def test_inactive_session(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
-    normal_user_token_headers: Dict[str, str], 
+    normal_user_token_headers: Dict[str, str],
 ):
     headers = await admin_token_headers
     normal_headers = await normal_user_token_headers
@@ -227,9 +224,7 @@ async def test_inactive_session(
 
     cur_session = swipe_sessions[1]
 
-    normal_user_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
-    )
+    normal_user_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -256,7 +251,9 @@ async def test_invalid_json(
 
     cur_session = swipe_sessions[0]
 
-    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
+    admin_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
+    )
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -288,7 +285,9 @@ async def test_invalid_action(
 
     cur_session = swipe_sessions[0]
 
-    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
+    admin_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
+    )
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -320,7 +319,9 @@ async def test_invalid_status_update(
 
     cur_session = swipe_sessions[0]
 
-    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
+    admin_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
+    )
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -351,7 +352,9 @@ async def test_invalid_recipe(
     swipe_sessions = res.json()
 
     cur_session = swipe_sessions[0]
-    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
+    admin_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
+    )
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -384,7 +387,9 @@ async def test_invalid_message(
     swipe_sessions = res.json()
 
     cur_session = swipe_sessions[0]
-    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
+    admin_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
+    )
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -453,7 +458,7 @@ async def test_update_session_to_active(
 async def test_swipe_session_1(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
-    normal_user_token_headers: Dict[str, str], 
+    normal_user_token_headers: Dict[str, str],
 ):
     headers = await admin_token_headers
     normal_headers = await normal_user_token_headers
@@ -465,11 +470,11 @@ async def test_swipe_session_1(
 
     cur_session = sessions[1]
 
-    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
-
-    normal_user_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
+    admin_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
     )
+
+    normal_user_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -508,7 +513,7 @@ async def test_swipe_session_1(
 async def test_swipe_session_2(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
-    normal_user_token_headers: Dict[str, str], 
+    normal_user_token_headers: Dict[str, str],
 ):
     headers = await admin_token_headers
     normal_headers = await normal_user_token_headers
@@ -520,11 +525,11 @@ async def test_swipe_session_2(
 
     cur_session = sessions[1]
 
-    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
-
-    normal_user_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
+    admin_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
     )
+
+    normal_user_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -532,6 +537,8 @@ async def test_swipe_session_2(
     # NOTE to self: receive() functions wait until they receive any data
     # and if they do not receive anything, they wait 'til the end of time
     with connect(admin_url) as ws_admin, connect(normal_user_url) as ws_normal_user:
+        ws_admin: WebSocketTestSession
+        ws_normal_user: WebSocketTestSession
 
         # Check connection
         data_1 = ws_admin.receive_json()
@@ -587,7 +594,7 @@ async def test_swipe_session_2(
 async def test_swipe_session_3(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
-    normal_user_token_headers: Dict[str, str], 
+    normal_user_token_headers: Dict[str, str],
 ):
     headers = await admin_token_headers
     normal_headers = await normal_user_token_headers
@@ -599,11 +606,11 @@ async def test_swipe_session_3(
 
     cur_session = sessions[1]
 
-    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
-
-    normal_user_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
+    admin_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
     )
+
+    normal_user_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -611,6 +618,8 @@ async def test_swipe_session_3(
     # NOTE to self: receive() functions wait until they receive any data
     # and if they do not receive anything, they wait 'til the end of time
     with connect(admin_url) as ws_admin, connect(normal_user_url) as ws_normal_user:
+        ws_admin: WebSocketTestSession
+        ws_normal_user: WebSocketTestSession
 
         # Check connection
         data_1 = ws_admin.receive_json()
@@ -654,7 +663,7 @@ async def test_swipe_session_3(
 async def test_swipe_session_4(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
-    normal_user_token_headers: Dict[str, str], 
+    normal_user_token_headers: Dict[str, str],
 ):
     headers = await admin_token_headers
     normal_headers = await normal_user_token_headers
@@ -666,11 +675,11 @@ async def test_swipe_session_4(
 
     cur_session = sessions[1]
 
-    admin_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
-
-    normal_user_url = (
-        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
+    admin_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
     )
+
+    normal_user_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -678,13 +687,12 @@ async def test_swipe_session_4(
     # NOTE to self: receive() functions wait until they receive any data
     # and if they do not receive anything, they wait 'til the end of time
     with connect(admin_url) as ws_admin, connect(normal_user_url) as ws_normal_user:
+        ws_admin: WebSocketTestSession
+        ws_normal_user: WebSocketTestSession
 
         # Check connection
         data_1 = ws_admin.receive_json()
         data_2 = ws_normal_user.receive_json()
-
-        print(data_1)
-        print(data_2)
 
         assert_status_code(data_1, exc.SuccessfullConnection)
         assert_status_code(data_2, exc.SuccessfullConnection)
@@ -701,23 +709,20 @@ async def test_swipe_session_4(
 
         assert data_2.get("action") == ssae.RECIPE_MATCH
         assert data_2.get("payload").get("recipe").get("id") == 2
-        
+
         # should be closing
 
         data_1 = ws_admin.receive_json()
         data_2 = ws_normal_user.receive_json()
 
-        # if data_1.get("action") != ssae.RECIPE_MATCH:
-        
-        #     assert data_1.get("action") == ssae.SESSION_STATUS_UPDATE
-        #     assert data_1.get("payload").get("status") == sse.COMPLETED
+        assert data_1.get("action") == ssae.SESSION_STATUS_UPDATE
+        assert data_1.get("payload").get("status") == sse.COMPLETED
 
-        #     assert data_2.get("action") == ssae.SESSION_STATUS_UPDATE
-        #     assert data_2.get("payload").get("status") == sse.COMPLETED
+        assert data_2.get("action") == ssae.SESSION_STATUS_UPDATE
+        assert data_2.get("payload").get("status") == sse.COMPLETED
 
-        # else:
-        #     wtf
-        #     ...
-        #     i dont like this game
-        #     because the websocket is closing, or something
-        #     idfk
+        data_1 = ws_admin.receive_json()
+        data_2 = ws_normal_user.receive_json()
+
+        assert_status_code(data_1, exc.ClosingConnection)
+        assert_status_code(data_2, exc.ClosingConnection)

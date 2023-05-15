@@ -42,7 +42,6 @@ manager = WebsocketConnectionManager(
     [[IsAuthenticated, IsSessionMember, IsActiveSession]]
 )
 
-
 class SwipeSessionWebsocketService:
     """
     This class provides a WebSocket service for communication between clients and servers using
@@ -153,11 +152,13 @@ class SwipeSessionWebsocketService:
         )
 
         await self.manager.connect(websocket, swipe_session.id)
-
         await self.manager.handle_connection_code(websocket, SuccessfullConnection)
 
         try:
-            while websocket.application_state == WebSocketState.CONNECTED:
+            while (
+                websocket.application_state == WebSocketState.CONNECTED
+                and websocket.client_state == WebSocketState.CONNECTED
+            ):
                 try:
                     packet: SwipeSessionPacketSchema = await self.manager.receive_data(
                         websocket, SwipeSessionPacketSchema
@@ -171,15 +172,22 @@ class SwipeSessionWebsocketService:
                         packet.action, self.handle_action_not_implemented
                     )
 
-                    await func(
+                    await self.manager.queued_run(
+                        pool_id=swipe_session.id,
+                        func=func,
                         packet=packet,
                         websocket=websocket,
                         user=user,
                         swipe_session=swipe_session,
                     )
 
-        except WebSocketDisconnect:
-            await self.manager.disconnect(websocket, swipe_session.id)
+        except WebSocketDisconnect as exc:
+            # Check because sometimes the exception is raised but it's already disconnected
+            if (
+                websocket.client_state == WebSocketState.CONNECTED
+                or websocket.application_state == WebSocketState.CONNECTED
+            ):
+                await self.manager.disconnect(websocket, swipe_session.id)
 
         except WebSocketException as exc:
             print("???")
@@ -309,6 +317,7 @@ class SwipeSessionWebsocketService:
             await self.handle_session_match(
                 websocket, swipe_session.id, packet.payload["recipe_id"]
             )
+
             packet = SwipeSessionPacketSchema(
                 action=ACTIONS.SESSION_STATUS_UPDATE,
                 payload={"status": SwipeSessionEnum.COMPLETED},

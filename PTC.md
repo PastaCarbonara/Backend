@@ -23,3 +23,7 @@ If there was no permission dependency active on said endpoint when you loaded th
 ## SQLA `update()` not working
 
 Did you `await session.commit()`?
+
+## Pytest
+
+`AssertionError: assert None` make sure you're not asserting the returns of a function that does not return anything.

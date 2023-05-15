@@ -3,7 +3,9 @@ Connection manager for websockets
 """
 
 from ast import List
+import asyncio
 import json
+import time
 from fastapi import WebSocket, WebSocketException, status
 from pydantic import ValidationError
 from pydantic.main import ModelMetaclass
@@ -48,7 +50,21 @@ class WebsocketConnectionManager:
         self.active_pools: dict = {}
         self.permissions: List[List[BaseWebsocketPermission]] = permissions
 
-    async def check_auth(self, permissions: list[list[BaseWebsocketPermission]] = None, **kwargs):
+    async def queued_run(self, pool_id, func, **kwargs):
+        ticket = round(time.time())
+        queue = self.active_pools[pool_id]["queue"]
+        queue.append(ticket)
+
+        while queue[0] != ticket:
+            ...
+
+        await func(**kwargs)
+
+        queue.pop(0)
+
+    async def check_auth(
+        self, permissions: list[list[BaseWebsocketPermission]] = None, **kwargs
+    ):
         """Check whether the client is authorized to perform the requested action.
 
         Args:
@@ -62,7 +78,7 @@ class WebsocketConnectionManager:
         """
         if not permissions:
             permissions = self.permissions
-        
+
         perm_checker = WebsocketPermission(permissions)
 
         try:
@@ -70,7 +86,7 @@ class WebsocketConnectionManager:
 
         except CustomException as exc:
             return exc
-        
+
         return None
 
     async def connect(self, websocket: WebSocket, pool_id: str) -> None:
@@ -87,9 +103,9 @@ class WebsocketConnectionManager:
         await websocket.accept()
 
         if pool_id not in self.active_pools:
-            self.active_pools[pool_id] = []
+            self.active_pools[pool_id] = {"connections": [], "queue": []}
 
-        self.active_pools[pool_id].append(websocket)
+        self.active_pools[pool_id]["connections"].append(websocket)
 
         return websocket
 
@@ -106,7 +122,8 @@ class WebsocketConnectionManager:
 
         Raises:
             JSONSerializableException: If the received data cannot be decoded to a JSON object.
-            ActionNotFoundException: If the received data fails to validate against the given schema.
+            ActionNotFoundException: If the received data fails to validate against the given
+            schema.
         """
         data = await websocket.receive_text()
 
@@ -149,8 +166,7 @@ class WebsocketConnectionManager:
             websocket (WebSocket): The WebSocket connection to remove from the active
             pools list.
         """
-
-        self.active_pools[pool_id].remove(websocket)
+        self.active_pools[pool_id]["connections"].remove(websocket)
         await websocket.close(status.WS_1000_NORMAL_CLOSURE)
 
         if self.get_connection_count(pool_id) < 1:
@@ -179,8 +195,10 @@ class WebsocketConnectionManager:
             print("Tried to disconnect for non existing pool")
             return
 
+        connections = [ws for ws in pool["connections"]]
+
         websocket: WebSocket
-        for websocket in pool:
+        for websocket in connections:
             await self.personal_packet(websocket, packet)
             await self.disconnect(websocket, pool_id)
 
@@ -271,8 +289,8 @@ class WebsocketConnectionManager:
         Args:
             packet (WebsocketPacketSchema): The packet to be broadcasted.
         """
-        for _, connections in self.active_pools.items():
-            for connection in connections:
+        for _, pool in self.active_pools.items():
+            for connection in pool["connections"]:
                 await connection.send_json(packet.dict())
 
     async def pool_broadcast(self, pool_id: str, packet: WebsocketPacketSchema) -> None:
@@ -282,7 +300,7 @@ class WebsocketConnectionManager:
             pool_id (str): The ID of the pool to broadcast to.
             packet (WebsocketPacketSchema): The packet to be broadcasted.
         """
-        for connection in self.active_pools[pool_id]:
+        for connection in self.active_pools[pool_id]["connections"]:
             await connection.send_json(packet.dict())
 
     def get_connection_count(self, pool_id: str | None = None) -> int:
@@ -298,7 +316,7 @@ class WebsocketConnectionManager:
         """
         if pool_id:
             try:
-                connections = self.active_pools[pool_id]
+                connections = self.active_pools[pool_id]["connections"]
             except KeyError:
                 # Perhaps a better way to resolve this exists, as this might be unclear
                 return 0
@@ -306,7 +324,7 @@ class WebsocketConnectionManager:
             return len(connections)
 
         total = 0
-        for _, connections in self.active_pools.items():
-            total += len(connections)
+        for _, pool in self.active_pools.items():
+            total += len(pool["connections"])
 
         return total
