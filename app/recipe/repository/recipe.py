@@ -205,21 +205,21 @@ class RecipeRepository:
                 RecipeJudgement(recipe_id=recipe_id, user_id=user_id, like=like)
             )
 
-    async def update_recipe(self, recipe: Recipe) -> Recipe:
-        """Update a recipe.
+    # async def update_recipe(self, recipe: Recipe) -> Recipe:
+    #     """Update a recipe.
 
-        Parameters
-        ----------
-        recipe : Recipe
-            The recipe to update.
+    #     Parameters
+    #     ----------
+    #     recipe : Recipe
+    #         The recipe to update.
 
-        Returns
-        -------
-        Recipe
-            The updated recipe.
-        """
-        await session.flush()
-        return recipe
+    #     Returns
+    #     -------
+    #     Recipe
+    #         The updated recipe.
+    #     """
+    #     await session.flush()
+    #     return recipe
 
     async def delete_recipe(self, recipe: Recipe) -> None:
         """Delete a recipe.

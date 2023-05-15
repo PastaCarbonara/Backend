@@ -143,7 +143,7 @@ class Recipe(Base, TimestampMixin):
         back_populates="recipe", cascade="all, delete"
     )
     creator: Mapped[User] = relationship(back_populates="recipes")
-    judgements: Mapped[RecipeJudgement] = relationship(back_populates="recipe")
+    judgements: Mapped[RecipeJudgement] = relationship(back_populates="recipe", cascade="all, delete")
 
     def __repr__(self) -> str:
         return (
