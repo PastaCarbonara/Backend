@@ -323,19 +323,9 @@ class SwipeSessionWebsocketService:
                 action=ACTIONS.SESSION_STATUS_UPDATE,
                 payload={"status": SwipeSessionEnum.COMPLETED},
             )
-            print("1")
             await self.handle_session_status_update(
                 packet, websocket, user, swipe_session
             )
-            # await self.manager.queued_run(
-            #     pool_id=swipe_session.id,
-            #     func=self.handle_session_status_update,
-            #     packet=packet,
-            #     websocket=websocket,
-            #     user=user,
-            #     swipe_session=swipe_session,
-            # )
-            print("3")
 
             exception = ClosingConnection
             payload = {"status_code": exception.code, "message": exception.message}
@@ -377,8 +367,22 @@ class SwipeSessionWebsocketService:
         user: User,
         swipe_session: SwipeSession,
     ):
+        """
+        Handle the authorization for a session status update.
+
+        Parameters:
+            packet (SwipeSessionPacketSchema): The packet containing the session status update.
+            websocket (WebSocket): The WebSocket connection.
+            user (User): The user initiating the session status update.
+            swipe_session (SwipeSession): The swipe session to be updated.
+
+        Returns:
+            Coroutine[Any, Any, None]: The result of the session status update handling.
+
+        Raises:
+            UnauthorizedException: If the user is not authorized to perform the session status update.
+        """
         if not await GroupService().is_admin(swipe_session.group_id, user.id):
-            print("exit1")
             await self.manager.handle_connection_code(websocket, UnauthorizedException)
             return
 
@@ -404,18 +408,15 @@ class SwipeSessionWebsocketService:
             swipe_session: A SwipeSession object representing the active swipe session.
 
         Returns:
-            None.
+            Coroutine[Any, Any, None]: The result of the pool broadcast.
         """
-        print("progress1")
+        del user
         session_status = packet.payload.get("status")
         if not session_status in [e.value for e in SwipeSessionEnum]:
-            print("exit2")
-            await self.manager.handle_connection_code(
+            return await self.manager.handle_connection_code(
                 websocket, StatusNotFoundException
             )
-            return
 
-        print("progress2")
         await SwipeSessionService().update_swipe_session(
             UpdateSwipeSessionSchema(id=swipe_session.id, status=session_status),
             swipe_session.group_id,
@@ -426,9 +427,7 @@ class SwipeSessionWebsocketService:
             action=ACTIONS.SESSION_STATUS_UPDATE, payload=payload
         )
 
-        print("progress3")
-        await self.manager.pool_broadcast(swipe_session.id, packet)
-        print("2")
+        return await self.manager.pool_broadcast(swipe_session.id, packet)
 
     async def handle_action_not_implemented(
         self,

@@ -53,16 +53,11 @@ class WebsocketConnectionManager:
         queue = self.active_pools[pool_id]["queue"]
         queue.append(ticket)
 
-        print(queue)
 
         while queue[0] != ticket:
             ...
-        print("doing", func.__name__)
-        print(queue)
 
         await func(**kwargs)
-
-        print("finished", func.__name__)
 
         queue.pop(0)
 
@@ -268,7 +263,6 @@ class WebsocketConnectionManager:
         Returns:
             None.
         """
-        print("cc", exception.message)
         payload = {"status_code": exception.code, "message": exception.message}
         packet = WebsocketPacketSchema(
             action=WebsocketActionEnum.CONNECTION_CODE, payload=payload
