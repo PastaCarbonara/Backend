@@ -171,13 +171,6 @@ class WebsocketConnectionManager:
         if self.get_connection_count(pool_id) < 1:
             self.active_pools.pop(pool_id)
 
-        # raise WebSocketException(code=status.WS_1011_INTERNAL_ERROR)
-        # pain.
-        # else:
-        #     await self.handle_pool_message(
-        #         websocket, pool_id, f"Client left the pool"
-        #     )
-
     async def disconnect_pool(self, pool_id, packet) -> None:
         """
         Sends a packet to all WebSocket connections in a given pool and removes each connection

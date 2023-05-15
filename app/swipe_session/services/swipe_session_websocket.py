@@ -24,7 +24,7 @@ from core.exceptions.websocket import (
     SuccessfullConnection,
     ValidationException,
 )
-from core.db.enums import SwipeSessionActionEnum as ACTIONS, SwipeSessionEnum
+from core.db.enums import SwipeSessionActionEnum, SwipeSessionEnum
 from core.db.models import SwipeSession, User
 from core.exceptions.base import CustomException, UnauthorizedException
 from core.exceptions.recipe import RecipeNotFoundException
@@ -113,10 +113,10 @@ class SwipeSessionWebsocketService:
         self.manager = manager
 
         self.actions = {
-            ACTIONS.GLOBAL_MESSAGE: self.handle_global_message,
-            ACTIONS.RECIPE_SWIPE: self.handle_recipe_swipe,
-            ACTIONS.POOL_MESSAGE: self.handle_pool_message,
-            ACTIONS.SESSION_STATUS_UPDATE: self.handle_session_status_update_auth,
+            SwipeSessionActionEnum.GLOBAL_MESSAGE: self.handle_global_message,
+            SwipeSessionActionEnum.RECIPE_SWIPE: self.handle_recipe_swipe,
+            SwipeSessionActionEnum.POOL_MESSAGE: self.handle_pool_message,
+            SwipeSessionActionEnum.SESSION_STATUS_UPDATE: self.handle_session_status_update_auth,
         }
 
     async def handler(
@@ -320,7 +320,7 @@ class SwipeSessionWebsocketService:
             )
 
             packet = SwipeSessionPacketSchema(
-                action=ACTIONS.SESSION_STATUS_UPDATE,
+                action=SwipeSessionActionEnum.SESSION_STATUS_UPDATE,
                 payload={"status": SwipeSessionEnum.COMPLETED},
             )
             await self.handle_session_status_update(
@@ -330,7 +330,7 @@ class SwipeSessionWebsocketService:
             exception = ClosingConnection
             payload = {"status_code": exception.code, "message": exception.message}
             packet = SwipeSessionPacketSchema(
-                action=ACTIONS.CONNECTION_CODE, payload=payload
+                action=SwipeSessionActionEnum.CONNECTION_CODE, payload=payload
             )
             await self.manager.disconnect_pool(swipe_session.id, packet)
 
@@ -424,7 +424,7 @@ class SwipeSessionWebsocketService:
 
         payload = {"status": session_status}
         packet = SwipeSessionPacketSchema(
-            action=ACTIONS.SESSION_STATUS_UPDATE, payload=payload
+            action=SwipeSessionActionEnum.SESSION_STATUS_UPDATE, payload=payload
         )
 
         return await self.manager.pool_broadcast(swipe_session.id, packet)
@@ -480,6 +480,8 @@ class SwipeSessionWebsocketService:
         full_recipe = GetFullRecipeResponseSchema(**recipe.to_dict())
 
         payload = {"message": "A match has been found", "recipe": full_recipe}
-        packet = SwipeSessionPacketSchema(action=ACTIONS.RECIPE_MATCH, payload=payload)
+        packet = SwipeSessionPacketSchema(
+            action=SwipeSessionActionEnum.RECIPE_MATCH, payload=payload
+        )
 
         await self.manager.pool_broadcast(session_id, packet)

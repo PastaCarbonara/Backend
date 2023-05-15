@@ -42,9 +42,7 @@ def init_listeners(app_: FastAPI) -> None:
     # Exception handler
     @app_.exception_handler(CustomException)
     async def custom_exception_handler(request: Request, exc: CustomException):
-        if request:
-            # pass pylint test >:D
-            ...
+        del request
 
         return JSONResponse(
             status_code=exc.code,
