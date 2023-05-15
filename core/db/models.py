@@ -18,6 +18,7 @@ from core.db.mixins import TimestampMixin
 from core.db.enums import SwipeSessionEnum, TagType
 from core.config import config
 
+# pylint: disable=too-few-public-methods
 
 class RecipeJudgement(Base, TimestampMixin):
     __tablename__ = "recipe_judgement"
@@ -158,6 +159,11 @@ class Recipe(Base, TimestampMixin):
     @hybrid_property
     def likes(self):
         return len([judgement for judgement in self.judgements if judgement.like])
+
+    def to_dict(self) -> dict:
+        result = self.__dict__
+        result["likes"] = self.likes
+        return result
 
 
 class Tag(Base):

@@ -11,7 +11,7 @@ from app.tag.schemas import CreateTagSchema
 from app.recipe.schemas import CreateRecipeSchema, CreateRecipeIngredientSchema
 from app.recipe.repository.recipe import RecipeRepository
 from app.image.repository.image import ImageRepository
-from app.image.exception.image import FileNotFoundException
+from app.image.exceptions.image import FileNotFoundException
 from app.user.services.user import UserService
 
 
@@ -82,6 +82,7 @@ class RecipeService:
         recipe = await self.recipe_repository.get_recipe_by_id(recipe_id)
         if not recipe:
             raise RecipeNotFoundException()
+
         return recipe
 
     @Transactional()
@@ -225,6 +226,20 @@ class RecipeService:
 
     @Transactional()
     async def delete_recipe(self, recipe_id: int, user: User):
+        """
+        Deletes a recipe from the repository, if authorized.
+
+        Args:
+            recipe_id (int): The ID of the recipe to be deleted.
+            user (User): The user attempting to delete the recipe.
+
+        Raises:
+            RecipeNotFoundException: If the specified recipe ID does not exist.
+            UnauthorizedException: If the user is not authorized to delete the recipe.
+
+        Returns:
+            str: A string indicating the successful deletion of the recipe.
+        """
         recipe = await self.recipe_repository.get_recipe_by_id(recipe_id)
         if not recipe:
             raise RecipeNotFoundException()

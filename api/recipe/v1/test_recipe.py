@@ -49,13 +49,12 @@ async def test_create_recipe(client: AsyncClient, admin_token_headers: Dict[str,
             "description": "test",
             "ingredients": [{"name": "test", "amount": 1, "unit": "test"}],
             "instructions": ["test"],
-            "tags": [{"name":"dogshit","tag_type":"Keuken"}],
+            "tags": [{"name": "dogshit", "tag_type": "Keuken"}],
             "preparation_time": 30,
         },
         headers=await admin_token_headers,
     )
     assert response.status_code == 200
-
 
 
 @pytest.mark.asyncio
@@ -65,12 +64,14 @@ async def test_delete_recipe(client: AsyncClient, admin_token_headers: Dict[str,
         "/api/v1/recipes/1", headers=await admin_token_headers
     )
     assert response.status_code == 204
-    
+
+
 @pytest.mark.asyncio
-async def test_delete_recipe_unauthorized(client: AsyncClient, normal_user_token_headers: Dict[str, str]):
+async def test_delete_recipe_unauthorized(
+    client: AsyncClient, normal_user_token_headers: Dict[str, str]
+):
     """Test that the delete recipe endpoint returns a recipe"""
     response = await client.delete(
         "/api/v1/recipes/2", headers=await normal_user_token_headers
     )
     assert response.status_code == 401
-

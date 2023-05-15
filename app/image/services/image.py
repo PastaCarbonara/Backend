@@ -11,21 +11,19 @@ from core.db.models import File
 from core.db import Transactional
 from core.config import config
 
-from app.image.exception.image import (
+from app.image.exceptions.image import (
     InvalidImageException,
     CorruptImageException,
     ImageTooLargeException,
-)
-from app.image.interface.image import ObjectStorageInterface
-from app.image.repository.image import ImageRepository
-from app.image.utils import generate_unique_filename
-from app.image.exception.image import (
     AzureImageUploadException,
     AzureImageDeleteException,
     FileNotFoundException,
     AzureImageDeleteNotFoundException,
     FileDependecyException,
 )
+from app.image.interface.image import ObjectStorageInterface
+from app.image.repository.image import ImageRepository
+from app.image.utils import generate_unique_filename
 
 ALLOWED_TYPES = ["image/jpeg", "image/png"]
 
@@ -178,7 +176,6 @@ class ImageService:
         except ResourceNotFoundError as exc:
             raise AzureImageDeleteNotFoundException() from exc
         except Exception as exc:
-            print(exc)
             raise AzureImageDeleteException() from exc
 
     async def validate_image(self, file: UploadFile):

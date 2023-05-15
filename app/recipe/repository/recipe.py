@@ -57,7 +57,7 @@ class RecipeRepository:
         query = query.limit(limit).offset(offset)
         result = await session.execute(query)
         # get count of all recipes in database
-        result_count = await session.execute(func.count(Recipe.id))
+        result_count = await session.execute(func.count(Recipe.id)) # pylint: disable=not-callable
         # return recipes and count
         return result.unique().scalars().all(), result_count.scalar()
 
