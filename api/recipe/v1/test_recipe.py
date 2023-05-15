@@ -61,7 +61,7 @@ async def test_create_recipe(client: AsyncClient, admin_token_headers: Dict[str,
 async def test_delete_recipe(client: AsyncClient, admin_token_headers: Dict[str, str]):
     """Test that the delete recipe endpoint returns a recipe"""
     response = await client.delete(
-        "/api/v1/recipes/1", headers=await admin_token_headers
+        "/api/v1/recipes/3", headers=await admin_token_headers
     )
     assert response.status_code == 204
 
