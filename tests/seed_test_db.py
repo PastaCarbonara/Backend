@@ -13,18 +13,19 @@ def seed_db():
     Session = sessionmaker(engine)
 
     with Session() as session:
-        admin = User(display_name="admin", is_admin=True, client_token=uuid.uuid4())
-        admin.account_auth = AccountAuth(
-            username="admin", password=get_password_hash("admin")
-        )
-        normal_user = User(display_name="normal_user", client_token=uuid.uuid4())
-        normal_user.account_auth = AccountAuth(
-            username="normal_user", password=get_password_hash("normal_user")
-        )
-        
         image_1 = File(filename="image_1")
         image_2 = File(filename="image_2")
         image_3 = File(filename="image_3")
+        image_4 = File(filename="image_4")
+        
+        admin = User(display_name="admin", is_admin=True, client_token=uuid.uuid4(), filename="image_4")
+        admin.account_auth = AccountAuth(
+            username="admin", password=get_password_hash("admin")
+        )
+        normal_user = User(display_name="normal_user", client_token=uuid.uuid4(), filename="image_4")
+        normal_user.account_auth = AccountAuth(
+            username="normal_user", password=get_password_hash("normal_user")
+        )
 
         group_1 = Group(name="group_1", filename="image_3")
         group_1.users.append(GroupMember(user=admin, is_admin=True))
@@ -53,7 +54,7 @@ def seed_db():
                 "Add topping",
                 "Enjoy",
             ],
-            preparing_time=30,
+            preparation_time=30,
             filename="image_1",
             creator=admin,
         )
@@ -62,11 +63,11 @@ def seed_db():
             name="Guacamole",
             description="Green sauce.",
             instructions=["Peel the avocado", "Peel the garlic", "Add ALL the pepper"],
-            preparing_time=15,
+            preparation_time=15,
             filename="image_2",
             creator=admin,
         )
-        tags = [Tag(name="tag1"), Tag(name="tag2"), Tag(name="tag3")]
+        tags = [Tag(name="tag1", tag_type="Keuken"), Tag(name="tag2", tag_type="Keuken"), Tag(name="tag3", tag_type="Keuken")]
         ingredients = [
             Ingredient(name="ingredient1"),
             Ingredient(name="ingredient2"),
@@ -86,6 +87,7 @@ def seed_db():
                 image_1,
                 image_2,
                 image_3,
+                image_4,
                 recipe_1,
                 recipe_2,
                 *tags,

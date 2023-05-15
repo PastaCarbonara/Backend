@@ -1,10 +1,16 @@
+"""
+User service module
+"""
+
 from typing import List
 import uuid
-from app.user.exception.user import DuplicateClientTokenException
+from app.image.repository.image import ImageRepository
+from app.user.exceptions.user import DuplicateClientTokenException
 from app.user.utils import generate_name, get_password_hash
-from core.db.models import User
 from app.user.repository.user import UserRepository
-from core.db import Transactional, session
+from app.user.schemas.user import UpdateUserSchema
+from app.image.exceptions.image import FileNotFoundException
+from core.db.models import User
 from core.exceptions import (
     DuplicateUsernameException,
     UserNotFoundException,
@@ -12,20 +18,95 @@ from core.exceptions import (
 
 
 class UserService:
+    """Class that handles user-related business logic.
+
+    Attributes
+    ----------
+    repo : UserRepository
+        UserRepository instance used for database operations.
+    """
+
     def __init__(self):
-        self.user_repository = UserRepository()
+        """Constructor for the UserService class."""
+        self.repo = UserRepository()
+        self.image_repo = ImageRepository()
 
     async def get_user_list(self) -> List[User]:
-        return await self.user_repository.get_user_list()
+        """Get the list of all users in the system.
 
-    async def get_user_by_display_name(self, display_name) -> User:
-        return await self.user_repository.get_user_by_display_name(display_name)
+        Returns
+        -------
+        List[User]
+            The list of all users.
+        """
+        return await self.repo.get_user_list()
 
-    async def get_user_by_client_token(self, ctoken) -> User:
-        return await self.user_repository.get_user_by_client_token(ctoken)
+    async def update(self, updated_user: UpdateUserSchema):
+        """
+        Updates the user information in the repository.
 
-    async def get_user_by_id(self, user_id: int) -> User:
-        """get a user by id.
+        Args:
+            updated_user (UpdateUserSchema): An object containing the updated user information.
+
+        Raises:
+            FileNotFoundException: If the specified image filename does not exist in the image 
+            repository.
+
+        Returns:
+            int: The ID of the updated user.
+        """
+        user_dict = updated_user.dict()
+
+        if updated_user.filename and not await self.image_repo.get_image_by_name(
+            updated_user.filename
+        ):
+            raise FileNotFoundException
+
+        await self.repo.update_by_id(model_id=updated_user.id, params=user_dict)
+        return updated_user.id
+
+    async def get_by_display_name(self, display_name) -> User:
+        """Get the user with the given display name.
+
+        Parameters
+        ----------
+        display_name : str
+            The display name of the user.
+
+        Returns
+        -------
+        User
+            The user with the given display name.
+
+        Raises
+        ------
+        UserNotFoundException
+            If the user with the given display name does not exist.
+        """
+        return await self.repo.get_by_display_name(display_name)
+
+    async def get_by_client_token(self, ctoken) -> User:
+        """Get the user with the given client token.
+
+        Parameters
+        ----------
+        ctoken : uuid.UUID
+            The client token of the user.
+
+        Returns
+        -------
+        User
+            The user with the given client token.
+
+        Raises
+        ------
+        UserNotFoundException
+            If the user with the given client token does not exist.
+        """
+        return await self.repo.get_by_client_token(ctoken)
+
+    async def get_by_id(self, user_id: int) -> User:
+        """Get a user by id.
 
         Parameters
         ----------
@@ -42,36 +123,107 @@ class UserService:
         UserNotFoundException
             If the user with the given id does not exist.
         """
-        user = await self.user_repository.get_user_by_id(user_id)
+        user = await self.repo.get_by_id(user_id)
         if not user:
             raise UserNotFoundException()
         return user
 
     async def create_auth_user(self, username: str, password: str) -> int:
-        user = await self.user_repository.get_user_by_display_name(username)
+        """Create a new authenticated user with the given username and password.
+
+        Parameters
+        ----------
+        username : str
+            The username of the new user.
+        password : str
+            The password of the new user.
+
+        Returns
+        -------
+        int
+            The id of the newly created user.
+
+        Raises
+        ------
+        DuplicateUsernameException
+            If a user with the given username already exists.
+        """
+        user = await self.repo.get_by_display_name(username)
         if user:
             raise DuplicateUsernameException()
         hashed_pwd = get_password_hash(password)
 
-        user_id = await self.user_repository.create_user(username, uuid.uuid4())
-        await self.user_repository.create_account_auth(user_id, username, hashed_pwd)
+        user_id = await self.repo.create_user(username, uuid.uuid4())
+        await self.repo.create_account_auth(user_id, username, hashed_pwd)
         return user_id
 
     async def create_user_with_client_token(
         self, ctoken: uuid.UUID, display_name: str = None
     ) -> int:
+        """Create a new user with the given client token and display name.
+
+        If the display name is not provided, it will be generated.
+
+        Parameters
+        ----------
+        ctoken : uuid.UUID
+            The client token of the new user.
+        display_name : str, optional
+            The display name of the new user, by default None
+
+        Returns
+        -------
+        int
+            The id of the newly created user.
+
+        Raises
+        ------
+        DuplicateClientTokenException
+            If a user with the given client token already exists.
+        """
         if not display_name:
             display_name = generate_name()
 
-        if await self.get_user_by_client_token(ctoken):
+        if await self.get_by_client_token(ctoken):
             raise DuplicateClientTokenException
 
-        return await self.user_repository.create_user(display_name, ctoken)
+        return await self.repo.create_user(display_name, ctoken)
 
     async def set_admin(self, user_id: int, is_admin: bool):
-        user = await self.get_user_by_id(user_id)
-        await self.user_repository.set_admin(user, is_admin)
+        """Set admin status for a user.
+
+        Parameters
+        ----------
+        user_id : int
+            The id of the user whose admin status will be updated.
+        is_admin : bool
+            The value to set for the user's admin status.
+
+        Raises
+        ------
+        UserNotFoundException
+            If the user with the given id does not exist.
+        """
+        user = await self.get_by_id(user_id)
+        await self.repo.set_admin(user, is_admin)
 
     async def is_admin(self, user_id: int) -> bool:
-        user = await self.get_user_by_id(user_id)
+        """Check if a user is an admin.
+
+        Parameters
+        ----------
+        user_id : int
+            The id of the user to check.
+
+        Returns
+        -------
+        bool
+            True if the user is an admin, False otherwise.
+
+        Raises
+        ------
+        UserNotFoundException
+            If the user with the given id does not exist.
+        """
+        user = await self.get_by_id(user_id)
         return user.is_admin

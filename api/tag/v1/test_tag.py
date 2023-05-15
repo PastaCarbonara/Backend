@@ -1,7 +1,8 @@
-"""Tests for the tag endpoints"""
+# pylint: skip-file
+
 import pytest
-from httpx import AsyncClient
 from typing import Dict
+from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
@@ -39,7 +40,7 @@ async def test_create_tag(client: AsyncClient, admin_token_headers: Dict[str, st
     response = await client.post(
         "/api/v1/tags",
         headers=admin_token_headers,
-        json={"name": "tag4"},
+        json={"name": "tag4", "tag_type":"Keuken"},
     )
     assert response.status_code == 200
     assert response.json()["name"] == "tag4"
@@ -58,7 +59,7 @@ async def test_create_tag_already_exists(
     response = await client.post(
         "/api/v1/tags",
         headers=admin_token_headers,
-        json={"name": "tag4"},
+        json={"name": "tag4", "tag_type":"Keuken"},
     )
     assert response.status_code == 409
 
@@ -69,10 +70,10 @@ async def test_update_tag(client: AsyncClient, admin_token_headers: Dict[str, st
     response = await client.put(
         "/api/v1/tags/2",
         headers=admin_token_headers,
-        json={"name": "tag5"},
+        json={"name": "tag5", "tag_type":"Keuken"},
     )
     assert response.status_code == 200
-    assert response.json() == {"id": 2, "name": "tag5"}
+    assert response.json() == {"id": 2, "name": "tag5", "tag_type":"Keuken"}
     response = await client.get("/api/v1/tags", headers=admin_token_headers)
     expected_tags = ["tag3", "tag4", "tag5"]
     tags = [tag["name"] for tag in response.json()]
@@ -88,7 +89,7 @@ async def test_update_tag_already_exists(
     response = await client.put(
         "/api/v1/tags/2",
         headers=admin_token_headers,
-        json={"name": "tag4"},
+        json={"name": "tag4", "tag_type":"Keuken"},
     )
     assert response.status_code == 409
 
@@ -101,6 +102,6 @@ async def test_update_tag_not_found(
     response = await client.put(
         "/api/v1/tags/9",
         headers=admin_token_headers,
-        json={"name": "tag5"},
+        json={"name": "tag5", "tag_type":"Keuken"},
     )
     assert response.status_code == 404

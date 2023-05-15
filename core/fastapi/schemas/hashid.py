@@ -11,8 +11,7 @@ class HashId(int):
     @classmethod
     def validate(cls, v):
         if not isinstance(v, int):
-            raise TypeError('integer required')
-        
+            raise TypeError('integer required')        
         return encode(v)
     
 

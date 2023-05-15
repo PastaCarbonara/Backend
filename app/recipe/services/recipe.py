@@ -1,15 +1,17 @@
 """Recipe service module."""
 
-from typing import List
-from core.db.models import RecipeIngredient, Recipe, RecipeTag
+from typing import List, Dict
+from core.db.models import RecipeIngredient, Recipe, RecipeTag, User
 from core.db import Transactional
 from core.exceptions import RecipeNotFoundException, UserNotFoundException
+from core.exceptions.base import UnauthorizedException
 from app.ingredient.repository.ingredient import IngredientRepository
 from app.tag.repository.tag import TagRepository
+from app.tag.schemas import CreateTagSchema
 from app.recipe.schemas import CreateRecipeSchema, CreateRecipeIngredientSchema
-from app.image.repository.image import ImageRepository
-from app.image.exception.image import FileNotFoundException
 from app.recipe.repository.recipe import RecipeRepository
+from app.image.repository.image import ImageRepository
+from app.image.exceptions.image import FileNotFoundException
 from app.user.services.user import UserService
 
 
@@ -48,7 +50,7 @@ class RecipeService:
         self.recipe_repository = RecipeRepository()
         self.user_service = UserService()
 
-    async def get_recipe_list(self) -> List[Recipe]:
+    async def get_paginated_recipe_list(self, limit, offset) -> Dict[str,str]:
         """Get a list of recipes.
 
         Returns
@@ -56,7 +58,8 @@ class RecipeService:
         List[Recipe]
             A list of recipes.
         """
-        return await self.recipe_repository.get_recipes()
+        recipes, total_count = await self.recipe_repository.get_recipes(limit, offset)
+        return {"total_count": total_count, "recipes": recipes}
 
     async def get_recipe_by_id(self, recipe_id: int) -> Recipe:
         """Get a recipe by id.
@@ -79,6 +82,7 @@ class RecipeService:
         recipe = await self.recipe_repository.get_recipe_by_id(recipe_id)
         if not recipe:
             raise RecipeNotFoundException()
+
         return recipe
 
     @Transactional()
@@ -99,7 +103,7 @@ class RecipeService:
             raise RecipeNotFoundException
 
         try:
-            await self.user_service.get_user_by_id(user_id)
+            await self.user_service.get_by_id(user_id)
         except UserNotFoundException as exc:
             raise UserNotFoundException() from exc
 
@@ -131,7 +135,7 @@ class RecipeService:
         image = await self.image_repository.get_image_by_name(recipe.filename)
         if not image:
             raise FileNotFoundException()
-        await self.user_service.get_user_by_id(user_id)
+        await self.user_service.get_by_id(user_id)
         db_recipe = await self.create_recipe_object(recipe, user_id)
         await self.set_ingredients_of_recipe(db_recipe, recipe.ingredients)
         await self.set_tags_of_recipe(db_recipe, recipe.tags)
@@ -159,8 +163,9 @@ class RecipeService:
             name=recipe.name,
             filename=recipe.filename,
             description=recipe.description,
-            preparing_time=recipe.preparing_time,
+            preparation_time=recipe.preparation_time,
             instructions=recipe.instructions,
+            materials = recipe.materials,
             creator_id=user_id,
         )
 
@@ -200,7 +205,7 @@ class RecipeService:
             )
             recipe.ingredients = recipe_ingredients
 
-    async def set_tags_of_recipe(self, recipe: Recipe, tags: List[int]) -> None:
+    async def set_tags_of_recipe(self, recipe: Recipe, tags: List[CreateTagSchema]) -> None:
         """set tags of a recipe instance
 
         Parameters
@@ -212,9 +217,33 @@ class RecipeService:
         """
         recipe_tags = []
         for tag in tags:
-            tag_object = await self.tag_repository.get_tag_by_name(tag)
+            tag_object = await self.tag_repository.get_tag_by_name(tag.name)
             if not tag_object:
-                tag_object = await self.tag_repository.create_tag(tag)
+                tag_object = await self.tag_repository.create_tag(tag.name, tag.tag_type)
             recipe_tags.append(RecipeTag(tag=tag_object, recipe=recipe))
 
         recipe.tags = recipe_tags
+
+    @Transactional()
+    async def delete_recipe(self, recipe_id: int, user: User):
+        """
+        Deletes a recipe from the repository, if authorized.
+
+        Args:
+            recipe_id (int): The ID of the recipe to be deleted.
+            user (User): The user attempting to delete the recipe.
+
+        Raises:
+            RecipeNotFoundException: If the specified recipe ID does not exist.
+            UnauthorizedException: If the user is not authorized to delete the recipe.
+
+        Returns:
+            str: A string indicating the successful deletion of the recipe.
+        """
+        recipe = await self.recipe_repository.get_recipe_by_id(recipe_id)
+        if not recipe:
+            raise RecipeNotFoundException()
+        if recipe.creator_id != user.id and not user.is_admin:
+            raise UnauthorizedException()
+        await self.recipe_repository.delete_recipe(recipe)
+        return "Ok"

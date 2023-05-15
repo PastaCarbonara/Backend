@@ -1,29 +1,29 @@
 """Image Service for handling image related logic."""
 
 from typing import List
-from azure.core.exceptions import ResourceNotFoundError
 from tempfile import NamedTemporaryFile
-from PIL import Image
+from azure.core.exceptions import ResourceNotFoundError
+from PIL import Image, UnidentifiedImageError
 from sqlalchemy.exc import IntegrityError
 from fastapi import UploadFile
+
 from core.db.models import File
 from core.db import Transactional
-from app.image.exception.image import (
+from core.config import config
+
+from app.image.exceptions.image import (
     InvalidImageException,
     CorruptImageException,
     ImageTooLargeException,
-)
-from app.image.interface.image import ObjectStorageInterface
-from app.image.repository.image import ImageRepository
-from app.image.utils import generate_unique_filename
-from app.image.exception.image import (
     AzureImageUploadException,
     AzureImageDeleteException,
     FileNotFoundException,
     AzureImageDeleteNotFoundException,
-    ImageDependecyException,
+    FileDependecyException,
 )
-from core.config import config
+from app.image.interface.image import ObjectStorageInterface
+from app.image.repository.image import ImageRepository
+from app.image.utils import generate_unique_filename
 
 ALLOWED_TYPES = ["image/jpeg", "image/png"]
 
@@ -70,6 +70,18 @@ class ImageService:
         self.image_repository = ImageRepository()
 
     async def get_image_by_name(self, filename) -> File:
+        """
+        Retrieves an image by filename from the image repository.
+
+        Args:
+            filename (str): The name of the image file to retrieve.
+
+        Returns:
+            File: The image file that matches the provided filename.
+
+        Raises:
+            FileNotFoundException: If no image is found with the provided filename.
+        """
         image = await self.image_repository.get_image_by_name(filename)
 
         if not image:
@@ -146,7 +158,7 @@ class ImageService:
         ------
         FileNotFoundException:
             If the image is not found in the repository.
-        ImageDependecyException:
+        FileDependecyException:
             If the image is used by another entity.
         AzureImageDeleteException:
             If the image could not be deleted from the object storage.
@@ -158,13 +170,12 @@ class ImageService:
         try:
             await self.image_repository.delete_image(image)
         except IntegrityError as exc:
-            raise ImageDependecyException() from exc
+            raise FileDependecyException() from exc
         try:
             await self.object_storage_interface.delete_image(filename)
         except ResourceNotFoundError as exc:
             raise AzureImageDeleteNotFoundException() from exc
         except Exception as exc:
-            print(exc)
             raise AzureImageDeleteException() from exc
 
     async def validate_image(self, file: UploadFile):
@@ -211,8 +222,19 @@ class ImageService:
         try:
             img = Image.open(file.file)
             img.verify()
-        except Exception:
+
+        except FileNotFoundError:
             return True
+
+        except UnidentifiedImageError:
+            return True
+
+        except KeyError:
+            return True
+
+        except ValueError:
+            return True
+
         return False
 
     async def is_image_to_large(self, file: UploadFile) -> bool:

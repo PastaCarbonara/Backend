@@ -1,26 +1,23 @@
 """Endpoints for recipe.
 """
-
-from typing import List
-
 from fastapi import APIRouter, Depends
 from core.exceptions import ExceptionResponseSchema
 from core.fastapi.dependencies.user import get_current_user
 from core.fastapi_versioning import version
+from core.fastapi.dependencies.permission import (
+    AllowAll,
+    PermissionDependency,
+    IsAuthenticated,
+)
 
 from app.recipe.schemas import (
     JudgeRecipeSchema,
     GetFullRecipeResponseSchema,
-    CreateRecipeIngredientSchema,
+    GetFullRecipePaginatedResponseSchema,
     CreateRecipeSchema,
 )
 from app.recipe.services import RecipeService
-from core.fastapi.dependencies.permission import (
-    AllowAll,
-    PermissionDependency,
-    IsAdmin,
-    IsAuthenticated,
-)
+
 
 
 recipe_v1_router = APIRouter()
@@ -29,11 +26,12 @@ recipe_v1_router = APIRouter()
 @recipe_v1_router.get(
     "",
     responses={"400": {"model": ExceptionResponseSchema}},
-    response_model=List[GetFullRecipeResponseSchema],
+    response_model=GetFullRecipePaginatedResponseSchema,
 )
 @version(1)
-async def get_recipe_list():
-    return await RecipeService().get_recipe_list()
+async def get_recipe_list(limit: int = 10, offset: int = 0):
+    return await RecipeService().get_paginated_recipe_list(limit, offset)
+
 
 
 @recipe_v1_router.get(
@@ -45,12 +43,23 @@ async def get_recipe_list():
 async def get_recipe_by_id(recipe_id: int):
     return await RecipeService().get_recipe_by_id(recipe_id)
 
+@recipe_v1_router.delete(
+    "/{recipe_id}",
+    responses={"400": {"model": ExceptionResponseSchema}},
+    status_code=204,
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
+)
+@version(1)
+async def delete_recipe(recipe_id: int, user = Depends(get_current_user)):
+    await RecipeService().delete_recipe(recipe_id, user)
+    return {"message": "Recipe deleted successfully."}
+
 
 @recipe_v1_router.post(
     "/{recipe_id}/judge",
     response_model_exclude={"id"},
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[AllowAll]]))],
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
 async def judge_recipe(
@@ -84,13 +93,4 @@ async def create_recipe(request: CreateRecipeSchema, user=Depends(get_current_us
 #     return await RecipeService().get_recipe_by_id(recipe_id)
 
 
-# @recipe_v1_router.delete(
-#     "/{recipe_id}",
-#     responses={"400": {"model": ExceptionResponseSchema}},
-#     status_code=204,
-#     dependencies=[Depends(PermissionDependency([[IsAuthenticated, ProvidesUserID]]))],
-# )
-# @version(1)
-# async def delete_recipe(recipe_id: int):
-#     await RecipeService().delete_recipe(recipe_id)
-#     return {"message": "Recipe deleted successfully."}
+

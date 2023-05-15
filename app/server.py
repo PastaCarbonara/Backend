@@ -1,13 +1,18 @@
+"""
+Initialize app
+"""
+
+
 from typing import List
 
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from core.fastapi_versioning import VersionedFastAPI
 
 from api import router
 from api.home.home import home_router
+
 from core.config import config
 from core.exceptions import CustomException
 from core.fastapi.dependencies import Logging
@@ -17,25 +22,38 @@ from core.fastapi.middlewares import (
     SQLAlchemyMiddleware,
     ResponseLogMiddleware,
 )
+from core.fastapi_versioning import VersionedFastAPI
 from core.helpers.cache import Cache, RedisBackend, CustomKeyMaker
+from core.tasks import start_tasks
 
 
 def init_routers(app_: FastAPI) -> None:
+    """
+    Initialize app routers
+    """
     app_.include_router(home_router)
     app_.include_router(router)
 
 
 def init_listeners(app_: FastAPI) -> None:
+    """
+    Initialize app listeners
+    """
     # Exception handler
     @app_.exception_handler(CustomException)
     async def custom_exception_handler(request: Request, exc: CustomException):
+        del request
+
         return JSONResponse(
             status_code=exc.code,
             content={"error_code": exc.error_code, "message": exc.message},
         )
 
 
-def on_auth_error(request: Request, exc: Exception):
+def on_auth_error(exc: Exception):
+    """
+    Authentication exception handler
+    """
     status_code, error_code, message = 401, None, str(exc)
     if isinstance(exc, CustomException):
         status_code = int(exc.code)
@@ -49,6 +67,9 @@ def on_auth_error(request: Request, exc: Exception):
 
 
 def make_middleware() -> List[Middleware]:
+    """
+    Initialize FastAPI middleware
+    """
     middleware = [
         Middleware(
             CORSMiddleware,
@@ -69,14 +90,20 @@ def make_middleware() -> List[Middleware]:
 
 
 def init_cache() -> None:
+    """
+    Initialize cache
+    """
     Cache.init(backend=RedisBackend(), key_maker=CustomKeyMaker())
 
 
 def create_app() -> FastAPI:
+    """
+    Create app
+    """
     app_ = FastAPI(
-        title="MealMatch",
-        description="MealMatch API",
-        version="0.1.0",
+        title="Munchie",
+        description="Munchie API",
+        version="0.4.0",
         docs_url=None if config.ENV == "production" else "/docs",
         redoc_url=None if config.ENV == "production" else "/redoc",
         dependencies=[Depends(Logging)],
@@ -86,7 +113,8 @@ def create_app() -> FastAPI:
     init_routers(app_=app_)
     init_listeners(app_=app_)
     init_cache()
-    
+    start_tasks()
+
     app_ = VersionedFastAPI(
         app_,
         init_func=init_listeners,

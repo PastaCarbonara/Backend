@@ -1,350 +1,487 @@
-import json
-from fastapi import WebSocket, WebSocketDisconnect, WebSocketException, status
+"""
+Module for working with the websocket for the swipesessions.
+"""
+
+from fastapi import WebSocket, WebSocketDisconnect, WebSocketException
 from pydantic import ValidationError
+from starlette.websockets import WebSocketState
 from app.group.services.group import GroupService
 from app.recipe.schemas.recipe import GetFullRecipeResponseSchema
 from app.recipe.services.recipe import RecipeService
 from app.swipe.schemas.swipe import CreateSwipeSchema
 from app.swipe.services.swipe import SwipeService
-from app.swipe_session.exception.swipe_session import (
-    AccessDeniedException,
-    ActionNotFoundException,
+from app.user.services.user import UserService
+from app.swipe_session.schemas.swipe_session import (
+    SwipeSessionPacketSchema,
+    UpdateSwipeSessionSchema,
+)
+from app.swipe_session.services.swipe_session import SwipeSessionService
+from core.exceptions.websocket import (
     ActionNotImplementedException,
     AlreadySwipedException,
     ClosingConnection,
-    ConnectionCode,
-    InactiveException,
-    InvalidIdException,
-    JSONSerializableException,
-    NoMessageException,
     StatusNotFoundException,
     SuccessfullConnection,
     ValidationException,
 )
-from app.user.services.user import UserService
-from core.db.enums import SwipeSessionActionEnum as ACTIONS, SwipeSessionEnum
-from app.swipe_session.schemas.swipe_session import (
-    PacketSchema,
-    UpdateSwipeSessionSchema,
-)
-from app.swipe_session.services.swipe_session import SwipeSessionService
+from core.db.enums import SwipeSessionActionEnum, SwipeSessionEnum
 from core.db.models import SwipeSession, User
 from core.exceptions.base import CustomException, UnauthorizedException
 from core.exceptions.recipe import RecipeNotFoundException
-from core.helpers.hashid import check_id
-from starlette.websockets import WebSocketState
+from core.helpers.hashid import decode_single
+from core.helpers.websocket.auth import (
+    IsActiveSession,
+    IsAuthenticated,
+    IsSessionMember,
+)
+from core.helpers.websocket.manager import WebsocketConnectionManager
+from core.utils.token_helper import TokenHelper
 
 
-class SwipeSessionConnectionManager:
-    def __init__(self):
-        self.active_connections: dict = {}
-
-    async def connect(self, websocket: WebSocket, session_id: str) -> None:
-        await websocket.accept()
-
-        if session_id not in self.active_connections:
-            self.active_connections[session_id] = []
-
-        self.active_connections[session_id].append(websocket)
-
-        return websocket
-
-    async def deny(
-        self, websocket: WebSocket, exception: CustomException = AccessDeniedException
-    ) -> None:
-        """Denies access to the websocket"""
-        await websocket.accept()
-        await SwipeSessionWebsocketService().handle_connection_code(
-            websocket, exception
-        )
-        await websocket.close(status.WS_1000_NORMAL_CLOSURE)
-
-    async def disconnect(self, session_id: str, websocket: WebSocket):
-        self.active_connections[session_id].remove(websocket)
-        await websocket.close()
-
-        if self.get_connection_count(session_id) < 1:
-            self.active_connections.pop(session_id)
-
-        # pain.
-        # else:
-        #     await self.handle_session_message(
-        #         websocket, session_id, f"Client left the session"
-        #     )
-
-    async def disconnect_session(self, session_id, packet) -> None:
-        session = self.active_connections.get(session_id)
-
-        if not session:  # Error Log this
-            print("Tried to disconnect for non existing session")
-            return
-
-        websocket: WebSocket
-        for websocket in session:
-            await self.personal_packet(websocket, packet)
-            await self.disconnect(session_id, websocket)
-
-    async def personal_packet(self, websocket: WebSocket, packet: PacketSchema) -> None:
-        await websocket.send_json(packet.dict())
-
-    async def global_broadcast(self, packet: PacketSchema) -> None:
-        for session_id in self.active_connections.keys():
-            for connection in self.active_connections[session_id]:
-                await connection.send_json(packet.dict())
-
-    async def session_broadcast(self, session_id: str, packet: PacketSchema) -> None:
-        for connection in self.active_connections[session_id]:
-            await connection.send_json(packet.dict())
-
-    def get_connection_count(self, session_id: str | None = None) -> int:
-        """Get total amount of WebSocket active connections
-
-        Provide a session_id to get the amount for one session
-        """
-        if session_id:
-            try:
-                connections = self.active_connections[session_id]
-            except KeyError:
-                # Perhaps a better way to resolve this exists, as this might be unclear
-                return 0
-
-            return len(connections)
-
-        total = 0
-        for session in self.active_connections:
-            total += len(self.active_connections[session])
-
-        return total
-
-
-manager = SwipeSessionConnectionManager()
+manager = WebsocketConnectionManager(
+    [[IsAuthenticated, IsSessionMember, IsActiveSession]]
+)
 
 
 class SwipeSessionWebsocketService:
+    """
+    This class provides a WebSocket service for communication between clients and servers using
+    the WebSocket protocol.
+
+    Attributes:
+    -----------
+    manager: WebSocketManager
+        The manager responsible for handling WebSocket connections, disconnections, and message
+        broadcasts
+        in the WebSocket protocol.
+
+    Methods:
+    --------
+    handler(websocket: WebSocket, session_id: str, user_id: int) -> None:
+        This function is the WebSocket protocol's handler and takes a WebSocket instance as well
+        as session and user IDs.
+
+    handle_session_status_update(websocket: WebSocket, session_id: int, user: User, status: str)
+    -> None:
+        This function handles the updates on the session status and broadcasts the updates to all
+        users in the session.
+
+    handle_recipe_swipe(websocket: WebSocket, session: SwipeSession, user: User, packet:
+    SwipeSessionPacketSchema) -> None:
+        This function handles the creation of swipe requests to recipes in a session and
+        broadcasts the request
+        to all WebSocket clients in the same session.
+
+    __init__(self, manager: WebSocketManager) -> None:
+        Initializes the SwipeSessionWebsocketService instance with a manager that handles
+        WebSocket connections,
+        disconnections, and message broadcasts in the WebSocket protocol.
+
+    handler(self, websocket: WebSocket, swipe_session_id: str, access_token: str) -> None:
+        This function handles the WebSocket protocol and receives a WebSocket instance, swipe
+        session ID, and
+        the client's access token.
+
+    get_user_and_swipe_session(self, access_token: str, swipe_session_id: str) -> Tuple[User,
+    SwipeSession]:
+        This function retrieves the user and swipe session associated with the given access
+        token and swipe
+        session ID.
+
+    handle_global_message(self, packet: SwipeSessionPacketSchema, websocket: WebSocket, user:
+    User, swipe_session: SwipeSession) -> None:
+        This function handles a global message and ensures that the user is an administrator
+        before broadcasting
+        the message.
+
+    handle_recipe_swipe(self, websocket: WebSocket, session: SwipeSession, user: User, packet:
+    SwipeSessionPacketSchema) -> None:
+        This function processes a recipe swipe and checks for a match with other participants
+        in the swipe session.
+    """
+
     def __init__(self) -> None:
+        """
+        Initializes the SwipeSessionWebsocketService instance with a WebSocketManager.
+
+        Parameters:
+        -----------
+        manager: WebSocketManager
+            The manager that handles the connection, disconnection and broadcasting of messages in
+            WebSocket protocol.
+        """
         self.manager = manager
 
+        self.actions = {
+            SwipeSessionActionEnum.GLOBAL_MESSAGE: self.handle_global_message,
+            SwipeSessionActionEnum.RECIPE_SWIPE: self.handle_recipe_swipe,
+            SwipeSessionActionEnum.POOL_MESSAGE: self.handle_pool_message,
+            SwipeSessionActionEnum.SESSION_STATUS_UPDATE: self.handle_session_status_update_auth,
+        }
+
     async def handler(
-        self, websocket: WebSocket, session_id: str, user_id: int
+        self, websocket: WebSocket, swipe_session_id: str, access_token: str
     ) -> None:
-        try:
-            user = await check_id(user_id, UserService().get_user_by_id)
-            session = await check_id(
-                session_id, SwipeSessionService().get_swipe_session_by_id
-            )
-        except:
-            await self.manager.deny(websocket, InvalidIdException)
+        """
+        The handler function for WebSocket protocol, receives a WebSocket instance, the swipe
+        session ID and client's access token.
+
+        Parameters:
+        -----------
+        websocket: WebSocket
+            The WebSocket instance.
+        swipe_session_id: str
+            The hashed swipe session ID.
+        access_token: str
+            The client's access token.
+
+        Returns:
+        --------
+        None
+        """
+        exc = await self.manager.check_auth(
+            access_token=access_token, swipe_session_id=swipe_session_id
+        )
+        if exc:
+            await websocket.accept()
+            await self.manager.handle_connection_code(websocket, exc)
+            await websocket.close()
             return
 
-        if session.status != SwipeSessionEnum.IN_PROGRESS:
-            await self.manager.deny(websocket, InactiveException)
-            return
-
-        if session.group_id:
-            if not await GroupService().is_member(session.group_id, user.id):
-                await self.manager.deny(websocket, InvalidIdException)
-                return
-
-        websocket = await self.manager.connect(websocket, session.id)
-
-        if not user or not session:
-            await self.handle_connection_code(websocket, InvalidIdException)
-            await self.manager.disconnect(session.id, websocket)
-            return
-
-        await self.handle_connection_code(websocket, SuccessfullConnection)
-
-        try:
-            while websocket.application_state == WebSocketState.CONNECTED:
-                # NOTE! DO NOT 'RETURN' IF YOU WISH TO 'CONTINUE'
-                # Learned it the hard way, and took me a day.
-
-                data = await websocket.receive_text()
-
-                # Gate keepers/Guard clauses
-                try:
-                    data_json = json.loads(data)
-                except:
-                    await self.handle_connection_code(
-                        websocket, JSONSerializableException
-                    )
-                    continue
-
-                try:
-                    packet = PacketSchema(**data_json)
-                except ValidationError:
-                    await self.handle_connection_code(
-                        websocket, ActionNotFoundException
-                    )
-                    continue
-
-                # Handlers
-                if packet.action == ACTIONS.GLOBAL_MESSAGE:
-                    if not await UserService().is_admin(user.id):
-                        await self.handle_connection_code(
-                            websocket, UnauthorizedException
-                        )
-                        continue
-                    await self.handle_global_message(
-                        websocket, packet.payload.get("message")
-                    )
-
-                elif packet.action == ACTIONS.RECIPE_SWIPE:
-                    await self.handle_recipe_swipe(websocket, session, user, packet)
-
-                elif packet.action == ACTIONS.SESSION_MESSAGE:
-                    await self.handle_session_message(
-                        websocket, session.id, packet.payload.get("message")
-                    )
-
-                elif packet.action == ACTIONS.SESSION_STATUS_UPDATE:
-                    if not await GroupService().is_admin(session.group_id, user.id):
-                        await self.handle_connection_code(
-                            websocket, UnauthorizedException
-                        )
-                        continue
-                    await self.handle_session_status_update(
-                        websocket, session.id, user, packet.payload.get("status")
-                    )
-
-                else:
-                    await self.handle_connection_code(
-                        websocket, ActionNotImplementedException
-                    )
-
-        except WebSocketDisconnect:
-            await self.manager.disconnect(session.id, websocket)
-
-        except Exception as e:
-            print("???")
-            print(e)
-
-    async def handle_session_status_update(
-        self, websocket: WebSocket, session_id: int, user: User, status: str
-    ):
-        if not status in [e.value for e in SwipeSessionEnum]:
-            await self.handle_connection_code(websocket, StatusNotFoundException)
-            return
-
-        # check is admin
-
-        await SwipeSessionService().update_swipe_session(
-            UpdateSwipeSessionSchema(id=session_id, status=SwipeSessionEnum.COMPLETED),
-            user,
+        user, swipe_session = await self.get_user_and_swipe_session(
+            access_token=access_token, swipe_session_id=swipe_session_id
         )
 
-        payload = {"status": status}
-        packet = PacketSchema(action=ACTIONS.SESSION_STATUS_UPDATE, payload=payload)
+        await self.manager.connect(websocket, swipe_session.id)
+        await self.manager.handle_connection_code(websocket, SuccessfullConnection)
 
-        await self.handle_session_packet(session_id, packet)
+        try:
+            while (
+                websocket.application_state == WebSocketState.CONNECTED
+                and websocket.client_state == WebSocketState.CONNECTED
+            ):
+                try:
+                    packet: SwipeSessionPacketSchema = await self.manager.receive_data(
+                        websocket, SwipeSessionPacketSchema
+                    )
 
-    async def handle_global_message(self, websocket: WebSocket, message: str) -> None:
-        if not message:
-            await self.handle_connection_code(websocket, NoMessageException)
-            return
+                except CustomException as exc:
+                    await self.manager.handle_connection_code(websocket, exc)
 
-        payload = {"message": message}
-        packet = PacketSchema(action=ACTIONS.GLOBAL_MESSAGE, payload=payload)
+                else:
+                    func = self.actions.get(
+                        packet.action, self.handle_action_not_implemented
+                    )
 
-        await self.handle_global_packet(packet)
+                    await self.manager.queued_run(
+                        pool_id=swipe_session.id,
+                        func=func,
+                        packet=packet,
+                        websocket=websocket,
+                        user=user,
+                        swipe_session=swipe_session,
+                    )
 
-    async def handle_global_packet(self, packet: PacketSchema) -> None:
-        await self.manager.global_broadcast(packet)
+        except WebSocketDisconnect as exc:
+            # Check because sometimes the exception is raised but it's already disconnected
+            if (
+                websocket.client_state == WebSocketState.CONNECTED
+                or websocket.application_state == WebSocketState.CONNECTED
+            ):
+                await self.manager.disconnect(websocket, swipe_session.id)
 
-    async def handle_session_message(
-        self, websocket: WebSocket, session_id: int, message: str
-    ) -> None:
-        if not message:
-            await self.handle_connection_code(websocket, NoMessageException)
-            return
+        except WebSocketException as exc:
+            print("???")
+            print(exc)
 
-        payload = {"message": message}
-        packet = PacketSchema(action=ACTIONS.SESSION_MESSAGE, payload=payload)
+    async def get_user_and_swipe_session(
+        self, access_token: str, swipe_session_id: str
+    ) -> tuple[User, SwipeSession]:
+        """Retrieve the user and swipe session associated with the given access token and swipe
+        session ID.
 
-        await self.handle_session_packet(session_id, packet)
+        Args:
+            access_token (str): The JWT access token used to authenticate the request.
+            swipe_session_id (str): The ID of the swipe session to retrieve.
 
-    async def handle_session_packet(
-        self, session_id: int, packet: PacketSchema
-    ) -> None:
-        await self.manager.session_broadcast(session_id, packet)
+        Returns:
+            Tuple[User, SwipeSession]: A tuple containing the User object associated with the access
+            token, and the SwipeSession object associated with the given ID.
 
-    async def handle_connection_code(
-        self, websocket, exception: CustomException | ConnectionCode
-    ) -> None:
-        payload = {"status_code": exception.code, "message": exception.message}
-        packet = PacketSchema(action=ACTIONS.CONNECTION_CODE, payload=payload)
+        Raises:
+            InvalidTokenException: If the access token is invalid or has expired.
+            NotFoundException: If the user or swipe session cannot be found.
+        """
+        decoded_token = TokenHelper.decode(token=access_token)
+        user_id = decode_single(decoded_token.get("user_id"))
+        swipe_session_id = decode_single(swipe_session_id)
 
-        await self.manager.personal_packet(websocket, packet)
+        # By calling "check_auth" with "IsSessionMember", we already know that these exist
+        user = await UserService().get_by_id(user_id)
+        swipe_session = await SwipeSessionService().get_swipe_session_by_id(
+            swipe_session_id
+        )
+
+        return (user, swipe_session)
+
+    async def handle_global_message(
+        self,
+        packet: SwipeSessionPacketSchema,
+        websocket: WebSocket,
+        user: User,
+        swipe_session: SwipeSession,
+    ):
+        """
+        Handle a global message sent by an admin user to all participants of a swipe session.
+
+        Args:
+            packet: A SwipeSessionPacketSchema object representing the packet containing the
+                global message to handle.
+            websocket: WebSocket object representing the active WebSocket connection.
+            user: User object representing the user associated with the active WebSocket connection.
+            swipe_session: not used
+
+        Returns:
+            None.
+        """
+        del swipe_session
+
+        if not await UserService().is_admin(user.id):
+            return await self.manager.handle_connection_code(
+                websocket, UnauthorizedException
+            )
+        await self.manager.handle_global_message(
+            websocket, packet.payload.get("message")
+        )
 
     async def handle_recipe_swipe(
         self,
         websocket: WebSocket,
-        session: SwipeSession,
+        swipe_session: SwipeSession,
         user: User,
-        packet: PacketSchema,
+        packet: SwipeSessionPacketSchema,
     ) -> None:
+        """
+        Process a recipe swipe and check for a match with other participants in the swipe session.
+
+        Args:
+            websocket: WebSocket object representing the active WebSocket connection.
+            session: A SwipeSession object representing the active swipe session.
+            user: User object representing the user associated with the active WebSocket connection.
+            packet: A SwipeSessionPacketSchema object representing the swipe packet to process.
+
+        Returns:
+            None.
+        """
         try:
             swipe_schema = CreateSwipeSchema(
-                swipe_session_id=session.id, user_id=user.id, **packet.payload
+                swipe_session_id=swipe_session.id, user_id=user.id, **packet.payload
             )
 
-        except ValidationError as e:
-            await self.handle_connection_code(websocket, ValidationException(e.json()))
+        except ValidationError as exc:
+            await self.manager.handle_connection_code(
+                websocket, ValidationException(exc.json())
+            )
             return
 
         try:
-            recipe = await RecipeService().get_recipe_by_id(packet.payload["recipe_id"])
-        except:
-            await self.handle_connection_code(websocket, RecipeNotFoundException)
+            await RecipeService().get_recipe_by_id(packet.payload["recipe_id"])
+        except RecipeNotFoundException:
+            await self.manager.handle_connection_code(
+                websocket, RecipeNotFoundException
+            )
             return
 
         existing_swipe = await SwipeService().get_swipe_by_creds(
-            swipe_session_id=session.id,
+            swipe_session_id=swipe_session.id,
             user_id=user.id,
             recipe_id=packet.payload["recipe_id"],
         )
 
         if existing_swipe:
-            await self.handle_connection_code(websocket, AlreadySwipedException)
+            await self.manager.handle_connection_code(websocket, AlreadySwipedException)
             return
 
-        new_swipe_id = await SwipeService().create_swipe(swipe_schema)
+        await SwipeService().create_swipe(swipe_schema)
 
         matching_swipes = (
             await SwipeService().get_swipes_by_session_id_and_recipe_id_and_like(
-                swipe_session_id=session.id,
+                swipe_session_id=swipe_session.id,
                 recipe_id=packet.payload["recipe_id"],
                 like=True,
             )
         )
 
-        group = await GroupService().get_group_by_id(session.group_id)
+        group = await GroupService().get_group_by_id(swipe_session.group_id)
 
         if len(matching_swipes) >= len(group.users):
             await self.handle_session_match(
-                websocket, session.id, packet.payload["recipe_id"]
+                websocket, swipe_session.id, packet.payload["recipe_id"]
+            )
+
+            packet = SwipeSessionPacketSchema(
+                action=SwipeSessionActionEnum.SESSION_STATUS_UPDATE,
+                payload={"status": SwipeSessionEnum.COMPLETED},
             )
             await self.handle_session_status_update(
-                websocket, session.id, user, SwipeSessionEnum.COMPLETED
+                packet, websocket, user, swipe_session
             )
 
             exception = ClosingConnection
             payload = {"status_code": exception.code, "message": exception.message}
-            packet = PacketSchema(action=ACTIONS.CONNECTION_CODE, payload=payload)
+            packet = SwipeSessionPacketSchema(
+                action=SwipeSessionActionEnum.CONNECTION_CODE, payload=payload
+            )
+            await self.manager.disconnect_pool(swipe_session.id, packet)
 
-            await self.manager.disconnect_session(session.id, packet)
+    async def handle_pool_message(
+        self,
+        packet: SwipeSessionPacketSchema,
+        websocket: WebSocket,
+        user: User,
+        swipe_session: SwipeSession,
+    ):
+        """
+        Handle a message sent by a participant of a swipe session to the session pool.
+
+        Args:
+            packet: A SwipeSessionPacketSchema object representing the packet containing the
+            message to handle.
+            websocket: WebSocket object representing the active WebSocket connection.
+            user: not used
+            swipe_session: A SwipeSession object representing the active swipe session.
+
+        Returns:
+            None.
+        """
+        del user
+
+        await self.manager.handle_pool_message(
+            websocket, swipe_session.id, packet.payload.get("message")
+        )
+
+    async def handle_session_status_update_auth(
+        self,
+        packet: SwipeSessionPacketSchema,
+        websocket: WebSocket,
+        user: User,
+        swipe_session: SwipeSession,
+    ):
+        """
+        Handle the authorization for a session status update.
+
+        Parameters:
+            packet (SwipeSessionPacketSchema): The packet containing the session status update.
+            websocket (WebSocket): The WebSocket connection.
+            user (User): The user initiating the session status update.
+            swipe_session (SwipeSession): The swipe session to be updated.
+
+        Returns:
+            Coroutine[Any, Any, None]: The result of the session status update handling.
+
+        Raises:
+            UnauthorizedException: If the user is not authorized to perform the session status update.
+        """
+        if not await GroupService().is_admin(swipe_session.group_id, user.id):
+            await self.manager.handle_connection_code(websocket, UnauthorizedException)
+            return
+
+        return await self.handle_session_status_update(
+            packet, websocket, user, swipe_session
+        )
+
+    async def handle_session_status_update(
+        self,
+        packet: SwipeSessionPacketSchema,
+        websocket: WebSocket,
+        user: User,
+        swipe_session: SwipeSession,
+    ):
+        """
+        Update the status of a swipe session and broadcast the change to all session participants.
+
+        Args:
+            packet: A SwipeSessionPacketSchema object representing the packet containing the new
+            status of the swipe session to update.
+            websocket: WebSocket object representing the active WebSocket connection.
+            user: User object representing the user associated with the active WebSocket connection.
+            swipe_session: A SwipeSession object representing the active swipe session.
+
+        Returns:
+            Coroutine[Any, Any, None]: The result of the pool broadcast.
+        """
+        del user
+        session_status = packet.payload.get("status")
+        if not session_status in [e.value for e in SwipeSessionEnum]:
+            return await self.manager.handle_connection_code(
+                websocket, StatusNotFoundException
+            )
+
+        await SwipeSessionService().update_swipe_session(
+            UpdateSwipeSessionSchema(id=swipe_session.id, status=session_status),
+            swipe_session.group_id,
+        )
+
+        payload = {"status": session_status}
+        packet = SwipeSessionPacketSchema(
+            action=SwipeSessionActionEnum.SESSION_STATUS_UPDATE, payload=payload
+        )
+
+        return await self.manager.pool_broadcast(swipe_session.id, packet)
+
+    async def handle_action_not_implemented(
+        self,
+        packet: SwipeSessionPacketSchema,
+        websocket: WebSocket,
+        user: User,
+        swipe_session: SwipeSession,
+    ):
+        """
+        Handle an action packet that has not been implemented.
+
+        Args:
+            packet: not used
+            websocket: WebSocket object representing the active WebSocket connection.
+            user: not used
+            swipe_session: not used
+
+        Returns:
+            None.
+        """
+        del packet, user, swipe_session
+
+        await self.manager.handle_connection_code(
+            websocket, ActionNotImplementedException
+        )
 
     async def handle_session_match(
         self, websocket: WebSocket, session_id: int, recipe_id: int
     ) -> None:
+        """
+        Send a recipe match packet to all participants of a swipe session.
+
+        Args:
+            websocket (WebSocket): The WebSocket object representing the active WebSocket
+            connection.
+            session_id (int): An integer representing the ID of the swipe session to broadcast the
+            packet to.
+            recipe_id (int): An integer representing the ID of the recipe that was matched.
+
+        Returns:
+            None.
+        """
         recipe = await RecipeService().get_recipe_by_id(recipe_id)
         if not recipe:
-            await self.handle_connection_code(websocket, RecipeNotFoundException)
+            await self.manager.handle_connection_code(
+                websocket, RecipeNotFoundException
+            )
             return
 
-        full_recipe = GetFullRecipeResponseSchema(**recipe.__dict__)
+        full_recipe = GetFullRecipeResponseSchema(**recipe.to_dict())
 
         payload = {"message": "A match has been found", "recipe": full_recipe}
-        packet = PacketSchema(action=ACTIONS.RECIPE_MATCH, payload=payload)
+        packet = SwipeSessionPacketSchema(
+            action=SwipeSessionActionEnum.RECIPE_MATCH, payload=payload
+        )
 
-        await self.handle_session_packet(session_id, packet)
+        await self.manager.pool_broadcast(session_id, packet)

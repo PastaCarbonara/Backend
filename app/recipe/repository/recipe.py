@@ -1,7 +1,7 @@
 """ Recipe repository. """
 
 from typing import List
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload
 from core.db import session
 from core.db.models import (
@@ -11,6 +11,7 @@ from core.db.models import (
     RecipeIngredient,
     RecipeTag,
     RecipeJudgement,
+    User,
 )
 
 
@@ -36,7 +37,7 @@ class RecipeRepository:
         Get a recipe judgement by recipe id and user id.
     """
 
-    async def get_recipes(self) -> List[Recipe]:
+    async def get_recipes(self, limit: int, offset: int) -> List[Recipe]:
         """Get a list of recipes.
 
         Returns
@@ -47,12 +48,18 @@ class RecipeRepository:
         query = select(Recipe).options(
             joinedload(Recipe.tags).joinedload(RecipeTag.tag),
             joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
-            joinedload(Recipe.creator),
+            joinedload(Recipe.creator).joinedload(User.account_auth),
+            joinedload(Recipe.creator).joinedload(User.image),
             joinedload(Recipe.judgements),
             joinedload(Recipe.image),
         )
+        # apply limit and offset
+        query = query.limit(limit).offset(offset)
         result = await session.execute(query)
-        return result.unique().scalars().all()
+        # get count of all recipes in database
+        result_count = await session.execute(func.count(Recipe.id)) # pylint: disable=not-callable
+        # return recipes and count
+        return result.unique().scalars().all(), result_count.scalar()
 
     async def get_recipe_by_id(self, recipe_id) -> Recipe:
         """Get a recipe by id.
@@ -73,7 +80,8 @@ class RecipeRepository:
             .options(
                 joinedload(Recipe.tags).joinedload(RecipeTag.tag),
                 joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
-                joinedload(Recipe.creator),
+                joinedload(Recipe.creator).joinedload(User.account_auth),
+                joinedload(Recipe.creator).joinedload(User.image),
                 joinedload(Recipe.judgements),
                 joinedload(Recipe.image),
             )
@@ -197,21 +205,21 @@ class RecipeRepository:
                 RecipeJudgement(recipe_id=recipe_id, user_id=user_id, like=like)
             )
 
-    async def update_recipe(self, recipe: Recipe) -> Recipe:
-        """Update a recipe.
+    # async def update_recipe(self, recipe: Recipe) -> Recipe:
+    #     """Update a recipe.
 
-        Parameters
-        ----------
-        recipe : Recipe
-            The recipe to update.
+    #     Parameters
+    #     ----------
+    #     recipe : Recipe
+    #         The recipe to update.
 
-        Returns
-        -------
-        Recipe
-            The updated recipe.
-        """
-        await session.flush()
-        return recipe
+    #     Returns
+    #     -------
+    #     Recipe
+    #         The updated recipe.
+    #     """
+    #     await session.flush()
+    #     return recipe
 
     async def delete_recipe(self, recipe: Recipe) -> None:
         """Delete a recipe.
@@ -221,4 +229,4 @@ class RecipeRepository:
         recipe_id : int
             The id of the recipe to delete.
         """
-        session.delete(recipe)
+        await session.delete(recipe)

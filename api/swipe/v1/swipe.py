@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 from typing import List
 
 from fastapi import APIRouter, Depends, Query, Request, WebSocket

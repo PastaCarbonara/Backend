@@ -1,4 +1,5 @@
-"""Tests for the ingredient endpoints"""
+# pylint: skip-file
+
 import pytest
 from httpx import AsyncClient
 from typing import Dict

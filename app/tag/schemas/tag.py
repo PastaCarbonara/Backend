@@ -2,6 +2,7 @@
 """
 
 from pydantic import BaseModel, Field
+from core.db.enums import TagType
 
 
 class TagSchema(BaseModel):
@@ -30,6 +31,7 @@ class TagSchema(BaseModel):
 
     id: int = Field(..., description="ID")
     name: str = Field(..., description="tag name")
+    tag_type: TagType = Field(..., description="Type of tag")
 
     class Config:
         orm_mode = True
@@ -51,3 +53,4 @@ class CreateTagSchema(BaseModel):
     """
 
     name: str
+    tag_type: TagType

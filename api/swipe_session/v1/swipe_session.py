@@ -1,7 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Query, Request, WebSocket
-from app.swipe_session.repository.swipe_session import SwipeSessionRepository
+from fastapi import APIRouter,Depends, WebSocket
 from app.swipe_session.schemas.swipe_session import (
     ActionDocsSchema,
     CreateSwipeSessionSchema,
@@ -14,24 +13,23 @@ from app.swipe_session.services.swipe_session_websocket import (
 )
 
 from core.exceptions import ExceptionResponseSchema
-from core.fastapi.dependencies import (
-    AllowAll,
+from core.fastapi.dependencies.permission import (
     IsAdmin,
     PermissionDependency,
-    IsGroupAdmin,
     IsAuthenticated,
+    IsSessionOwner,
 )
-from core.fastapi.dependencies.permission import IsAuthenticated, IsSessionOwner
 from core.fastapi.dependencies.user import get_current_user
 from core.fastapi_versioning.versioning import version
+from core.helpers.websocket.auth import get_cookie_or_token
 
 
 swipe_session_v1_router = APIRouter()
 
 
-@swipe_session_v1_router.websocket("/{session_id}/{user_id}")
-async def websocket_endpoint(websocket: WebSocket, session_id: str, user_id: str):
-    await SwipeSessionWebsocketService().handler(websocket, session_id, user_id)
+@swipe_session_v1_router.websocket("/{session_id}")
+async def websocket_endpoint(websocket: WebSocket, session_id: str, access_token = Depends(get_cookie_or_token)):
+    await SwipeSessionWebsocketService().handler(websocket, session_id, access_token)
 
 
 @swipe_session_v1_router.get(
