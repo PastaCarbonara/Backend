@@ -5,11 +5,11 @@ User service module
 from typing import List
 import uuid
 from app.image.repository.image import ImageRepository
-from app.user.exception.user import DuplicateClientTokenException
+from app.user.exceptions.user import DuplicateClientTokenException
 from app.user.utils import generate_name, get_password_hash
 from app.user.repository.user import UserRepository
 from app.user.schemas.user import UpdateUserSchema
-from app.image.exception.image import FileNotFoundException
+from app.image.exceptions.image import FileNotFoundException
 from core.db.models import User
 from core.exceptions import (
     DuplicateUsernameException,
@@ -42,6 +42,19 @@ class UserService:
         return await self.repo.get_user_list()
 
     async def update(self, updated_user: UpdateUserSchema):
+        """
+        Updates the user information in the repository.
+
+        Args:
+            updated_user (UpdateUserSchema): An object containing the updated user information.
+
+        Raises:
+            FileNotFoundException: If the specified image filename does not exist in the image 
+            repository.
+
+        Returns:
+            int: The ID of the updated user.
+        """
         user_dict = updated_user.dict()
 
         if updated_user.filename and not await self.image_repo.get_image_by_name(

@@ -110,7 +110,6 @@ class BaseTask:
 
         else:
             if self._running:
-                # print(f"Restarting {self.name} in {self.countdown} seconds")
                 self._timer = threading.Timer(self.countdown, self.run)
                 self._timer.start()
 
@@ -128,6 +127,7 @@ class Task(BaseTask):
 
     @property
     def countdown(self) -> int:
+        # Run every 0 seconds (instantly, aka continuesly)
         return 0
 
     def exec(self) -> None:

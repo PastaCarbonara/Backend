@@ -7,13 +7,14 @@ from typing import List
 from sqlalchemy import select
 from core.db.models import File
 from core.db import session
-from app.image.exception.image import DuplicateFileNameException
+from app.image.exceptions.image import DuplicateFileNameException
 
 
 class ImageRepository:
     """
     A class that interacts with the database to perform CRUD operations on the 'files' table.
     """
+
     async def store_image(self, filename: str) -> File:
         """
         Store the image file with the given filename in the database.
@@ -22,7 +23,7 @@ class ImageRepository:
             filename (str): The name of the image file.
 
         Raises:
-            DuplicateFileNameException: If a file with the same filename already exists in the 
+            DuplicateFileNameException: If a file with the same filename already exists in the
             database.
 
         Returns:
@@ -47,7 +48,7 @@ class ImageRepository:
         query = select(File)
         result = await session.execute(query)
         return result.scalars().all()
-    
+
     async def get_image_by_name(self, filename: str) -> File:
         """
         Get the File object corresponding to the given filename.

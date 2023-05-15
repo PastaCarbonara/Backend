@@ -6,7 +6,7 @@ import uuid
 from api.auth.v1.response.auth import TokensSchema
 from app.auth.exceptions.auth import BadUUIDException
 from app.auth.services.jwt import JwtService
-from app.user.exception.user import IncorrectPasswordException, UserNotFoundException
+from app.user.exceptions.user import IncorrectPasswordException, UserNotFoundException
 from app.user.services.user import UserService
 from app.user.utils import verify_password
 

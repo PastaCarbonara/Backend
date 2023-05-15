@@ -4,7 +4,7 @@ from typing import List
 from sqlalchemy.exc import IntegrityError
 from app.ingredient.schemas import CreateIngredientSchema
 from app.ingredient.repository.ingredient import IngredientRepository
-from app.ingredient.exception.ingredient import (
+from app.ingredient.exceptions.ingredient import (
     IngredientAlreadyExistsException,
     IngredientNotFoundException,
     IngredientDependecyException,
