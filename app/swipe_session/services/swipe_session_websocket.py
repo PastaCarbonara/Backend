@@ -42,6 +42,7 @@ manager = WebsocketConnectionManager(
     [[IsAuthenticated, IsSessionMember, IsActiveSession]]
 )
 
+
 class SwipeSessionWebsocketService:
     """
     This class provides a WebSocket service for communication between clients and servers using
@@ -115,7 +116,7 @@ class SwipeSessionWebsocketService:
             ACTIONS.GLOBAL_MESSAGE: self.handle_global_message,
             ACTIONS.RECIPE_SWIPE: self.handle_recipe_swipe,
             ACTIONS.POOL_MESSAGE: self.handle_pool_message,
-            ACTIONS.SESSION_STATUS_UPDATE: self.handle_session_status_update,
+            ACTIONS.SESSION_STATUS_UPDATE: self.handle_session_status_update_auth,
         }
 
     async def handler(
@@ -322,16 +323,25 @@ class SwipeSessionWebsocketService:
                 action=ACTIONS.SESSION_STATUS_UPDATE,
                 payload={"status": SwipeSessionEnum.COMPLETED},
             )
+            print("1")
             await self.handle_session_status_update(
                 packet, websocket, user, swipe_session
             )
+            # await self.manager.queued_run(
+            #     pool_id=swipe_session.id,
+            #     func=self.handle_session_status_update,
+            #     packet=packet,
+            #     websocket=websocket,
+            #     user=user,
+            #     swipe_session=swipe_session,
+            # )
+            print("3")
 
             exception = ClosingConnection
             payload = {"status_code": exception.code, "message": exception.message}
             packet = SwipeSessionPacketSchema(
                 action=ACTIONS.CONNECTION_CODE, payload=payload
             )
-
             await self.manager.disconnect_pool(swipe_session.id, packet)
 
     async def handle_pool_message(
@@ -360,6 +370,22 @@ class SwipeSessionWebsocketService:
             websocket, swipe_session.id, packet.payload.get("message")
         )
 
+    async def handle_session_status_update_auth(
+        self,
+        packet: SwipeSessionPacketSchema,
+        websocket: WebSocket,
+        user: User,
+        swipe_session: SwipeSession,
+    ):
+        if not await GroupService().is_admin(swipe_session.group_id, user.id):
+            print("exit1")
+            await self.manager.handle_connection_code(websocket, UnauthorizedException)
+            return
+
+        return await self.handle_session_status_update(
+            packet, websocket, user, swipe_session
+        )
+
     async def handle_session_status_update(
         self,
         packet: SwipeSessionPacketSchema,
@@ -380,17 +406,16 @@ class SwipeSessionWebsocketService:
         Returns:
             None.
         """
-        if not await GroupService().is_admin(swipe_session.group_id, user.id):
-            return await self.manager.handle_connection_code(
-                websocket, UnauthorizedException
-            )
-
+        print("progress1")
         session_status = packet.payload.get("status")
         if not session_status in [e.value for e in SwipeSessionEnum]:
-            return await self.manager.handle_connection_code(
+            print("exit2")
+            await self.manager.handle_connection_code(
                 websocket, StatusNotFoundException
             )
+            return
 
+        print("progress2")
         await SwipeSessionService().update_swipe_session(
             UpdateSwipeSessionSchema(id=swipe_session.id, status=session_status),
             swipe_session.group_id,
@@ -401,7 +426,9 @@ class SwipeSessionWebsocketService:
             action=ACTIONS.SESSION_STATUS_UPDATE, payload=payload
         )
 
+        print("progress3")
         await self.manager.pool_broadcast(swipe_session.id, packet)
+        print("2")
 
     async def handle_action_not_implemented(
         self,

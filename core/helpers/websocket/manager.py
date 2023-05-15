@@ -2,11 +2,9 @@
 Connection manager for websockets
 """
 
-from ast import List
-import asyncio
 import json
-import time
-from fastapi import WebSocket, WebSocketException, status
+import random
+from fastapi import WebSocket, status
 from pydantic import ValidationError
 from pydantic.main import ModelMetaclass
 from core.db.enums import WebsocketActionEnum
@@ -48,17 +46,23 @@ class WebsocketConnectionManager:
             permissions = [[AllowAll]]
 
         self.active_pools: dict = {}
-        self.permissions: List[List[BaseWebsocketPermission]] = permissions
+        self.permissions = permissions
 
     async def queued_run(self, pool_id, func, **kwargs):
-        ticket = round(time.time())
+        ticket = random.random()
         queue = self.active_pools[pool_id]["queue"]
         queue.append(ticket)
 
+        print(queue)
+
         while queue[0] != ticket:
             ...
+        print("doing", func.__name__)
+        print(queue)
 
         await func(**kwargs)
+
+        print("finished", func.__name__)
 
         queue.pop(0)
 
@@ -264,6 +268,7 @@ class WebsocketConnectionManager:
         Returns:
             None.
         """
+        print("cc", exception.message)
         payload = {"status_code": exception.code, "message": exception.message}
         packet = WebsocketPacketSchema(
             action=WebsocketActionEnum.CONNECTION_CODE, payload=payload
