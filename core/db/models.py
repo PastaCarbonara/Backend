@@ -126,7 +126,7 @@ class Recipe(Base, TimestampMixin):
     __tablename__ = "recipe"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50))
+    name: Mapped[str] = mapped_column(String())
     description: Mapped[str] = mapped_column()
     instructions = Column(JSON, nullable=False)
     materials = Column(JSON, nullable=True)
