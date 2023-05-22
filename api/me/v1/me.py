@@ -36,7 +36,7 @@ async def get_me(user = Depends(get_current_user)):
     ],
 )
 @version(1)
-async def update_user(request: UpdateMeSchema, user = Depends(get_current_user)):
+async def update_me(request: UpdateMeSchema, user = Depends(get_current_user)):
     user_req = UpdateUserSchema(id=user.id, **request.dict())
     return await UserService().update(user_req)
 
