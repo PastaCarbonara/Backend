@@ -47,27 +47,6 @@ class UserRepository(BaseRepo):
         synchronize_session: SynchronizeSessionEnum = 'auto',
     ):
         return await super().update_by_id(model_id, params, synchronize_session)
-        # query = (
-        #     update(self.model)
-        #     .where(self.model.id == model_id)
-        #     .values(**params)
-        #     .execution_options(synchronize_session=synchronize_session)
-        # )
-        # await session.execute(query)
-        # return await self.get_by_id(model_id)
-        # query = (
-        #     update(self.model)
-        #     .where(self.model.id == model_id)
-        #     .values(**params)
-        #     .returning(self.model.__table__.c)  # Specify the columns or expressions to retrieve
-        #     .execution_options(synchronize_session=synchronize_session)
-        #     .options(
-        #         joinedload(User.account_auth),
-        #         joinedload(User.image),
-        #     )
-        # )
-        # result = await session.execute(query)
-        # return result.scalars().first()
 
     @Transactional()
     async def create_account_auth(self, user_id, username, password):

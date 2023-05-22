@@ -64,7 +64,6 @@ async def create_user(request: CreateUserRequestSchema):
 async def update_user(request: UpdateMeSchema, user_id: str = Depends(get_path_user_id)):
     user_req = UpdateUserSchema(id=user_id, **request.dict())
     return await UserService().update(user_req)
-    # return await UserService().update(request)
 
 
 @user_v1_router.get(
