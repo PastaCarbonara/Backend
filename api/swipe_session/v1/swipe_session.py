@@ -28,7 +28,7 @@ swipe_session_v1_router = APIRouter()
 
 
 @swipe_session_v1_router.websocket("/{session_id}")
-async def websocket_endpoint(websocket: WebSocket, session_id: str, access_token = Depends(get_cookie_or_token)):
+async def websocket_endpoint(websocket: WebSocket, session_id: str = None, access_token = Depends(get_cookie_or_token)):
     await SwipeSessionWebsocketService().handler(websocket, session_id, access_token)
 
 

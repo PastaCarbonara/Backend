@@ -116,14 +116,39 @@ class UserRepository(BaseRepo):
         )
         result = await session.execute(query)
         return result.scalars().first()
-
-    async def get_by_display_name(self, display_name: str) -> User:
+    
+    async def get_by_username(self, username: str) -> User:
         """Get user by username.
 
         Parameters
         ----------
         username : str
             Username.
+
+        Returns
+        -------
+        User
+            User instance.
+        """
+        query = (
+            select(User)
+            .join(User.account_auth)
+            .where(AccountAuth.username == username)
+            .options(
+                joinedload(User.account_auth),
+                joinedload(User.image),
+            )
+        )
+        result = await session.execute(query)
+        return result.scalars().first()
+
+    async def get_by_display_name(self, display_name: str) -> User:
+        """Get user by display name.
+
+        Parameters
+        ----------
+        display_name : str
+            Display name.
 
         Returns
         -------
