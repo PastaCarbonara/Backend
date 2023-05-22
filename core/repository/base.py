@@ -16,6 +16,7 @@ class BaseRepo(Generic[Model]):
     """
     A generic repository that provides basic database operations for a given SQLAlchemy model.
     """
+
     def __init__(self, model: Type[Model]):
         """
         Initializes the repository.
@@ -39,23 +40,25 @@ class BaseRepo(Generic[Model]):
         self,
         model_id: int,
         params: dict,
-        synchronize_session: SynchronizeSessionEnum = False,
+        synchronize_session: SynchronizeSessionEnum = "auto",
     ) -> None:
         """
         Updates a single model instance with the given ID.
 
         :param model_id: The ID of the model instance to update.
         :param params: A dictionary containing the attribute-value pairs to update.
-        :param synchronize_session: An optional parameter specifying the level of synchronization 
+        :param synchronize_session: An optional parameter specifying the level of synchronization
         to use.
         """
         query = (
             update(self.model)
+            .returning(self.model)
             .where(self.model.id == model_id)
             .values(**params)
             .execution_options(synchronize_session=synchronize_session)
         )
-        await session.execute(query)
+        result = await session.execute(query)
+        return result.scalars().first()
 
     async def delete(self, model: Model) -> None:
         """

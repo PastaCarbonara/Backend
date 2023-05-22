@@ -7,7 +7,7 @@ from app.group.services.group import GroupService
 from app.filter.services.filter import FilterService
 from app.filter.schemas.filter import FilterSchema, UserCreateSchema
 from app.image.services.image import ImageService
-from app.user.schemas.user import UpdateUserSchema
+from app.user.schemas.user import UpdateMeSchema, UpdateUserSchema
 from core.exceptions import ExceptionResponseSchema
 from core.fastapi.dependencies.hashid import get_path_user_id
 from core.fastapi.dependencies.object_storage import get_object_storage
@@ -61,9 +61,9 @@ async def create_user(request: CreateUserRequestSchema):
     ],
 )
 @version(1)
-async def update_user(request: UpdateUserSchema, user_id: str):
-    user_id = await UserService().update(request)
-    return await UserService().get_by_id(user_id)
+async def update_user(request: UpdateMeSchema, user_id: str = Depends(get_path_user_id)):
+    user_req = UpdateUserSchema(id=user_id, **request.dict())
+    return await UserService().update(user_req)
 
 
 @user_v1_router.get(
