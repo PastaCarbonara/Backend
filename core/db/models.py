@@ -46,8 +46,8 @@ class User(Base, TimestampMixin):
         ForeignKey("file.filename", ondelete="CASCADE"), nullable=True
     )
 
-    image: Mapped["File"] = relationship(back_populates="user")
-    account_auth: Mapped["AccountAuth"] = relationship(back_populates="user")
+    image: Mapped["File"] = relationship(back_populates="user", lazy="immediate")
+    account_auth: Mapped["AccountAuth"] = relationship(back_populates="user", lazy="immediate")
     recipes: Mapped[List["Recipe"]] = relationship(back_populates="creator")
     judged_recipes: Mapped[List[RecipeJudgement]] = relationship(back_populates="user")
     groups: Mapped[List["GroupMember"]] = relationship(back_populates="user")

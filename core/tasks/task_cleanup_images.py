@@ -9,7 +9,7 @@ from app.image.interface import AzureBlobInterface
 class Task(BaseTask):
     def __init__(self, session, capture_exceptions) -> None:
         self.azure_blob_interface = AzureBlobInterface()
-        name = "Remove unused images from Azure Blob Storage "
+        name = "Remove unused images from Azure Blob Storage"
         super().__init__(session, capture_exceptions, name)
 
     @property

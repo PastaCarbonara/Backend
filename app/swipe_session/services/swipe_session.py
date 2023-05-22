@@ -7,6 +7,7 @@ from typing import List
 from sqlalchemy import update
 
 from app.recipe.services.recipe import RecipeService
+from app.swipe_session.exceptions.swipe_session import DateTooOldException
 from app.swipe_session.repository.swipe_session import SwipeSessionRepository
 from app.swipe_session.schemas.swipe_session import (
     CreateSwipeSessionSchema,
@@ -97,16 +98,23 @@ class SwipeSessionService:
         Returns:
             A datetime object.
         """
+        now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         if isinstance(session_date, date):
             session_date = datetime.combine(session_date, datetime.min.time())
-        else:
-            if not session_date:
-                session_date = datetime.now()
 
             session_date = session_date.replace(
                 hour=0, minute=0, second=0, microsecond=0
             )
+
+        if not session_date:
+            return now
+
+        if session_date < now:
+            print(session_date, now, session_date < now)
+            raise DateTooOldException
+
         return session_date
+        # return max(session_date, now)
 
     async def update_all_in_group_to_paused(self, group_id) -> None:
         """
