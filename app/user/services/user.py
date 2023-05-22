@@ -63,6 +63,26 @@ class UserService:
             raise FileNotFoundException
 
         return await self.repo.update_by_id(model_id=updated_user.id, params=user_dict)
+    
+    async def get_by_username(self, username) -> User:
+        """Get the user with the given username.
+
+        Parameters
+        ----------
+        username : str
+            The username of the user.
+
+        Returns
+        -------
+        User
+            The user with the given username.
+
+        Raises
+        ------
+        UserNotFoundException
+            If the user with the given username does not exist.
+        """
+        return await self.repo.get_by_username(username)
 
     async def get_by_display_name(self, display_name) -> User:
         """Get the user with the given display name.

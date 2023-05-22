@@ -131,4 +131,11 @@ def create_app() -> FastAPI:
 
 app = create_app()
 
+from fastapi.responses import HTMLResponse
+@app.get("/")
+async def get():
+    with open("ws_test.html", "r") as f:
+        html = f.read()
+    return HTMLResponse(html)
+
 # Greg is disappointed

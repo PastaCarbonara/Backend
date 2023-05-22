@@ -52,7 +52,7 @@ class AuthService:
         Returns:
             TokensSchema: A pair of JSON Web Tokens (access and refresh tokens).
         """
-        user = await self.user_serv.get_by_display_name(username)
+        user = await self.user_serv.get_by_username(username)
         if not user:
             raise UserNotFoundException()
         if not verify_password(password, user.account_auth.password):
