@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 
-from app.group.schemas.group import GroupSchema, CreateGroupSchema
+from app.group.schemas.group import GroupSchema, CreateGroupSchema, GroupInfoSchema
 from app.group.services.group import GroupService
 from app.recipe.schemas.recipe import GetFullRecipeResponseSchema
 from app.swipe_session.schemas.swipe_session import (
@@ -59,13 +59,26 @@ async def create_group(
     responses={"400": {"model": ExceptionResponseSchema}},
     response_model=GroupSchema,
     dependencies=[
-        Depends(
-            PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupMember]])
-        )
+        Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupMember]]))
     ],
 )
 @version(1)
 async def get_group(group_id: int = Depends(get_path_group_id)):
+    group = await GroupService().get_group_by_id(group_id)
+    if not group:
+        raise GroupNotFoundException
+
+    return group
+
+
+@group_v1_router.get(
+    "/{group_id}/preview",
+    responses={"400": {"model": ExceptionResponseSchema}},
+    response_model=GroupInfoSchema,
+    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsAuthenticated]]))],
+)
+@version(1)
+async def get_group_info(group_id: int = Depends(get_path_group_id)):
     group = await GroupService().get_group_by_id(group_id)
     if not group:
         raise GroupNotFoundException
@@ -87,7 +100,9 @@ async def join_group(request: Request, group_id: int = Depends(get_path_group_id
 @group_v1_router.get(
     "/{group_id}/swipe_sessions",
     response_model=list[SwipeSessionSchema],
-    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupMember]]))],
+    dependencies=[
+        Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupMember]]))
+    ],
 )
 @version(1)
 async def get_swipe_sessions_by_group(group_id: int = Depends(get_path_group_id)):
@@ -97,7 +112,9 @@ async def get_swipe_sessions_by_group(group_id: int = Depends(get_path_group_id)
 @group_v1_router.post(
     "/{group_id}/swipe_sessions",
     response_model=SwipeSessionSchema,
-    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupAdmin]]))],
+    dependencies=[
+        Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupAdmin]]))
+    ],
 )
 @version(1)
 async def create_swipe_session(
@@ -115,7 +132,9 @@ async def create_swipe_session(
     "/{group_id}/swipe_sessions",
     response_model=SwipeSessionSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupAdmin]]))],
+    dependencies=[
+        Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupAdmin]]))
+    ],
 )
 @version(1)
 async def update_swipe_session(
@@ -130,7 +149,9 @@ async def update_swipe_session(
 @group_v1_router.get(
     "/{group_id}/swipe_sessions/{session_id}/matches",
     response_model=GetFullRecipeResponseSchema,
-    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupMember]]))]
+    dependencies=[
+        Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupMember]]))
+    ],
 )
 @version(1)
 async def get_swipe_session_match(

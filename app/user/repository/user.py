@@ -44,7 +44,7 @@ class UserRepository(BaseRepo):
         self,
         model_id: int,
         params: dict,
-        synchronize_session: SynchronizeSessionEnum = False,
+        synchronize_session: SynchronizeSessionEnum = 'auto',
     ):
         return await super().update_by_id(model_id, params, synchronize_session)
 

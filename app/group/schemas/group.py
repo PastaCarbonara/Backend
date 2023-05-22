@@ -32,7 +32,7 @@ class FlattenedGroupMemberSchema(BaseModel):
             "is_admin": values["is_admin"],
             "user": None,
         } | dict(values)
-    
+
     class Config:
         orm_mode = True
 
@@ -43,6 +43,16 @@ class GroupSchema(BaseModel):
     image: ImageSchema = Field(..., description="image")
     users: list[FlattenedGroupMemberSchema]
     swipe_sessions: list[SwipeSessionSchema]
+
+    class Config:
+        orm_mode = True
+
+
+class GroupInfoSchema(BaseModel):
+    id: HashId
+    name: str
+    image: ImageSchema = Field(..., description="image")
+    users: list[FlattenedGroupMemberSchema]
 
     class Config:
         orm_mode = True

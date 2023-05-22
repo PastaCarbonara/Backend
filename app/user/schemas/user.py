@@ -28,6 +28,11 @@ class UpdateUserSchema(BaseModel):
     filename: str = None
 
 
+class UpdateMeSchema(BaseModel):
+    display_name: str
+    filename: str = None
+
+
 class CreateUserRequestSchema(BaseModel):
     username: str = Field(..., description="Username")
     password: str = Field(..., description="Password")

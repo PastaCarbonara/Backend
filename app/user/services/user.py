@@ -41,7 +41,7 @@ class UserService:
         """
         return await self.repo.get_user_list()
 
-    async def update(self, updated_user: UpdateUserSchema):
+    async def update(self, updated_user: UpdateUserSchema) -> User:
         """
         Updates the user information in the repository.
 
@@ -62,8 +62,7 @@ class UserService:
         ):
             raise FileNotFoundException
 
-        await self.repo.update_by_id(model_id=updated_user.id, params=user_dict)
-        return updated_user.id
+        return await self.repo.update_by_id(model_id=updated_user.id, params=user_dict)
 
     async def get_by_display_name(self, display_name) -> User:
         """Get the user with the given display name.

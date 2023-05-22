@@ -61,9 +61,8 @@ async def create_user(request: CreateUserRequestSchema):
     ],
 )
 @version(1)
-async def update_user(request: UpdateUserSchema, user_id: str):
-    user_id = await UserService().update(request)
-    return await UserService().get_by_id(user_id)
+async def update_user(request: UpdateUserSchema, user_id: str = Depends(get_path_user_id)):
+    return await UserService().update(request)
 
 
 @user_v1_router.get(
