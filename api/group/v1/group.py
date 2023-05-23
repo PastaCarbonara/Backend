@@ -140,7 +140,6 @@ async def create_swipe_session(
 async def update_swipe_session(
     request: UpdateSwipeSessionSchema,
     group_id: int = Depends(get_path_group_id),
-    user=Depends(get_current_user),
 ):
     session_id = await SwipeSessionService().update_swipe_session(request, group_id)
     return await SwipeSessionService().get_swipe_session_by_id(session_id)
@@ -158,4 +157,5 @@ async def get_swipe_session_match(
     group_id: int = Depends(get_path_group_id),
     session_id: int = Depends(get_path_session_id),
 ):
+    del group_id
     return await SwipeSessionService().get_matches(session_id)
