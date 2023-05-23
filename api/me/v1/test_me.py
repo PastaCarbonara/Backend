@@ -57,8 +57,7 @@ async def test_me_filters_delete(
 ):
     normal_user_token_headers  = await normal_user_token_headers
     res = await client.delete(
-        "/api/v1/me/filters",
-        params={"id": 3},
+        f"/api/v1/me/filters/{3}",
         headers=normal_user_token_headers,
     )
     res = await client.get("/api/v1/me/filters", headers=normal_user_token_headers)

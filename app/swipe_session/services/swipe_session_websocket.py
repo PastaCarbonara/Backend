@@ -184,10 +184,7 @@ class SwipeSessionWebsocketService:
 
         except WebSocketDisconnect as exc:
             # Check because sometimes the exception is raised but it's already disconnected
-            if (
-                websocket.client_state == WebSocketState.CONNECTED
-                or websocket.application_state == WebSocketState.CONNECTED
-            ):
+            if websocket.client_state == WebSocketState.CONNECTED:
                 await self.manager.disconnect(websocket, swipe_session.id)
 
         except WebSocketException as exc:
