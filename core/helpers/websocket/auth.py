@@ -25,8 +25,6 @@ async def get_cookie_or_token(
     token: Annotated[str | None, Query()] = None,
 ):
     """Retrieve access_token from cookie or query parameter"""
-    print(access_token)
-    print(token)
     if access_token is None and token is None:
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
     return access_token or token

@@ -4,7 +4,7 @@ The module contains a repository class that defines database operations for user
 
 from typing import List
 import uuid
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from core.db.models import AccountAuth, User
 from core.db import session

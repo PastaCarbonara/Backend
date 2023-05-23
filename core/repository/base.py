@@ -40,7 +40,7 @@ class BaseRepo(Generic[Model]):
         self,
         model_id: int,
         params: dict,
-        synchronize_session: SynchronizeSessionEnum = "auto",
+        synchronize_session: SynchronizeSessionEnum = False,
     ) -> None:
         """
         Updates a single model instance with the given ID.
