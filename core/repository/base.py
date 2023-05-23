@@ -52,13 +52,11 @@ class BaseRepo(Generic[Model]):
         """
         query = (
             update(self.model)
-            .returning(self.model)
             .where(self.model.id == model_id)
             .values(**params)
             .execution_options(synchronize_session=synchronize_session)
         )
-        result = await session.execute(query)
-        return result.scalars().first()
+        await session.execute(query)
 
     async def delete(self, model: Model) -> None:
         """
