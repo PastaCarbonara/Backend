@@ -134,7 +134,7 @@ app = create_app()
 from fastapi.responses import HTMLResponse
 @app.get("/")
 async def get():
-    with open("ws_test.html", "r") as f:
+    with open("tests/ws_test.html", "r", encoding="utf-8") as f:
         html = f.read()
     return HTMLResponse(html)
 
