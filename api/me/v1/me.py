@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 from app.group.schemas.group import GroupSchema
 from app.group.services.group import GroupService
+from app.user.exceptions.user import UserNotFoundException
 from app.user.schemas.user import UpdateMeSchema, UpdateUserSchema, UserSchema
 from app.filter.schemas.filter import FilterSchema, UserCreateSchema
 from app.filter.services.filter import FilterService
@@ -35,6 +36,16 @@ async def get_me(user=Depends(get_current_user)):
 async def update_me(request: UpdateMeSchema, user=Depends(get_current_user)):
     user_req = UpdateUserSchema(id=user.id, **request.dict())
     return await UserService().update(user_req)
+
+
+@me_v1_router.delete(
+    "",
+    status_code=204,
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
+)
+@version(1)
+async def delete_me(user=Depends(get_current_user)):
+    return await UserService().delete_user(user.id)
 
 
 @me_v1_router.get(

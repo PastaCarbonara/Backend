@@ -7,6 +7,7 @@ from typing import TypeVar, Type, Optional, Generic
 from sqlalchemy import select, update, delete
 
 from core.db.session import Base, session
+from core.db.transactional import Transactional
 from core.repository.enum import SynchronizeSessionEnum
 
 Model = TypeVar("Model", bound=Base)
@@ -58,6 +59,7 @@ class BaseRepo(Generic[Model]):
         )
         await session.execute(query)
 
+    @Transactional()
     async def delete(self, model: Model) -> None:
         """
         Deletes the given model instance.

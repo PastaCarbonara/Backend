@@ -49,12 +49,12 @@ class User(Base, TimestampMixin):
 
     image: Mapped["File"] = relationship(back_populates="user", lazy="immediate")
     account_auth: Mapped["AccountAuth"] = relationship(
-        back_populates="user", lazy="immediate"
+        back_populates="user", lazy="immediate", cascade="delete"
     )
     recipes: Mapped[List["Recipe"]] = relationship(back_populates="creator")
-    judged_recipes: Mapped[List[RecipeJudgement]] = relationship(back_populates="user")
-    groups: Mapped[List["GroupMember"]] = relationship(back_populates="user")
-    filters: Mapped[List["UserTag"]] = relationship(back_populates="user")
+    judged_recipes: Mapped[List[RecipeJudgement]] = relationship(back_populates="user", cascade="all, delete")
+    groups: Mapped[List["GroupMember"]] = relationship(back_populates="user", cascade="all, delete")
+    filters: Mapped[List["UserTag"]] = relationship(back_populates="user", cascade="all, delete")
 
 
 class AccountAuth(Base, TimestampMixin):
@@ -64,7 +64,7 @@ class AccountAuth(Base, TimestampMixin):
     username: Mapped[str] = mapped_column(String(50))
     password: Mapped[str] = mapped_column()
 
-    user: Mapped[User] = relationship(back_populates="account_auth")
+    user: Mapped[User] = relationship(back_populates="account_auth", cascade="delete")
 
 
 class RecipeIngredient(Base):

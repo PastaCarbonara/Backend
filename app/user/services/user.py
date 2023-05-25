@@ -250,3 +250,21 @@ class UserService:
         """
         user = await self.get_by_id(user_id)
         return user.is_admin
+
+    async def delete_user(self, user_id) -> None:
+        """Delete's a user by given id.
+
+        Parameters
+        ----------
+        user_id : int
+            The id of the user to delete.
+        """
+        user = await self.repo.get_by_id(user_id)
+
+        if not user:
+            raise UserNotFoundException
+
+        if user.account_auth:
+            await self.repo.delete(user.account_auth)
+
+        await self.repo.delete(user)
