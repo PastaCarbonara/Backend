@@ -25,6 +25,7 @@ class GetFullRecipeResponseSchema(BaseModel):
     image: ImageSchema = Field(..., description="image")
     creator: UserSchema = Field(..., description="Creator of the recipe")
     preparation_time: int = Field(..., description="Time in minutes")
+    spiciness: int
 
     tags: List[FlattenedRecipeTagSchema] = Field(..., description="Tags of the recipe")
     instructions: List[str] = Field(..., description="Instructions for the recipe")
@@ -40,13 +41,14 @@ class GetFullRecipeResponseSchema(BaseModel):
 class GetFullRecipePaginatedResponseSchema(BaseModel):
     total_count: int = Field(..., description="Total amount of recipes")
     recipes: List[GetFullRecipeResponseSchema] = Field(..., description="Recipes")
-    
+
 
 class CreateRecipeSchema(BaseModel):
     name: str = Field(..., description="Recipe name")
     description: str | None = Field(None, description="Recipe description")
     filename: str = Field(..., description="image")
     preparation_time: int = Field(..., description="Time in minutes")
+    spiciness: int = Field(..., ge=0, le=3)
 
     tags: List[CreateTagSchema] = Field(..., description="Tags of the recipe")
     instructions: List[str] = Field(..., description="Instructions for the recipe")

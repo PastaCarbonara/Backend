@@ -55,6 +55,7 @@ def seed_db():
                 "Enjoy",
             ],
             preparation_time=30,
+            spiciness=0,
             filename="image_1",
             creator=admin,
         )
@@ -64,6 +65,7 @@ def seed_db():
             description="Green sauce.",
             instructions=["Peel the avocado", "Peel the garlic", "Add ALL the pepper"],
             preparation_time=15,
+            spiciness=0,
             filename="image_2",
             creator=admin,
         )
