@@ -71,6 +71,16 @@ async def get_group(group_id: int = Depends(get_path_group_id)):
     return group
 
 
+@group_v1_router.delete(
+    "/{group_id}",
+    status_code=204,
+    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupAdmin]]))]
+)
+@version(1)
+async def delete_group(group_id = Depends(get_path_group_id)):
+    return await GroupService().delete_group(group_id)
+
+
 @group_v1_router.get(
     "/{group_id}/preview",
     responses={"400": {"model": ExceptionResponseSchema}},

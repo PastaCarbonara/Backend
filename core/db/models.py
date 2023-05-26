@@ -239,8 +239,8 @@ class Group(Base, TimestampMixin):
     )
 
     image: Mapped[File] = relationship(back_populates="group")
-    users: Mapped[List["GroupMember"]] = relationship(back_populates="group")
-    swipe_sessions: Mapped[List[SwipeSession]] = relationship(back_populates="group")
+    users: Mapped[List["GroupMember"]] = relationship(back_populates="group", cascade="all, delete")
+    swipe_sessions: Mapped[List[SwipeSession]] = relationship(back_populates="group", cascade="all, delete")
 
 
 class GroupMember(Base):

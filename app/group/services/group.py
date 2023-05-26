@@ -13,6 +13,7 @@ from app.user.services.user import UserService
 from core.db.models import Group, GroupMember, SwipeSession, User
 from core.db import Transactional, session
 from core.exceptions.group import GroupNotFoundException
+from app.group.repository.group import GroupRepository
 
 
 class GroupService:
@@ -45,6 +46,7 @@ class GroupService:
         Initializes the SwipeSessionService instance.
         """
         self.swipe_session_serv = SwipeSessionService()
+        self.repo = GroupRepository()
 
     async def is_member(self, group_id: int, user_id: int) -> bool:
         """
@@ -262,3 +264,18 @@ class GroupService:
                 user=await UserService().get_by_id(user_id),
             )
         )
+
+    async def delete_group(self, group_id) -> None:
+        """Delete's a group by given id.
+
+        Parameters
+        ----------
+        group_id : int
+            The id of the group to delete.
+        """
+        group = await self.repo.get_by_id(group_id)
+
+        if not group:
+            raise GroupNotFoundException
+
+        await self.repo.delete(group)
