@@ -66,6 +66,16 @@ async def update_user(request: UpdateMeSchema, user_id: str = Depends(get_path_u
     return await UserService().update(user_req)
 
 
+@user_v1_router.delete(
+    "/{user_id}",
+    status_code=204,
+    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsUserOwner]]))]
+)
+@version(1)
+async def delete_me(user_id = Depends(get_path_user_id)):
+    return await UserService().delete_user(user_id)
+
+
 @user_v1_router.get(
     "/{user_id}/groups",
     response_model=list[GroupSchema],
