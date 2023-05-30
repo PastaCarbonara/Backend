@@ -50,8 +50,10 @@ class GroupService:
         """
         Initializes the SwipeSessionService instance.
         """
-        self.swipe_session_serv = SwipeSessionService()
         self.repo = GroupRepository()
+        self.user_serv = UserService()
+        self.image_serv = ImageService
+        self.swipe_session_serv = SwipeSessionService()
 
     async def is_member(self, group_id: int, user_id: int) -> bool:
         """
@@ -196,7 +198,7 @@ class GroupService:
             The group id
         """
         # Check if file exists
-        await ImageService(object_storage).get_image_by_name(request.filename)
+        await self.image_serv(object_storage).get_image_by_name(request.filename)
 
         db_group = Group(**request.dict())
 
@@ -270,7 +272,7 @@ class GroupService:
         group.users.append(
             GroupMember(
                 is_admin=False,
-                user=await UserService().get_by_id(user_id),
+                user=await self.user_serv.get_by_id(user_id),
             )
         )
 
