@@ -8,9 +8,10 @@ from sqlalchemy import select
 from core.db.models import File
 from core.db import session
 from app.image.exceptions.image import DuplicateFileNameException
+from core.repository.base import BaseRepo
 
 
-class ImageRepository:
+class ImageRepository(BaseRepo):
     """
     A class that interacts with the database to perform CRUD operations on the 'files' table.
     """

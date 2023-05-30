@@ -13,9 +13,10 @@ from core.db.models import (
     RecipeJudgement,
     User,
 )
+from core.repository.base import BaseRepo
 
 
-class RecipeRepository:
+class RecipeRepository(BaseRepo):
     """Recipe repository.
 
     Attributes

@@ -111,6 +111,11 @@ class SwipeSessionWebsocketService:
             WebSocket protocol.
         """
         self.manager = manager
+        self.swipe_serv = SwipeService()
+        self.user_serv = UserService()
+        self.recipe_serv = RecipeService()
+        self.swipe_session_serv = SwipeSessionService()
+        self.group_serv = GroupService()
 
         self.actions = {
             SwipeSessionActionEnum.GLOBAL_MESSAGE: self.handle_global_message,
@@ -214,8 +219,8 @@ class SwipeSessionWebsocketService:
         swipe_session_id = decode_single(swipe_session_id)
 
         # By calling "check_auth" with "IsSessionMember", we already know that these exist
-        user = await UserService().get_by_id(user_id)
-        swipe_session = await SwipeSessionService().get_swipe_session_by_id(
+        user = await self.user_serv.get_by_id(user_id)
+        swipe_session = await self.swipe_session_serv.get_swipe_session_by_id(
             swipe_session_id
         )
 
@@ -243,7 +248,7 @@ class SwipeSessionWebsocketService:
         """
         del swipe_session
 
-        if not await UserService().is_admin(user.id):
+        if not await self.user_serv.is_admin(user.id):
             return await self.manager.handle_connection_code(
                 websocket, UnauthorizedException
             )
@@ -282,14 +287,14 @@ class SwipeSessionWebsocketService:
             return
 
         try:
-            await RecipeService().get_recipe_by_id(packet.payload["recipe_id"])
+            await self.recipe_serv.get_recipe_by_id(packet.payload["recipe_id"])
         except RecipeNotFoundException:
             await self.manager.handle_connection_code(
                 websocket, RecipeNotFoundException
             )
             return
 
-        existing_swipe = await SwipeService().get_swipe_by_creds(
+        existing_swipe = await self.swipe_serv.get_swipe_by_creds(
             swipe_session_id=swipe_session.id,
             user_id=user.id,
             recipe_id=packet.payload["recipe_id"],
@@ -299,17 +304,17 @@ class SwipeSessionWebsocketService:
             await self.manager.handle_connection_code(websocket, AlreadySwipedException)
             return
 
-        await SwipeService().create_swipe(swipe_schema)
+        await self.swipe_serv.create_swipe(swipe_schema)
 
         matching_swipes = (
-            await SwipeService().get_swipes_by_session_id_and_recipe_id_and_like(
+            await self.swipe_serv.get_swipes_by_session_id_and_recipe_id_and_like(
                 swipe_session_id=swipe_session.id,
                 recipe_id=packet.payload["recipe_id"],
                 like=True,
             )
         )
 
-        group = await GroupService().get_group_by_id(swipe_session.group_id)
+        group = await self.group_serv.get_group_by_id(swipe_session.group_id)
 
         if len(matching_swipes) >= len(group.users):
             await self.handle_session_match(
@@ -379,7 +384,7 @@ class SwipeSessionWebsocketService:
         Raises:
             UnauthorizedException: If the user is not authorized to perform the session status update.
         """
-        if not await GroupService().is_admin(swipe_session.group_id, user.id):
+        if not await self.group_serv.is_admin(swipe_session.group_id, user.id):
             await self.manager.handle_connection_code(websocket, UnauthorizedException)
             return
 
@@ -414,7 +419,7 @@ class SwipeSessionWebsocketService:
                 websocket, StatusNotFoundException
             )
 
-        await SwipeSessionService().update_swipe_session(
+        await self.swipe_session_serv.update_swipe_session(
             UpdateSwipeSessionSchema(id=swipe_session.id, status=session_status),
             swipe_session.group_id,
         )
@@ -467,7 +472,7 @@ class SwipeSessionWebsocketService:
         Returns:
             None.
         """
-        recipe = await RecipeService().get_recipe_by_id(recipe_id)
+        recipe = await self.recipe_serv.get_recipe_by_id(recipe_id)
         if not recipe:
             await self.manager.handle_connection_code(
                 websocket, RecipeNotFoundException
