@@ -103,7 +103,7 @@ def create_app() -> FastAPI:
     app_ = FastAPI(
         title="Munchie",
         description="Munchie API",
-        version="0.4.0",
+        version="0.4.3",
         docs_url=None if config.ENV == "production" else "/docs",
         redoc_url=None if config.ENV == "production" else "/redoc",
         dependencies=[Depends(Logging)],
