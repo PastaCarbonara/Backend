@@ -1,7 +1,7 @@
 """ Recipe repository. """
 
 from typing import List
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_, or_, not_
 from sqlalchemy.orm import joinedload
 from core.db import session
 from core.db.models import (
@@ -12,7 +12,11 @@ from core.db.models import (
     RecipeTag,
     RecipeJudgement,
     User,
+    UserTag,
 )
+
+WANTED_TAG_TYPES = ["Keuken", "Dieet"]
+UNWANTED_TAG_TYPES = ["Allergieën"]
 
 
 class RecipeRepository:
@@ -37,7 +41,59 @@ class RecipeRepository:
         Get a recipe judgement by recipe id and user id.
     """
 
-    async def get_recipes(self, limit: int, offset: int) -> List[Recipe]:
+    async def get_user_tags(self, user_id: int):
+        query = select(Tag).join(UserTag).where(UserTag.user_id == user_id)
+        result = await session.execute(query)
+        return result.scalars().all()
+
+    def get_recipes_by_required_tags_and_allergies(
+        self, required_tags: list[int], not_wanted_tags: list[int]
+    ) -> tuple:
+        query = (
+            select(Recipe)
+            .join(RecipeTag)
+            .join(Tag)
+            .filter(
+                and_(
+                    not_(Tag.id.in_(not_wanted_tags)),
+                    or_(*[Tag.id == t for t in required_tags]),
+                )
+            )
+        )
+        count_query = (
+            select(func.count(func.distinct(Recipe.id)))
+            .select_from(Recipe)
+            .join(RecipeTag)
+            .join(Tag)
+            .filter(
+                and_(
+                    not_(Tag.id.in_(not_wanted_tags)),
+                    or_(*[Tag.id == t for t in required_tags]),
+                )
+            )
+        )
+
+        return query, count_query
+
+    def get_recipes_by_allergies(self, required_tags, not_wanted_tags) -> tuple:
+        query = (
+            select(Recipe)
+            .join(RecipeTag)
+            .join(Tag)
+            .filter(not_(Tag.id.in_(not_wanted_tags)))
+        )
+        count_query = (
+            select(func.count(func.distinct(Recipe.id)))
+            .select_from(Recipe)
+            .join(RecipeTag)
+            .join(Tag)
+            .filter(not_(Tag.id.in_(not_wanted_tags)))
+        )
+        return query, count_query
+
+    async def get_recipes(
+        self, limit: int, offset: int, user_id: int = None
+    ) -> List[Recipe]:
         """Get a list of recipes.
 
         Returns
@@ -45,7 +101,30 @@ class RecipeRepository:
         List[Recipe]
             A list of recipes.
         """
-        query = select(Recipe).options(
+        if user_id:
+            user_tags = await self.get_user_tags(user_id)
+            required_tags = [
+                tag.id for tag in user_tags if tag.tag_type in WANTED_TAG_TYPES
+            ]
+            not_wanted_tags = [
+                tag.id for tag in user_tags if tag.tag_type in UNWANTED_TAG_TYPES
+            ]
+
+            if required_tags:
+                query, count_query = self.get_recipes_by_required_tags_and_allergies(
+                    required_tags, not_wanted_tags
+                )
+            else:
+                query, count_query = self.get_recipes_by_allergies(
+                    required_tags, not_wanted_tags
+                )
+        else:
+            query = select(Recipe)
+            count_query = select(func.count(func.distinct(Recipe.id))).select_from(
+                Recipe
+            )
+        # eager load all relationships
+        query = query.options(
             joinedload(Recipe.tags).joinedload(RecipeTag.tag),
             joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
             joinedload(Recipe.creator).joinedload(User.account_auth),
@@ -57,7 +136,7 @@ class RecipeRepository:
         query = query.limit(limit).offset(offset)
         result = await session.execute(query)
         # get count of all recipes in database
-        result_count = await session.execute(func.count(Recipe.id)) # pylint: disable=not-callable
+        result_count = await session.execute(count_query)
         # return recipes and count
         return result.unique().scalars().all(), result_count.scalar()
 

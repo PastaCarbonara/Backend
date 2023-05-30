@@ -3,7 +3,7 @@ from app.tag.repository.tag import TagRepository
 from app.user.repository.user import UserRepository
 from app.user.exceptions.user import UserNotFoundException
 from core.db import Transactional
-from core.db.models import Tag
+from core.db.models import Tag, Recipe
 
 
 class FilterService:
@@ -53,3 +53,14 @@ class FilterService:
         if not user:
             raise UserNotFoundException()
         return await self.filter_repository.get_all_filters_user(user_id)
+
+    async def get_filtered_recipes_user(self, user_id) -> list[Recipe]:
+        """Get all recipes for a user."""
+        user = await self.user_repository.get_by_id(user_id)
+        if not user:
+            raise UserNotFoundException()
+        return await self.filter_repository.get_filtered_recipes_user(user_id)
+
+    async def get_filtered_recipes_group(self, group_id) -> list[Recipe]:
+        """Get all recipes for a group."""
+        return await self.filter_repository.get_filtered_recipes_group(group_id)

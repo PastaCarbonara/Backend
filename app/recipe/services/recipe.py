@@ -50,7 +50,9 @@ class RecipeService:
         self.recipe_repo = RecipeRepository()
         self.user_serv = UserService()
 
-    async def get_paginated_recipe_list(self, limit, offset) -> Dict[str, str]:
+    async def get_paginated_recipe_list(
+        self, limit: int, offset: int, user: User = None
+    ) -> Dict[str, str]:
         """Get a list of recipes.
 
         Returns
@@ -58,7 +60,9 @@ class RecipeService:
         List[Recipe]
             A list of recipes.
         """
-        recipes, total_count = await self.recipe_repo.get_recipes(limit, offset)
+        recipes, total_count = await self.recipe_repo.get_recipes(
+            limit, offset, user.id if user else None
+        )
         return {"total_count": total_count, "recipes": recipes}
 
     async def get_recipe_by_id(self, recipe_id: int) -> Recipe:
@@ -224,9 +228,7 @@ class RecipeService:
         for tag in tags:
             tag_object = await self.tag_repo.get_tag_by_name(tag.name)
             if not tag_object:
-                tag_object = await self.tag_repo.create_tag(
-                    tag.name, tag.tag_type
-                )
+                tag_object = await self.tag_repo.create_tag(tag.name, tag.tag_type)
             recipe_tags.append(RecipeTag(tag=tag_object, recipe=recipe))
 
         recipe.tags = recipe_tags
