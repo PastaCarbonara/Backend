@@ -1,7 +1,7 @@
 """
 Module for working with the websocket for the swipesessions.
 """
-
+import asyncio
 from fastapi import WebSocket, WebSocketDisconnect, WebSocketException
 from pydantic import ValidationError
 from starlette.websockets import WebSocketState
@@ -57,21 +57,6 @@ class SwipeSessionWebsocketService:
 
     Methods:
     --------
-    handler(websocket: WebSocket, session_id: str, user_id: int) -> None:
-        This function is the WebSocket protocol's handler and takes a WebSocket instance as well
-        as session and user IDs.
-
-    handle_session_status_update(websocket: WebSocket, session_id: int, user: User, status: str)
-    -> None:
-        This function handles the updates on the session status and broadcasts the updates to all
-        users in the session.
-
-    handle_recipe_swipe(websocket: WebSocket, session: SwipeSession, user: User, packet:
-    SwipeSessionPacketSchema) -> None:
-        This function handles the creation of swipe requests to recipes in a session and
-        broadcasts the request
-        to all WebSocket clients in the same session.
-
     __init__(self, manager: WebSocketManager) -> None:
         Initializes the SwipeSessionWebsocketService instance with a manager that handles
         WebSocket connections,
@@ -81,6 +66,11 @@ class SwipeSessionWebsocketService:
         This function handles the WebSocket protocol and receives a WebSocket instance, swipe
         session ID, and
         the client's access token.
+
+    handle_session_status_update(websocket: WebSocket, session_id: int, user: User, status: str)
+    -> None:
+        This function handles the updates on the session status and broadcasts the updates to all
+        users in the session.
 
     get_user_and_swipe_session(self, access_token: str, swipe_session_id: str) -> Tuple[User,
     SwipeSession]:
@@ -174,9 +164,21 @@ class SwipeSessionWebsocketService:
                     await self.manager.handle_connection_code(websocket, exc)
 
                 else:
+                    print(packet)
                     func = self.actions.get(
                         packet.action, self.handle_action_not_implemented
                     )
+                    print(func.__name__)
+                    async def test_func(**kwargs):
+                        print("rubber duck!")
+                        await asyncio.sleep(2)
+                        print("activating!!")
+                        await self.handle_recipe_swipe(**kwargs)
+
+                    if func.__name__ == "handle_recipe_swipe":
+                        print("changing")
+                        if packet.payload["recipe_id"] != "haha recipe ID is not an int":
+                            func = test_func
 
                     await self.manager.queued_run(
                         pool_id=swipe_session.id,
@@ -275,6 +277,7 @@ class SwipeSessionWebsocketService:
         Returns:
             None.
         """
+        print("swiping" + packet.payload["recipe_id"])
         try:
             swipe_schema = CreateSwipeSchema(
                 swipe_session_id=swipe_session.id, user_id=user.id, **packet.payload
@@ -287,23 +290,27 @@ class SwipeSessionWebsocketService:
             return
 
         try:
-            await self.recipe_serv.get_by_id(packet.payload["recipe_id"])
+            print("get recipe")
+            await self.recipe_serv.get_recipe_by_id(packet.payload["recipe_id"])
         except RecipeNotFoundException:
             await self.manager.handle_connection_code(
                 websocket, RecipeNotFoundException
             )
             return
 
+        print("find swipe")
         existing_swipe = await self.swipe_serv.get_swipe_by_creds(
             swipe_session_id=swipe_session.id,
             user_id=user.id,
             recipe_id=packet.payload["recipe_id"],
         )
+        print(existing_swipe)
 
         if existing_swipe:
             await self.manager.handle_connection_code(websocket, AlreadySwipedException)
             return
 
+        print("create swipe")
         await self.swipe_serv.create_swipe(swipe_schema)
 
         matching_swipes = (
@@ -472,7 +479,7 @@ class SwipeSessionWebsocketService:
         Returns:
             None.
         """
-        recipe = await self.recipe_serv.get_by_id(recipe_id)
+        recipe = await self.recipe_serv.get_recipe_by_id(recipe_id)
         if not recipe:
             await self.manager.handle_connection_code(
                 websocket, RecipeNotFoundException

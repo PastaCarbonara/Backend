@@ -1,6 +1,6 @@
 """ Recipe repository. """
 
-from typing import List
+from typing import List, Type
 from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload
 from core.db import session
@@ -37,6 +37,9 @@ class RecipeRepository(BaseRepo):
     get_jugment(recipe_id, user_id)
         Get a recipe judgement by recipe id and user id.
     """
+
+    def __init__(self):
+        super().__init__(Recipe)
 
     async def get(self, limit: int, offset: int) -> List[Recipe]:
         """Get a list of recipes.
