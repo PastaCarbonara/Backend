@@ -1,4 +1,4 @@
-from core.exceptions import CustomException
+from core.exceptions.base import CustomException
 
 
 class IncorrectHashIDException(CustomException):

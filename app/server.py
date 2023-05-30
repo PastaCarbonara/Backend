@@ -14,7 +14,7 @@ from api import router
 from api.home.home import home_router
 
 from core.config import config
-from core.exceptions import CustomException
+from core.exceptions.base import CustomException
 from core.fastapi.dependencies import Logging
 from core.fastapi.middlewares import (
     AuthenticationMiddleware,

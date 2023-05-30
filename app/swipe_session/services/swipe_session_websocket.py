@@ -16,6 +16,7 @@ from app.swipe_session.schemas.swipe_session import (
     UpdateSwipeSessionSchema,
 )
 from app.swipe_session.services.swipe_session import SwipeSessionService
+from app.recipe.exceptions.recipe import RecipeNotFoundException
 from core.exceptions.websocket import (
     ActionNotImplementedException,
     AlreadySwipedException,
@@ -27,7 +28,6 @@ from core.exceptions.websocket import (
 from core.db.enums import SwipeSessionActionEnum, SwipeSessionEnum
 from core.db.models import SwipeSession, User
 from core.exceptions.base import CustomException, UnauthorizedException
-from core.exceptions.recipe import RecipeNotFoundException
 from core.helpers.hashid import decode_single
 from core.helpers.websocket.auth import (
     IsActiveSession,

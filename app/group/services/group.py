@@ -11,7 +11,7 @@ from app.user.services.user import UserService
 from app.group.repository.group import GroupRepository
 from core.db.models import Group, GroupMember
 from core.db import Transactional, session
-from core.exceptions.group import (
+from app.group.exceptions.group import (
     AdminLeavingException,
     GroupNotFoundException,
     GroupJoinConflictException,

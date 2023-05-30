@@ -1,5 +1,5 @@
 """excepions related to ingredients"""
-from core.exceptions import CustomException
+from core.exceptions.base import CustomException
 
 
 class IngredientAlreadyExistsException(CustomException):

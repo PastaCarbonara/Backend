@@ -9,6 +9,9 @@ from core.repository.base import BaseRepo
 class FilterRepository(BaseRepo):
     """Responsible for interacting with the database to perform CRUD operations on the user tags."""
 
+    def __init__(self):
+        super().__init__(UserTag)
+
     async def store(self, user_id: int, user_filter: int):
         """Store a filter for a user."""
         session.add(UserTag(user_id=user_id, tag_id=user_filter))

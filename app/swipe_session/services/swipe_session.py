@@ -7,7 +7,10 @@ from typing import List
 from sqlalchemy import update
 
 from app.recipe.services.recipe import RecipeService
-from app.swipe_session.exceptions.swipe_session import DateTooOldException
+from app.swipe_session.exceptions.swipe_session import (
+    DateTooOldException,
+    SwipeSessionNotFoundException,
+)
 from app.swipe_session.repository.swipe_session import SwipeSessionRepository
 from app.swipe_session.schemas.swipe_session import (
     CreateSwipeSessionSchema,
@@ -16,7 +19,6 @@ from app.swipe_session.schemas.swipe_session import (
 from core.db import Transactional, session
 from core.db.enums import SwipeSessionEnum
 from core.db.models import Recipe, SwipeSession, User
-from core.exceptions.swipe_session import SwipeSessionNotFoundException
 
 from .action_docs import actions
 
