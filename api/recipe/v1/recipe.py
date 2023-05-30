@@ -26,10 +26,13 @@ recipe_v1_router = APIRouter()
     "",
     responses={"400": {"model": ExceptionResponseSchema}},
     response_model=GetFullRecipePaginatedResponseSchema,
+    dependencies=[Depends(PermissionDependency([[AllowAll]]))],
 )
 @version(1)
-async def get_recipe_list(limit: int = 10, offset: int = 0):
-    return await RecipeService().get_paginated_recipe_list(limit, offset)
+async def get_recipe_list(
+    limit: int = 10, offset: int = 0, user=Depends(get_current_user)
+):
+    return await RecipeService().get_paginated_recipe_list(limit, offset, user)
 
 
 @recipe_v1_router.get(
