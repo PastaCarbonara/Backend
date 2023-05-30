@@ -64,7 +64,7 @@ class SwipeSessionService:
         Returns:
             A list of SwipeSession objects.
         """
-        swipe_sessions = await self.repo.get_by_group(group_id)
+        swipe_sessions = await self.repo.get_by_group_id(group_id)
 
         for swipe_session in swipe_sessions:
             swipe_session.matches = await self.get_matches(swipe_session.id)
@@ -142,7 +142,7 @@ class SwipeSessionService:
             for _ in range(3):  # Error Log this
                 print(f"WARNING! THERE SHOULD ONLY BE 1 MATCH, NOT {recipe_ids}!")
 
-        return [await self.recipe_serv.get_recipe_by_id(id) for id in recipe_ids]
+        return [await self.recipe_serv.get_by_id(id) for id in recipe_ids]
 
     @Transactional()
     async def update_swipe_session(

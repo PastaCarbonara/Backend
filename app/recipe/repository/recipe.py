@@ -26,19 +26,19 @@ class RecipeRepository(BaseRepo):
 
     Methods
     -------
-    get_recipes()
+    get()
         Get a list of recipes.
-    get_recipe_by_id(recipe_id)
+    get_by_id(recipe_id)
         Get a recipe by id.
-    get_recipe_by_tags(tags)
+    get_by_tags(tags)
         Get a list of recipes by tags.
-    get_recipe_by_ingredients(ingredients)
+    get_by_ingredients(ingredients)
         Get a list of recipes by ingredients.
-    get_recipe_jugment(recipe_id, user_id)
+    get_jugment(recipe_id, user_id)
         Get a recipe judgement by recipe id and user id.
     """
 
-    async def get_recipes(self, limit: int, offset: int) -> List[Recipe]:
+    async def get(self, limit: int, offset: int) -> List[Recipe]:
         """Get a list of recipes.
 
         Returns
@@ -62,7 +62,7 @@ class RecipeRepository(BaseRepo):
         # return recipes and count
         return result.unique().scalars().all(), result_count.scalar()
 
-    async def get_recipe_by_id(self, recipe_id) -> Recipe:
+    async def get_by_id(self, recipe_id) -> Recipe:
         """Get a recipe by id.
 
         Parameters
@@ -90,7 +90,7 @@ class RecipeRepository(BaseRepo):
         result = await session.execute(query)
         return result.scalars().first()
 
-    async def get_recipe_by_tags(self, tags: List[str]) -> List[Recipe]:
+    async def get_by_tags(self, tags: List[str]) -> List[Recipe]:
         """Get a list of recipes by tags.
 
         Parameters
@@ -118,7 +118,7 @@ class RecipeRepository(BaseRepo):
         result = await session.execute(query)
         return result.scalars().all()
 
-    async def get_recipe_by_ingredients(self, ingredients: List[str]) -> List[Recipe]:
+    async def get_by_ingredients(self, ingredients: List[str]) -> List[Recipe]:
         """Get a list of recipes by ingredients.
 
         Parameters
@@ -146,7 +146,7 @@ class RecipeRepository(BaseRepo):
         result = await session.execute(query)
         return result.scalars().all()
 
-    async def get_recipe_jugment(self, recipe_id: int, user_id: int) -> RecipeJudgement:
+    async def get_jugment(self, recipe_id: int, user_id: int) -> RecipeJudgement:
         """Get a recipe judgement.
 
         Parameters
@@ -198,7 +198,7 @@ class RecipeRepository(BaseRepo):
         like : bool
             True if the user likes the recipe, False if the user dislikes the recipe.
         """
-        judgement = await self.get_recipe_jugment(recipe_id, user_id)
+        judgement = await self.get_jugment(recipe_id, user_id)
         if judgement:
             judgement.like = like
         else:
@@ -222,7 +222,7 @@ class RecipeRepository(BaseRepo):
     #     await session.flush()
     #     return recipe
 
-    async def delete_recipe(self, recipe: Recipe) -> None:
+    async def delete(self, recipe: Recipe) -> None:
         """Delete a recipe.
 
         Parameters

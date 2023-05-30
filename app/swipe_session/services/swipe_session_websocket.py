@@ -287,7 +287,7 @@ class SwipeSessionWebsocketService:
             return
 
         try:
-            await self.recipe_serv.get_recipe_by_id(packet.payload["recipe_id"])
+            await self.recipe_serv.get_by_id(packet.payload["recipe_id"])
         except RecipeNotFoundException:
             await self.manager.handle_connection_code(
                 websocket, RecipeNotFoundException
@@ -472,7 +472,7 @@ class SwipeSessionWebsocketService:
         Returns:
             None.
         """
-        recipe = await self.recipe_serv.get_recipe_by_id(recipe_id)
+        recipe = await self.recipe_serv.get_by_id(recipe_id)
         if not recipe:
             await self.manager.handle_connection_code(
                 websocket, RecipeNotFoundException

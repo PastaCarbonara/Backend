@@ -39,7 +39,7 @@ class ImageRepository(BaseRepo):
         session.add(file)
         return file
 
-    async def get_images(self) -> List[File]:
+    async def get(self) -> List[File]:
         """
         Get a list of all the image files stored in the database.
 
@@ -50,7 +50,7 @@ class ImageRepository(BaseRepo):
         result = await session.execute(query)
         return result.scalars().all()
 
-    async def get_image_by_name(self, filename: str) -> File:
+    async def get_by_name(self, filename: str) -> File:
         """
         Get the File object corresponding to the given filename.
 
@@ -64,7 +64,7 @@ class ImageRepository(BaseRepo):
         result = await session.execute(query)
         return result.scalars().first()
 
-    async def delete_image(self, file: File) -> None:
+    async def delete(self, file: File) -> None:
         """
         Delete the given image file from the database.
 

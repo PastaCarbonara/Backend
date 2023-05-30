@@ -135,7 +135,7 @@ class GroupService:
         Returns:
             list[Group]: A list of Group objects that the user is a member of.
         """
-        groups = await self.repo.get_by_user(user_id)
+        groups = await self.repo.get_by_user_id(user_id)
         groups = await self.attach_matches_all(groups)
 
         return groups

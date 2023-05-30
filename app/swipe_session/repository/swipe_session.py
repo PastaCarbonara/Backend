@@ -41,7 +41,7 @@ class SwipeSessionRepository(BaseRepo):
         result = await session.execute(query)
         return result.unique().scalars().all()
 
-    async def get_by_group(self, group_id) -> list[SwipeSession]:
+    async def get_by_group_id(self, group_id) -> list[SwipeSession]:
         """Retrieve all swipe sessions for a group.
 
         Args:
