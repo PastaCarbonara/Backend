@@ -137,7 +137,7 @@ class SwipeSessionService:
             A list of Recipe objects.
         """
 
-        recipe_ids = await SwipeSessionRepository().get_matches(swipe_session_id)
+        recipe_ids = await self.repo.get_matches(swipe_session_id)
 
         if len(recipe_ids) > 1:
             for _ in range(3):  # Error Log this
