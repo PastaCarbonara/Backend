@@ -19,13 +19,15 @@ def seed_db():
         image_4 = File(filename="image_4")
         
         admin = User(display_name="admin", is_admin=True, client_token=uuid.uuid4(), filename="image_4")
-        admin.account_auth = AccountAuth(
+        admin_acc = AccountAuth(
             username="admin", password=get_password_hash("admin")
         )
+        admin.account_auth = admin_acc
         normal_user = User(display_name="normal_user", client_token=uuid.uuid4(), filename="image_4")
-        normal_user.account_auth = AccountAuth(
+        normal_acc = AccountAuth(
             username="normal_user", password=get_password_hash("normal_user")
         )
+        normal_user.account_auth = normal_acc
 
         group_1 = Group(name="group_1", filename="image_3")
         group_1.users.append(GroupMember(user=admin, is_admin=True))
@@ -55,6 +57,7 @@ def seed_db():
                 "Enjoy",
             ],
             preparation_time=30,
+            spiciness=0,
             filename="image_1",
             creator=admin,
         )
@@ -64,6 +67,7 @@ def seed_db():
             description="Green sauce.",
             instructions=["Peel the avocado", "Peel the garlic", "Add ALL the pepper"],
             preparation_time=15,
+            spiciness=0,
             filename="image_2",
             creator=admin,
         )
@@ -77,7 +81,9 @@ def seed_db():
         session.add_all(
             [
                 admin,
+                admin_acc,
                 normal_user,
+                normal_acc,
                 group_1,
                 group_2,
                 group_3,

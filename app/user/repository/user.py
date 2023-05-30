@@ -4,7 +4,7 @@ The module contains a repository class that defines database operations for user
 
 from typing import List
 import uuid
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from core.db.models import AccountAuth, User
 from core.db import session
@@ -44,9 +44,9 @@ class UserRepository(BaseRepo):
         self,
         model_id: int,
         params: dict,
-        synchronize_session: SynchronizeSessionEnum = 'auto',
+        synchronize_session: SynchronizeSessionEnum = "auto",
     ):
-        return await super().update_by_id(model_id, params, synchronize_session)
+        await super().update_by_id(model_id, params, synchronize_session)
 
     @Transactional()
     async def create_account_auth(self, user_id, username, password):
@@ -116,7 +116,7 @@ class UserRepository(BaseRepo):
         )
         result = await session.execute(query)
         return result.scalars().first()
-    
+
     async def get_by_username(self, username: str) -> User:
         """Get user by username.
 

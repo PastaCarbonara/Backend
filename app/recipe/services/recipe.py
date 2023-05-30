@@ -50,7 +50,7 @@ class RecipeService:
         self.recipe_repository = RecipeRepository()
         self.user_service = UserService()
 
-    async def get_paginated_recipe_list(self, limit, offset) -> Dict[str,str]:
+    async def get_paginated_recipe_list(self, limit, offset) -> Dict[str, str]:
         """Get a list of recipes.
 
         Returns
@@ -136,7 +136,9 @@ class RecipeService:
         if not image:
             raise FileNotFoundException()
         await self.user_service.get_by_id(user_id)
+        print(recipe.__dict__)
         db_recipe = await self.create_recipe_object(recipe, user_id)
+        print(db_recipe.__dict__)
         await self.set_ingredients_of_recipe(db_recipe, recipe.ingredients)
         await self.set_tags_of_recipe(db_recipe, recipe.tags)
 
@@ -165,7 +167,8 @@ class RecipeService:
             description=recipe.description,
             preparation_time=recipe.preparation_time,
             instructions=recipe.instructions,
-            materials = recipe.materials,
+            materials=recipe.materials,
+            spiciness=recipe.spiciness,
             creator_id=user_id,
         )
 
@@ -205,7 +208,9 @@ class RecipeService:
             )
             recipe.ingredients = recipe_ingredients
 
-    async def set_tags_of_recipe(self, recipe: Recipe, tags: List[CreateTagSchema]) -> None:
+    async def set_tags_of_recipe(
+        self, recipe: Recipe, tags: List[CreateTagSchema]
+    ) -> None:
         """set tags of a recipe instance
 
         Parameters
@@ -219,7 +224,9 @@ class RecipeService:
         for tag in tags:
             tag_object = await self.tag_repository.get_tag_by_name(tag.name)
             if not tag_object:
-                tag_object = await self.tag_repository.create_tag(tag.name, tag.tag_type)
+                tag_object = await self.tag_repository.create_tag(
+                    tag.name, tag.tag_type
+                )
             recipe_tags.append(RecipeTag(tag=tag_object, recipe=recipe))
 
         recipe.tags = recipe_tags

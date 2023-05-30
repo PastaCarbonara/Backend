@@ -15,6 +15,7 @@ from core.exceptions import (
     DuplicateUsernameException,
     UserNotFoundException,
 )
+from core.db.session import session
 
 
 class UserService:
@@ -49,7 +50,7 @@ class UserService:
             updated_user (UpdateUserSchema): An object containing the updated user information.
 
         Raises:
-            FileNotFoundException: If the specified image filename does not exist in the image 
+            FileNotFoundException: If the specified image filename does not exist in the image
             repository.
 
         Returns:
@@ -62,8 +63,11 @@ class UserService:
         ):
             raise FileNotFoundException
 
-        return await self.repo.update_by_id(model_id=updated_user.id, params=user_dict)
-    
+        await self.repo.update_by_id(model_id=updated_user.id, params=user_dict)
+        user = await self.repo.get_by_id(updated_user.id)
+        await session.refresh(user)
+        return user
+
     async def get_by_username(self, username) -> User:
         """Get the user with the given username.
 
@@ -246,3 +250,21 @@ class UserService:
         """
         user = await self.get_by_id(user_id)
         return user.is_admin
+
+    async def delete_user(self, user_id) -> None:
+        """Delete's a user by given id.
+
+        Parameters
+        ----------
+        user_id : int
+            The id of the user to delete.
+        """
+        user = await self.repo.get_by_id(user_id)
+
+        if not user:
+            raise UserNotFoundException
+
+        if user.account_auth:
+            await self.repo.delete(user.account_auth)
+
+        await self.repo.delete(user)

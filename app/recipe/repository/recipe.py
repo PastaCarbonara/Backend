@@ -181,6 +181,8 @@ class RecipeRepository:
         Recipe
             The created recipe.
         """
+        print(recipe)
+        print(recipe.__dict__)
         session.add(recipe)
         await session.flush()
         return recipe
