@@ -10,10 +10,15 @@ from app.image.interface.image import ObjectStorageInterface
 from app.image.services.image import ImageService
 from app.swipe_session.services.swipe_session import SwipeSessionService
 from app.user.services.user import UserService
+from app.group.repository.group import GroupRepository
 from core.db.models import Group, GroupMember, SwipeSession, User
 from core.db import Transactional, session
-from core.exceptions.group import GroupNotFoundException
-from app.group.repository.group import GroupRepository
+from core.exceptions.group import (
+    AdminLeavingException,
+    GroupNotFoundException,
+    GroupJoinConflictException,
+    NotInGroupException,
+)
 
 
 class GroupService:
@@ -252,11 +257,15 @@ class GroupService:
 
         Raises:
             GroupNotFoundException: If the specified group does not exist.
+            GroupJoinConflictException: If the specified user already in the group.
         """
         group = await self.get_group_by_id(group_id)
 
         if not group:
             raise GroupNotFoundException
+
+        if await self.is_member(group_id, user_id):
+            raise GroupJoinConflictException
 
         group.users.append(
             GroupMember(
@@ -264,6 +273,33 @@ class GroupService:
                 user=await UserService().get_by_id(user_id),
             )
         )
+
+    @Transactional()
+    async def leave_group(self, group_id, user_id) -> None:
+        """
+        Remove a user from a group.
+
+        Args:
+            group_id (int): The ID of the group to leave.
+            user_id (int): The ID of the user to remove from the group.
+
+        Raises:
+            GroupNotFoundException: If the specified group does not exist.
+            NotInGroupException: If the specified user is not in the group.
+            AdminLeavingException: If the specified user is the group admin.
+        """
+        group = await self.get_group_by_id(group_id)
+
+        if not group:
+            raise GroupNotFoundException
+
+        if not await self.is_member(group_id, user_id):
+            raise NotInGroupException
+
+        if await self.is_admin(group_id, user_id):
+            raise AdminLeavingException
+
+        await self.repo.delete_member(group_id, user_id)
 
     async def delete_group(self, group_id) -> None:
         """Delete's a group by given id.
