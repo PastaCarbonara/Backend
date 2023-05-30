@@ -50,7 +50,7 @@ async def test_join_group(
 ):
     groups = await groups
 
-    res = await client.get(
+    res = await client.post(
         f"/api/v1/groups/{groups[2].get('id')}/join",
         headers=await normal_user_token_headers,
     )
@@ -85,14 +85,14 @@ async def test_already_join_group(
 ):
     groups = await groups
 
-    res = await client.get(
+    res = await client.post(
         f"/api/v1/groups/{groups[2].get('id')}/join",
         headers=await normal_user_token_headers,
     )
     json_res = res.json()
 
-    assert res.status_code == 200
-    assert json_res is None
+    assert res.status_code == 409
+    assert json_res is not None
 
 
 @pytest.mark.asyncio

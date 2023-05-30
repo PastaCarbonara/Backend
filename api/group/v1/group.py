@@ -96,15 +96,24 @@ async def get_group_info(group_id: int = Depends(get_path_group_id)):
     return group
 
 
-@group_v1_router.get(
+@group_v1_router.post(
     "/{group_id}/join",
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
 async def join_group(request: Request, group_id: int = Depends(get_path_group_id)):
-    if not await GroupService().is_member(group_id, request.user.id):
-        return await GroupService().join_group(group_id, request.user.id)
+    return await GroupService().join_group(group_id, request.user.id)
+
+
+@group_v1_router.post(
+    "/{group_id}/leave",
+    responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
+)
+@version(1)
+async def leave_group(request: Request, group_id: int = Depends(get_path_group_id)):
+    return await GroupService().leave_group(group_id, request.user.id)
 
 
 @group_v1_router.get(
