@@ -5,16 +5,17 @@ User service module
 from typing import List
 import uuid
 from app.image.repository.image import ImageRepository
-from app.user.exception.user import DuplicateClientTokenException
+from app.user.exceptions.user import DuplicateClientTokenException
 from app.user.utils import generate_name, get_password_hash
 from app.user.repository.user import UserRepository
 from app.user.schemas.user import UpdateUserSchema
-from app.image.exception.image import FileNotFoundException
+from app.image.exceptions.image import FileNotFoundException
 from core.db.models import User
 from core.exceptions import (
     DuplicateUsernameException,
     UserNotFoundException,
 )
+from core.db.session import session
 
 
 class UserService:
@@ -41,7 +42,20 @@ class UserService:
         """
         return await self.repo.get_user_list()
 
-    async def update(self, updated_user: UpdateUserSchema):
+    async def update(self, updated_user: UpdateUserSchema) -> User:
+        """
+        Updates the user information in the repository.
+
+        Args:
+            updated_user (UpdateUserSchema): An object containing the updated user information.
+
+        Raises:
+            FileNotFoundException: If the specified image filename does not exist in the image
+            repository.
+
+        Returns:
+            int: The ID of the updated user.
+        """
         user_dict = updated_user.dict()
 
         if updated_user.filename and not await self.image_repo.get_image_by_name(
@@ -50,7 +64,29 @@ class UserService:
             raise FileNotFoundException
 
         await self.repo.update_by_id(model_id=updated_user.id, params=user_dict)
-        return updated_user.id
+        user = await self.repo.get_by_id(updated_user.id)
+        await session.refresh(user)
+        return user
+
+    async def get_by_username(self, username) -> User:
+        """Get the user with the given username.
+
+        Parameters
+        ----------
+        username : str
+            The username of the user.
+
+        Returns
+        -------
+        User
+            The user with the given username.
+
+        Raises
+        ------
+        UserNotFoundException
+            If the user with the given username does not exist.
+        """
+        return await self.repo.get_by_username(username)
 
     async def get_by_display_name(self, display_name) -> User:
         """Get the user with the given display name.
@@ -214,3 +250,21 @@ class UserService:
         """
         user = await self.get_by_id(user_id)
         return user.is_admin
+
+    async def delete_user(self, user_id) -> None:
+        """Delete's a user by given id.
+
+        Parameters
+        ----------
+        user_id : int
+            The id of the user to delete.
+        """
+        user = await self.repo.get_by_id(user_id)
+
+        if not user:
+            raise UserNotFoundException
+
+        if user.account_auth:
+            await self.repo.delete(user.account_auth)
+
+        await self.repo.delete(user)

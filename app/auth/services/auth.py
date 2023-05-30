@@ -6,7 +6,7 @@ import uuid
 from api.auth.v1.response.auth import TokensSchema
 from app.auth.exceptions.auth import BadUUIDException
 from app.auth.services.jwt import JwtService
-from app.user.exception.user import IncorrectPasswordException, UserNotFoundException
+from app.user.exceptions.user import IncorrectPasswordException, UserNotFoundException
 from app.user.services.user import UserService
 from app.user.utils import verify_password
 
@@ -52,7 +52,7 @@ class AuthService:
         Returns:
             TokensSchema: A pair of JSON Web Tokens (access and refresh tokens).
         """
-        user = await self.user_serv.get_by_display_name(username)
+        user = await self.user_serv.get_by_username(username)
         if not user:
             raise UserNotFoundException()
         if not verify_password(password, user.account_auth.password):

@@ -1,7 +1,7 @@
 from app.filter.repository.filter import FilterRepository
 from app.tag.repository.tag import TagRepository
 from app.user.repository.user import UserRepository
-from app.user.exception.user import UserNotFoundException
+from app.user.exceptions.user import UserNotFoundException
 from core.db import Transactional
 from core.db.models import Tag, Recipe
 
@@ -27,14 +27,15 @@ class FilterService:
         if not user:
             raise UserNotFoundException()
 
-        filters = await self.filter_repository.get_all_filters_user(user_id)
+        stored_filters = await self.filter_repository.get_all_filters_user(user_id)
+        stored_filters_ids = [stored_filter.id for stored_filter in stored_filters]
         tags = await self.tag_repository.get_tags()
+        stored_tags_ids = [tag.id for tag in tags]
 
         new_filters = [
-            filter
-            for filter in user_filters
-            if filter not in [filter.id for filter in filters]
-            and filter in [tag.id for tag in tags]
+            filter_id
+            for filter_id in user_filters
+            if filter_id not in stored_filters_ids and filter_id in stored_tags_ids
         ]
 
         await self.filter_repository.store_filters(user_id, new_filters)

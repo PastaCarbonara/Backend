@@ -4,7 +4,7 @@ from typing import List
 from sqlalchemy.exc import IntegrityError
 from app.ingredient.schemas import CreateIngredientSchema
 from app.ingredient.repository.ingredient import IngredientRepository
-from app.ingredient.exception.ingredient import (
+from app.ingredient.exceptions.ingredient import (
     IngredientAlreadyExistsException,
     IngredientNotFoundException,
     IngredientDependecyException,
@@ -19,7 +19,7 @@ class IngredientService:
 
     Attributes
     ----------
-    ingredient_repository : `IngredientRepository`
+    ingredient_repo : `IngredientRepository`
         An instance of `IngredientRepository` that provides access to the
         ingredient data.
 
@@ -43,7 +43,7 @@ class IngredientService:
 
     def __init__(self):
         """initializes the service"""
-        self.ingredient_repository = IngredientRepository()
+        self.ingredient_repo = IngredientRepository()
 
     async def get_ingredients(self) -> List[Ingredient]:
         """
@@ -58,7 +58,7 @@ class IngredientService:
         list[Ingredient]
             A list of all the ingredients.
         """
-        return await self.ingredient_repository.get_ingredients()
+        return await self.ingredient_repo.get_ingredients()
 
     async def get_ingredient_by_id(self, ingredient_id: int) -> Ingredient:
         """
@@ -79,12 +79,12 @@ class IngredientService:
         IngredientNotFoundException
             If no ingredient with the given ID exists.
         """
-        ingredient = await self.ingredient_repository.get_ingredient_by_id(
+        ingredient = await self.ingredient_repo.get_ingredient_by_id(
             ingredient_id
         )
         if not ingredient:
             raise IngredientNotFoundException
-        return await self.ingredient_repository.get_ingredient_by_id(ingredient_id)
+        return await self.ingredient_repo.get_ingredient_by_id(ingredient_id)
 
     async def get_ingredient_by_name(self, ingredient_name: str) -> Ingredient:
         """
@@ -105,7 +105,7 @@ class IngredientService:
         IngredientNotFoundException
             If no ingredient with the given name exists.
         """
-        ingredient = await self.ingredient_repository.get_ingredient_by_name(
+        ingredient = await self.ingredient_repo.get_ingredient_by_name(
             ingredient_name
         )
         if not ingredient:
@@ -134,13 +134,13 @@ class IngredientService:
         IngredientAlreadyExistsException
             If an ingredient with the same name already exists.
         """
-        ingredient = await self.ingredient_repository.get_ingredient_by_name(
+        ingredient = await self.ingredient_repo.get_ingredient_by_name(
             request.name
         )
         if ingredient:
             raise IngredientAlreadyExistsException
 
-        return await self.ingredient_repository.create_ingredient(request.name)
+        return await self.ingredient_repo.create_ingredient(request.name)
 
     @Transactional()
     async def update_ingredient(
@@ -170,13 +170,13 @@ class IngredientService:
         IngredientAlreadyExistsException
             If an ingredient with the same name already exists.
         """
-        ingredient = await self.ingredient_repository.get_ingredient_by_id(
+        ingredient = await self.ingredient_repo.get_ingredient_by_id(
             ingredient_id
         )
         if not ingredient:
             raise IngredientNotFoundException
         try:
-            return await self.ingredient_repository.update_ingredient(
+            return await self.ingredient_repo.update_ingredient(
                 ingredient, request.name
             )
         except IntegrityError as exc:
@@ -203,13 +203,13 @@ class IngredientService:
         -------
         None
         """
-        ingredient = await self.ingredient_repository.get_ingredient_by_id(
+        ingredient = await self.ingredient_repo.get_ingredient_by_id(
             ingredient_id
         )
         if not ingredient:
             raise IngredientNotFoundException
 
         try:
-            await self.ingredient_repository.delete_ingredient(ingredient)
+            await self.ingredient_repo.delete_ingredient(ingredient)
         except AssertionError as exc:
             raise IngredientDependecyException from exc

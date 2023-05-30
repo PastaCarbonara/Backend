@@ -3,6 +3,7 @@ Connection manager for websockets
 """
 
 import json
+import random
 from fastapi import WebSocket, status
 from pydantic import ValidationError
 from pydantic.main import ModelMetaclass
@@ -16,6 +17,11 @@ from core.exceptions.websocket import (
     NoMessageException,
 )
 from core.helpers.schemas.websocket import WebsocketPacketSchema
+from core.helpers.websocket.auth import (
+    AllowAll,
+    BaseWebsocketPermission,
+    WebsocketPermission,
+)
 
 
 class WebsocketConnectionManager:
@@ -27,12 +33,60 @@ class WebsocketConnectionManager:
     methods to get information about active pools of connections.
     """
 
-    def __init__(self):
+    def __init__(self, permissions: list[list[BaseWebsocketPermission]] = None):
         """
         Initializes WebsocketConnectionManager with an empty dictionary to hold active
         pools and its connections.
+
+        Args:
+            permissions (List[List[BaseWebsocketPermission]], optional): A two dimensional list
+            containing permission requirements for connecting to a manager. Defaults to AllowAll.
         """
+        if permissions is None:
+            permissions = [[AllowAll]]
+
         self.active_pools: dict = {}
+        self.permissions = permissions
+
+    async def queued_run(self, pool_id, func, **kwargs):
+        ticket = random.random()
+        queue = self.active_pools[pool_id]["queue"]
+        queue.append(ticket)
+
+
+        while queue[0] != ticket:
+            ...
+
+        await func(**kwargs)
+
+        queue.pop(0)
+
+    async def check_auth(
+        self, permissions: list[list[BaseWebsocketPermission]] = None, **kwargs
+    ):
+        """Check whether the client is authorized to perform the requested action.
+
+        Args:
+            **kwargs: Arbitrary keyword arguments that will be passed to the permission check.
+
+        Raises:
+            WebSocketException: If the permission check fails.
+
+        Returns:
+            bool: True if the permission check succeeds.
+        """
+        if not permissions:
+            permissions = self.permissions
+
+        perm_checker = WebsocketPermission(permissions)
+
+        try:
+            await perm_checker(**kwargs)
+
+        except CustomException as exc:
+            return exc
+
+        return None
 
     async def connect(self, websocket: WebSocket, pool_id: str) -> None:
         """
@@ -48,9 +102,9 @@ class WebsocketConnectionManager:
         await websocket.accept()
 
         if pool_id not in self.active_pools:
-            self.active_pools[pool_id] = []
+            self.active_pools[pool_id] = {"connections": [], "queue": []}
 
-        self.active_pools[pool_id].append(websocket)
+        self.active_pools[pool_id]["connections"].append(websocket)
 
         return websocket
 
@@ -67,7 +121,8 @@ class WebsocketConnectionManager:
 
         Raises:
             JSONSerializableException: If the received data cannot be decoded to a JSON object.
-            ActionNotFoundException: If the received data fails to validate against the given schema.
+            ActionNotFoundException: If the received data fails to validate against the given
+            schema.
         """
         data = await websocket.receive_text()
 
@@ -98,7 +153,7 @@ class WebsocketConnectionManager:
         await self.handle_connection_code(websocket, exception)
         await websocket.close(status.WS_1000_NORMAL_CLOSURE)
 
-    async def disconnect(self, pool_id: str, websocket: WebSocket):
+    async def disconnect(self, websocket: WebSocket, pool_id: str):
         """
         Removes a WebSocket connection from the active pools list for a given pool ID.
 
@@ -110,17 +165,11 @@ class WebsocketConnectionManager:
             websocket (WebSocket): The WebSocket connection to remove from the active
             pools list.
         """
-        self.active_pools[pool_id].remove(websocket)
-        await websocket.close()
+        self.active_pools[pool_id]["connections"].remove(websocket)
+        await websocket.close(status.WS_1000_NORMAL_CLOSURE)
 
         if self.get_connection_count(pool_id) < 1:
             self.active_pools.pop(pool_id)
-
-        # pain.
-        # else:
-        #     await self.handle_pool_message(
-        #         websocket, pool_id, f"Client left the pool"
-        #     )
 
     async def disconnect_pool(self, pool_id, packet) -> None:
         """
@@ -138,10 +187,12 @@ class WebsocketConnectionManager:
             print("Tried to disconnect for non existing pool")
             return
 
+        connections = [ws for ws in pool["connections"]]
+
         websocket: WebSocket
-        for websocket in pool:
+        for websocket in connections:
             await self.personal_packet(websocket, packet)
-            await self.disconnect(pool_id, websocket)
+            await self.disconnect(websocket, pool_id)
 
     async def handle_global_message(self, websocket: WebSocket, message: str) -> None:
         """
@@ -230,8 +281,8 @@ class WebsocketConnectionManager:
         Args:
             packet (WebsocketPacketSchema): The packet to be broadcasted.
         """
-        for _, connections in self.active_pools.items():
-            for connection in connections:
+        for _, pool in self.active_pools.items():
+            for connection in pool["connections"]:
                 await connection.send_json(packet.dict())
 
     async def pool_broadcast(self, pool_id: str, packet: WebsocketPacketSchema) -> None:
@@ -241,12 +292,12 @@ class WebsocketConnectionManager:
             pool_id (str): The ID of the pool to broadcast to.
             packet (WebsocketPacketSchema): The packet to be broadcasted.
         """
-        for connection in self.active_pools[pool_id]:
+        for connection in self.active_pools[pool_id]["connections"]:
             await connection.send_json(packet.dict())
 
     def get_connection_count(self, pool_id: str | None = None) -> int:
-        """ "Gets the total number of active websocket connections across all pools, or the number of
-        connections for a specific pool if pool_id is provided.
+        """ "Gets the total number of active websocket connections across all pools, or the number
+        of connections for a specific pool if pool_id is provided.
 
         Args:
             pool_id (str | None, optional): The ID of the pool to get connection count for.
@@ -257,7 +308,7 @@ class WebsocketConnectionManager:
         """
         if pool_id:
             try:
-                connections = self.active_pools[pool_id]
+                connections = self.active_pools[pool_id]["connections"]
             except KeyError:
                 # Perhaps a better way to resolve this exists, as this might be unclear
                 return 0
@@ -265,7 +316,7 @@ class WebsocketConnectionManager:
             return len(connections)
 
         total = 0
-        for _, connections in self.active_pools.items():
-            total += len(connections)
+        for _, pool in self.active_pools.items():
+            total += len(pool["connections"])
 
         return total

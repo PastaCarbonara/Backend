@@ -18,6 +18,8 @@ from core.db.mixins import TimestampMixin
 from core.db.enums import SwipeSessionEnum, TagType
 from core.config import config
 
+# pylint: disable=too-few-public-methods
+
 
 class RecipeJudgement(Base, TimestampMixin):
     __tablename__ = "recipe_judgement"
@@ -45,12 +47,14 @@ class User(Base, TimestampMixin):
         ForeignKey("file.filename", ondelete="CASCADE"), nullable=True
     )
 
-    image: Mapped["File"] = relationship(back_populates="user")
-    account_auth: Mapped["AccountAuth"] = relationship(back_populates="user")
+    image: Mapped["File"] = relationship(back_populates="user", lazy="immediate")
+    account_auth: Mapped["AccountAuth"] = relationship(
+        back_populates="user", lazy="immediate", cascade="delete"
+    )
     recipes: Mapped[List["Recipe"]] = relationship(back_populates="creator")
-    judged_recipes: Mapped[List[RecipeJudgement]] = relationship(back_populates="user")
-    groups: Mapped[List["GroupMember"]] = relationship(back_populates="user")
-    filters: Mapped[List["UserTag"]] = relationship(back_populates="user")
+    judged_recipes: Mapped[List[RecipeJudgement]] = relationship(back_populates="user", cascade="all, delete")
+    groups: Mapped[List["GroupMember"]] = relationship(back_populates="user", cascade="all, delete")
+    filters: Mapped[List["UserTag"]] = relationship(back_populates="user", cascade="all, delete")
 
 
 class AccountAuth(Base, TimestampMixin):
@@ -60,7 +64,7 @@ class AccountAuth(Base, TimestampMixin):
     username: Mapped[str] = mapped_column(String(50))
     password: Mapped[str] = mapped_column()
 
-    user: Mapped[User] = relationship(back_populates="account_auth")
+    user: Mapped[User] = relationship(back_populates="account_auth", cascade="delete")
 
 
 class RecipeIngredient(Base):
@@ -125,7 +129,7 @@ class Recipe(Base, TimestampMixin):
     __tablename__ = "recipe"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50))
+    name: Mapped[str] = mapped_column(String())
     description: Mapped[str] = mapped_column()
     instructions = Column(JSON, nullable=False)
     materials = Column(JSON, nullable=True)
@@ -134,6 +138,8 @@ class Recipe(Base, TimestampMixin):
         ForeignKey("file.filename", ondelete="CASCADE")
     )
     creator_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"))
+    spiciness: Mapped[int] = mapped_column()
+
     image: Mapped[File] = relationship(back_populates="recipe")
     ingredients: Mapped[List[RecipeIngredient]] = relationship(
         back_populates="recipe", cascade="all, delete"
@@ -142,7 +148,9 @@ class Recipe(Base, TimestampMixin):
         back_populates="recipe", cascade="all, delete"
     )
     creator: Mapped[User] = relationship(back_populates="recipes")
-    judgements: Mapped[RecipeJudgement] = relationship(back_populates="recipe", cascade="all, delete")
+    judgements: Mapped[RecipeJudgement] = relationship(
+        back_populates="recipe", cascade="all, delete"
+    )
 
     def __repr__(self) -> str:
         return (
@@ -158,6 +166,11 @@ class Recipe(Base, TimestampMixin):
     @hybrid_property
     def likes(self):
         return len([judgement for judgement in self.judgements if judgement.like])
+
+    def to_dict(self) -> dict:
+        result = self.__dict__
+        result["likes"] = self.likes
+        return result
 
 
 class Tag(Base):
@@ -189,7 +202,7 @@ class SwipeSession(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     session_date: Mapped[datetime] = mapped_column(
-        default=func.now(), server_default=func.now() # pylint: disable=not-callable
+        default=func.now(), server_default=func.now()  # pylint: disable=not-callable
     )
     status: Mapped[SwipeSessionEnum] = mapped_column(default=SwipeSessionEnum.READY)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
@@ -226,8 +239,8 @@ class Group(Base, TimestampMixin):
     )
 
     image: Mapped[File] = relationship(back_populates="group")
-    users: Mapped[List["GroupMember"]] = relationship(back_populates="group")
-    swipe_sessions: Mapped[List[SwipeSession]] = relationship(back_populates="group")
+    users: Mapped[List["GroupMember"]] = relationship(back_populates="group", cascade="all, delete")
+    swipe_sessions: Mapped[List[SwipeSession]] = relationship(back_populates="group", cascade="all, delete")
 
 
 class GroupMember(Base):

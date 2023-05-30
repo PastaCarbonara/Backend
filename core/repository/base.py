@@ -7,6 +7,7 @@ from typing import TypeVar, Type, Optional, Generic
 from sqlalchemy import select, update, delete
 
 from core.db.session import Base, session
+from core.db.transactional import Transactional
 from core.repository.enum import SynchronizeSessionEnum
 
 Model = TypeVar("Model", bound=Base)
@@ -16,6 +17,7 @@ class BaseRepo(Generic[Model]):
     """
     A generic repository that provides basic database operations for a given SQLAlchemy model.
     """
+
     def __init__(self, model: Type[Model]):
         """
         Initializes the repository.
@@ -46,10 +48,9 @@ class BaseRepo(Generic[Model]):
 
         :param model_id: The ID of the model instance to update.
         :param params: A dictionary containing the attribute-value pairs to update.
-        :param synchronize_session: An optional parameter specifying the level of synchronization 
+        :param synchronize_session: An optional parameter specifying the level of synchronization
         to use.
         """
-        print(params)
         query = (
             update(self.model)
             .where(self.model.id == model_id)
@@ -58,6 +59,7 @@ class BaseRepo(Generic[Model]):
         )
         await session.execute(query)
 
+    @Transactional()
     async def delete(self, model: Model) -> None:
         """
         Deletes the given model instance.

@@ -15,6 +15,7 @@ from core.repository.enum import SynchronizeSessionEnum
 
 class UserRepository(BaseRepo):
     """Repository class for accessing and manipulating User objects in the database."""
+
     def __init__(self):
         super().__init__(User)
 
@@ -37,11 +38,15 @@ class UserRepository(BaseRepo):
         session.add(user)
         await session.flush()
         return user.id
-    
-    
+
     @Transactional()
-    async def update_by_id(self, model_id: int, params: dict, synchronize_session: SynchronizeSessionEnum = False):
-        return await super().update_by_id(model_id, params, synchronize_session)
+    async def update_by_id(
+        self,
+        model_id: int,
+        params: dict,
+        synchronize_session: SynchronizeSessionEnum = "auto",
+    ):
+        await super().update_by_id(model_id, params, synchronize_session)
 
     @Transactional()
     async def create_account_auth(self, user_id, username, password):
@@ -112,13 +117,38 @@ class UserRepository(BaseRepo):
         result = await session.execute(query)
         return result.scalars().first()
 
-    async def get_by_display_name(self, display_name: str) -> User:
+    async def get_by_username(self, username: str) -> User:
         """Get user by username.
 
         Parameters
         ----------
         username : str
             Username.
+
+        Returns
+        -------
+        User
+            User instance.
+        """
+        query = (
+            select(User)
+            .join(User.account_auth)
+            .where(AccountAuth.username == username)
+            .options(
+                joinedload(User.account_auth),
+                joinedload(User.image),
+            )
+        )
+        result = await session.execute(query)
+        return result.scalars().first()
+
+    async def get_by_display_name(self, display_name: str) -> User:
+        """Get user by display name.
+
+        Parameters
+        ----------
+        display_name : str
+            Display name.
 
         Returns
         -------
@@ -145,12 +175,9 @@ class UserRepository(BaseRepo):
         List[User]
             User list.
         """
-        query = (
-            select(User)
-            .options(
-                joinedload(User.account_auth),
-                joinedload(User.image),
-            )
+        query = select(User).options(
+            joinedload(User.account_auth),
+            joinedload(User.image),
         )
         result = await session.execute(query)
         return result.scalars().all()

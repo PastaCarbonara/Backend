@@ -15,7 +15,7 @@ if len(sys.argv) < 2:
 run = lint.Run([sys.argv[1]], do_exit=False)
 score = round(run.linter.stats.global_note, 2)
 
-if score < THRESHOLD:
+if score <= THRESHOLD:
     print(f"Linter score is too low: {bcolors.FAIL}{bcolors.BOLD}{score}{bcolors.ENDC}")
     sys.exit(1)
 
