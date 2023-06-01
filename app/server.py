@@ -3,7 +3,6 @@ Initialize app
 """
 
 
-from datetime import datetime
 import logging
 
 from fastapi import FastAPI, Depends, Request
@@ -25,6 +24,7 @@ from core.fastapi.middlewares import (
 )
 from core.fastapi_versioning import VersionedFastAPI
 from core.helpers.cache import Cache, RedisBackend, CustomKeyMaker
+from core.helpers.logger import get_logger
 from core.tasks import start_tasks
 
 
@@ -52,20 +52,7 @@ def init_listeners(app_: FastAPI) -> None:
 
     @app_.exception_handler(Exception)
     async def unicorn_exception_handler(request: Request, exc: Exception):
-        log_name = "_".join(
-            [
-                datetime.now().strftime("%m%d%Y-%H%M%S"),
-                (str(exc).lower() or "untitled"),
-            ]
-        ).replace(" ", "_")
-
-        logging.basicConfig(
-            filename=f"logs/{log_name}.log",
-            format="%(levelname)s\t%(asctime)s: %(message)s",
-            encoding="utf-8",
-            level=logging.INFO,
-            force=True,
-        )
+        log_name = get_logger(exc)
 
         logging.info(request.scope.get("raw_path"))
         logging.info(request.__dict__)
