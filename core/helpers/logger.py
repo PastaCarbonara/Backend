@@ -1,9 +1,13 @@
 import logging
+import os
 from datetime import datetime
+from pathlib import Path
 
 
 def get_logger(exc: Exception | str = None):
     """Initializes logger and generates log name."""
+
+    Path(os.getcwd() + "/logs").mkdir(parents=True, exist_ok=True)
 
     log_name = "_".join(
         [
