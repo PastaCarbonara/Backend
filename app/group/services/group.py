@@ -214,6 +214,41 @@ class GroupService:
 
         return db_group.id
 
+    @Transactional()
+    async def edit_group(
+        self,
+        request: CreateGroupSchema,
+        group_id: int,
+        object_storage: ObjectStorageInterface,
+    ) -> int:
+        """
+        Edit a group
+
+        Parameters
+        ----------
+        request : EditGroupSchema
+            The request body
+        group_id : int
+            The group id
+        object_storage : ObjectStorageInterface
+            The object storage interface
+
+        Returns
+        -------
+        int
+            The group id
+        """
+        # Check if file exists
+        await self.image_serv(object_storage).get_image_by_name(request.filename)
+
+        db_group = await self.get_group_by_id(group_id)
+        db_group.name = request.name
+        db_group.filename = request.filename
+
+        await session.flush()
+
+        return db_group.id
+
     async def get_group_by_id(self, group_id: int) -> Group:
         """
         Get a group by its ID.
