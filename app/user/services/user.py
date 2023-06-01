@@ -5,16 +5,12 @@ User service module
 from typing import List
 import uuid
 from app.image.repository.image import ImageRepository
-from app.user.exceptions.user import DuplicateClientTokenException
+from app.user.exceptions.user import DuplicateClientTokenException, UserNotFoundException, DuplicateUsernameException
 from app.user.utils import generate_name, get_password_hash
 from app.user.repository.user import UserRepository
 from app.user.schemas.user import UpdateUserSchema
 from app.image.exceptions.image import FileNotFoundException
 from core.db.models import User
-from core.exceptions import (
-    DuplicateUsernameException,
-    UserNotFoundException,
-)
 from core.db.session import session
 
 

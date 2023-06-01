@@ -3,15 +3,16 @@
 from typing import List, Dict
 from core.db.models import RecipeIngredient, Recipe, RecipeTag, User
 from core.db import Transactional
-from core.exceptions import RecipeNotFoundException, UserNotFoundException
 from core.exceptions.base import UnauthorizedException
 from app.ingredient.repository.ingredient import IngredientRepository
 from app.tag.repository.tag import TagRepository
 from app.tag.schemas import CreateTagSchema
+from app.recipe.exceptions.recipe import RecipeNotFoundException
 from app.recipe.schemas import CreateRecipeSchema, CreateRecipeIngredientSchema
 from app.recipe.repository.recipe import RecipeRepository
 from app.image.repository.image import ImageRepository
 from app.image.exceptions.image import FileNotFoundException
+from app.user.exceptions.user import UserNotFoundException
 from app.user.services.user import UserService
 
 

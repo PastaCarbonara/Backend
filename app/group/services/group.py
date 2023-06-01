@@ -2,18 +2,15 @@
 Class business logic for groups
 """
 
-from typing import List
-from sqlalchemy import select, and_
-from sqlalchemy.orm import joinedload
 from app.group.schemas.group import CreateGroupSchema
 from app.image.interface.image import ObjectStorageInterface
 from app.image.services.image import ImageService
 from app.swipe_session.services.swipe_session import SwipeSessionService
 from app.user.services.user import UserService
 from app.group.repository.group import GroupRepository
-from core.db.models import Group, GroupMember, SwipeSession, User
-from core.db import Transactional, session
-from core.exceptions.group import (
+from core.db.models import Group, GroupMember
+from core.db import Transactional
+from app.group.exceptions.group import (
     AdminLeavingException,
     GroupNotFoundException,
     GroupJoinConflictException,
@@ -33,7 +30,7 @@ class GroupService:
         Checks if a given user is a member of a given group.
     is_admin(group_id: int, user_id: int) -> bool
         Checks if a given user is an admin of a given group.
-    get_group_list() -> List[Group]
+    get_group_list() -> list[Group]
         Gets a list of all groups.
     get_groups_by_user(user_id) -> list[Group]
         Gets a list of groups for a given user.
@@ -113,13 +110,13 @@ class GroupService:
 
         return user.is_admin
 
-    async def get_group_list(self) -> List[Group]:
+    async def get_group_list(self) -> list[Group]:
         """
         Gets a list of all groups.
 
         Returns
         -------
-        List[Group]
+        list[Group]
             A list of all groups.
         """
         groups: list[Group] = await self.repo.get()

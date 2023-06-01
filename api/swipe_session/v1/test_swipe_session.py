@@ -11,7 +11,7 @@ import core.exceptions.websocket as exc
 from core.db.enums import SwipeSessionEnum as sse
 from core.db.enums import SwipeSessionActionEnum as ssae
 from core.exceptions.base import UnauthorizedException
-from core.exceptions.recipe import RecipeNotFoundException
+from app.recipe.exceptions.recipe import RecipeNotFoundException
 
 
 def assert_status_code(data, exception):
