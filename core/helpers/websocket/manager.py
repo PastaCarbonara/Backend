@@ -55,8 +55,6 @@ class WebsocketConnectionManager:
 
 
         while queue[0] != ticket:
-            print("queue")
-            time.sleep(1)
             ...
 
         await func(**kwargs)

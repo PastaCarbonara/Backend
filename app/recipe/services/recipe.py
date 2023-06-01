@@ -145,9 +145,7 @@ class RecipeService:
         await self.set_ingredients_of_recipe(db_recipe, recipe.ingredients)
         await self.set_tags_of_recipe(db_recipe, recipe.tags)
 
-        recipe: Recipe = await self.recipe_repo.create(db_recipe)
-
-        return recipe.id
+        return await self.recipe_repo.create(db_recipe)
 
     async def create_recipe_object(
         self, recipe: CreateRecipeSchema, user_id: int
