@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
+import logging
 import threading
 import time
 
 from core.helpers import bcolors
+from core.helpers.logger import get_logger
 
 
 class BaseTask:
@@ -25,8 +27,10 @@ class BaseTask:
         `exec()`: Placeholder method for defining task behavior.
         `countdown()`: Placeholder property method that returns the time interval between task runs in seconds.
     """
-    
-    def __init__(self, session, capture_exceptions: bool = True, name: str = "Unnamed Task") -> None:
+
+    def __init__(
+        self, session, capture_exceptions: bool = True, name: str = "Unnamed Task"
+    ) -> None:
         """
         Initializes a new BaseTask instance.
 
@@ -46,7 +50,7 @@ class BaseTask:
         Placeholder propery; returns the time interval between task runs in seconds.
         """
         raise Exception(f"Countdown on '{self.name}' is undefined")
-    
+
     def start(self) -> None:
         """
         Starts the task.
@@ -60,7 +64,7 @@ class BaseTask:
         Stops the task.
         """
         self._running = False
-        if hasattr(self, '_timer'):
+        if hasattr(self, "_timer"):
             self._timer.cancel()
 
     def run(self) -> None:
@@ -77,7 +81,9 @@ class BaseTask:
             end = time.time()
             time_spent = end - start
 
-            next_iteration = datetime.today() + timedelta(seconds=round(self.countdown, 2))
+            next_iteration = datetime.today() + timedelta(
+                seconds=round(self.countdown, 2)
+            )
             next_iteration = next_iteration.replace(microsecond=0)
 
             success_message = (
@@ -88,8 +94,9 @@ class BaseTask:
             )
             print(success_message)
 
-        except Exception as e:
-            # Log this
+        except Exception as exc:
+            get_logger("task-failed_" + str(exc))
+            logging.exception(exc)
 
             if self.capture_exceptions:
                 end = time.time()
@@ -99,25 +106,24 @@ class BaseTask:
                     f"{bcolors.FAIL}{bcolors.BOLD}{bcolors.UNDERLINE}TASK FAILED{bcolors.ENDC}"
                     f"{bcolors.ENDC}{bcolors.BOLD}: {self.name}{bcolors.ENDC}"
                     f" - Time spent: {bcolors.BOLD}{str(round(time_spent, 2))}{bcolors.ENDC}s"
-                    f" - Error: {e}"
+                    f" - Error: {exc}"
                 )
                 print(failure_message)
+                logging.info(failure_message)
                 self.stop()
-                return e
-            
-            raise e
-            
+                return exc
 
-        else:
-            if self._running:
-                self._timer = threading.Timer(self.countdown, self.run)
-                self._timer.start()
+            raise exc
+
+        if self._running:
+            self._timer = threading.Timer(self.countdown, self.run)
+            self._timer.start()
 
     def exec(self) -> None:
         """
         Placeholder method for defining task behavior.
         """
-        pass
+        ...
 
 
 class Task(BaseTask):

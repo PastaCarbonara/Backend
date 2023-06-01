@@ -3,6 +3,7 @@ Class business logic for swipe sessions
 """
 
 from datetime import date, datetime
+import logging
 from typing import List
 from sqlalchemy import update
 
@@ -17,6 +18,7 @@ from core.db import Transactional, session
 from core.db.enums import SwipeSessionEnum
 from core.db.models import Recipe, SwipeSession, User
 from core.exceptions.swipe_session import SwipeSessionNotFoundException
+from core.helpers.logger import get_logger
 
 from .action_docs import actions
 
@@ -139,8 +141,8 @@ class SwipeSessionService:
         recipe_ids = await self.repo.get_matches(swipe_session_id)
 
         if len(recipe_ids) > 1:
-            for _ in range(3):  # Error Log this
-                print(f"WARNING! THERE SHOULD ONLY BE 1 MATCH, NOT {recipe_ids}!")
+            get_logger("multiple_matches")
+            logging.warning("There should only be one match, not %e", len(recipe_ids))
 
         return [await self.recipe_serv.get_recipe_by_id(id) for id in recipe_ids]
 
