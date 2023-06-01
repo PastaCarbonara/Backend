@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 
+from app.group.exceptions.group import GroupNotFoundException
 from app.group.schemas.group import GroupSchema, CreateGroupSchema, GroupInfoSchema
 from app.group.services.group import GroupService
 from app.recipe.schemas.recipe import GetFullRecipeResponseSchema
@@ -10,7 +11,7 @@ from app.swipe_session.schemas.swipe_session import (
 )
 from app.swipe_session.services.swipe_session import SwipeSessionService
 
-from core.exceptions import ExceptionResponseSchema, GroupNotFoundException
+from core.exceptions import ExceptionResponseSchema
 from core.fastapi.dependencies.hashid import (
     get_path_group_id,
     get_path_session_id,

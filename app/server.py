@@ -8,7 +8,7 @@ from typing import List
 from fastapi import FastAPI, Depends, Request
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 
 from api import router
 from api.home.home import home_router
@@ -131,11 +131,10 @@ def create_app() -> FastAPI:
 
 app = create_app()
 
-from fastapi.responses import HTMLResponse
 @app.get("/")
 async def get():
-    with open("tests/ws_test.html", "r", encoding="utf-8") as f:
-        html = f.read()
+    with open("tests/ws_test.html", "r", encoding="utf-8") as ws_test:
+        html = ws_test.read()
     return HTMLResponse(html)
 
 # Greg is disappointed

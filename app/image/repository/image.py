@@ -3,19 +3,21 @@ The module contains a repository class that defines database operations for imag
 It implements CRUD functions for images which are stored in the database. 
 """
 
-from typing import List
 from sqlalchemy import select
 from core.db.models import File
 from core.db import session
+from core.repository.base import BaseRepo
 from app.image.exceptions.image import DuplicateFileNameException
 
-
-class ImageRepository:
+class ImageRepository(BaseRepo):
     """
     A class that interacts with the database to perform CRUD operations on the 'files' table.
     """
 
-    async def store_image(self, filename: str) -> File:
+    def __init__(self):
+        super().__init__(File)
+
+    async def store(self, filename: str) -> File:
         """
         Store the image file with the given filename in the database.
 
@@ -38,7 +40,7 @@ class ImageRepository:
         session.add(file)
         return file
 
-    async def get_images(self) -> List[File]:
+    async def get(self) -> list[File]:
         """
         Get a list of all the image files stored in the database.
 
@@ -49,7 +51,7 @@ class ImageRepository:
         result = await session.execute(query)
         return result.scalars().all()
 
-    async def get_image_by_name(self, filename: str) -> File:
+    async def get_by_name(self, filename: str) -> File:
         """
         Get the File object corresponding to the given filename.
 
@@ -63,7 +65,7 @@ class ImageRepository:
         result = await session.execute(query)
         return result.scalars().first()
 
-    async def delete_image(self, file: File) -> None:
+    async def delete(self, model: File) -> None:
         """
         Delete the given image file from the database.
 
@@ -73,5 +75,5 @@ class ImageRepository:
         Returns:
             None
         """
-        await session.delete(file)
+        await session.delete(model)
         await session.flush()

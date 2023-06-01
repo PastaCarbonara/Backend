@@ -35,7 +35,6 @@ async def test_add_filters(
         json={"tags": [3]},
         headers=await normal_user_token_headers,
     )
-    print(res.json())
 
     assert res.status_code == 201
 
@@ -45,7 +44,6 @@ async def test_me_filters(
     client: AsyncClient,
 ):
     res = await client.get("/api/v1/me/filters", headers=await normal_user_token_headers)
-    print(res.json())
     assert len(res.json()) == 1
     assert res.status_code == 200
 
