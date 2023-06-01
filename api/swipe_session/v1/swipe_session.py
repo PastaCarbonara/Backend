@@ -12,7 +12,7 @@ from app.swipe_session.services.swipe_session_websocket import (
     SwipeSessionWebsocketService,
 )
 
-from core.exceptions.responses import ExceptionResponseSchema
+from core.exceptions import ExceptionResponseSchema
 from core.fastapi.dependencies.permission import (
     IsAdmin,
     PermissionDependency,

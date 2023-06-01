@@ -9,9 +9,11 @@ from app.group.services.group import GroupService
 from app.swipe_session.services.swipe_session import SwipeSessionService
 
 from app.user.services import UserService
-from core.exceptions.base import (
+from core.exceptions import (
     CustomException,
     UnauthorizedException,
+    MissingUserIDException,
+    MissingGroupIDException,
 )
 from core.helpers.hashid import decode_single
     

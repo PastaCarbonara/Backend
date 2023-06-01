@@ -1,20 +1,24 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, UploadFile, status
 from fastapi.responses import JSONResponse
 from app.group.schemas.group import GroupSchema
 from app.group.services.group import GroupService
 from app.filter.services.filter import FilterService
 from app.filter.schemas.filter import FilterSchema, UserCreateSchema
+from app.image.services.image import ImageService
 from app.user.schemas.user import UpdateMeSchema, UpdateUserSchema
-from core.exceptions.responses import ExceptionResponseSchema
+from core.exceptions import ExceptionResponseSchema
 from core.fastapi.dependencies.hashid import get_path_user_id
+from core.fastapi.dependencies.object_storage import get_object_storage
 from core.fastapi.dependencies.permission import IsAuthenticated, IsUserOwner
+from core.fastapi.dependencies.user import get_current_user
 from core.fastapi_versioning.versioning import version
 
 from app.user.schemas import (
     UserSchema,
     CreateUserRequestSchema,
+    CreateUserResponseSchema,
 )
 from app.user.services import UserService
 from core.fastapi.dependencies import (

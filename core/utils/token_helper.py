@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import jwt
 
 from core.config import config
-from core.exceptions.token import DecodeTokenException, ExpiredTokenException
+from core.exceptions import DecodeTokenException, ExpiredTokenException
 from core.utils.token_checker import token_checker
 
 

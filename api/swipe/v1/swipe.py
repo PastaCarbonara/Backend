@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, Request, WebSocket
 from app.swipe.schemas.swipe import CreateSwipeSchema, SwipeSchema
 from app.swipe.services.swipe import SwipeService
 
-from core.exceptions.responses import ExceptionResponseSchema
+from core.exceptions import ExceptionResponseSchema
 from core.fastapi.dependencies import (
     AllowAll,
     IsAdmin,

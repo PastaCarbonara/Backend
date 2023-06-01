@@ -7,7 +7,7 @@ from app.user.schemas.user import UpdateMeSchema, UpdateUserSchema, UserSchema
 from app.filter.schemas.filter import FilterSchema, UserCreateSchema
 from app.filter.services.filter import FilterService
 from app.user.services.user import UserService
-from core.exceptions.responses import ExceptionResponseSchema
+from core.exceptions import ExceptionResponseSchema
 from core.fastapi.dependencies.permission import IsAuthenticated, PermissionDependency
 from core.fastapi.dependencies.user import get_current_user
 from core.fastapi_versioning.versioning import version

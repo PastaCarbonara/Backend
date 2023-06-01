@@ -1,4 +1,4 @@
-from core.exceptions.base import CustomException
+from core.exceptions import CustomException
 
 
 class ConnectionCode:

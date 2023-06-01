@@ -1,6 +1,6 @@
 from typing import List
 from fastapi import APIRouter, Depends, UploadFile
-from core.exceptions.responses import ExceptionResponseSchema
+from core.exceptions import ExceptionResponseSchema
 from core.fastapi.dependencies.permission import IsAuthenticated
 from core.fastapi_versioning import version
 from core.fastapi.dependencies.object_storage import get_object_storage

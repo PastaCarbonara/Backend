@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, Response
-from core.exceptions.responses import ExceptionResponseSchema
-from core.exceptions.token import DecodeTokenException
+from core.exceptions import ExceptionResponseSchema, DecodeTokenException
 from core.fastapi.dependencies.permission import AllowAll, PermissionDependency
 from core.fastapi_versioning import version
 
