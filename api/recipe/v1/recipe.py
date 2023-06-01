@@ -19,7 +19,6 @@ from app.recipe.schemas import (
 from app.recipe.services import RecipeService
 
 
-
 recipe_v1_router = APIRouter()
 
 
@@ -27,11 +26,13 @@ recipe_v1_router = APIRouter()
     "",
     responses={"400": {"model": ExceptionResponseSchema}},
     response_model=GetFullRecipePaginatedResponseSchema,
+    dependencies=[Depends(PermissionDependency([[AllowAll]]))],
 )
 @version(1)
-async def get_recipe_list(limit: int = 10, offset: int = 0):
-    return await RecipeService().get_paginated_recipe_list(limit, offset)
-
+async def get_recipe_list(
+    limit: int = 10, offset: int = 0, user=Depends(get_current_user)
+):
+    return await RecipeService().get_paginated_recipe_list(limit, offset, user)
 
 
 @recipe_v1_router.get(
@@ -43,6 +44,7 @@ async def get_recipe_list(limit: int = 10, offset: int = 0):
 async def get_recipe_by_id(recipe_id: int):
     return await RecipeService().get_recipe_by_id(recipe_id)
 
+
 @recipe_v1_router.delete(
     "/{recipe_id}",
     responses={"400": {"model": ExceptionResponseSchema}},
@@ -50,7 +52,7 @@ async def get_recipe_by_id(recipe_id: int):
     dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
-async def delete_recipe(recipe_id: int, user = Depends(get_current_user)):
+async def delete_recipe(recipe_id: int, user=Depends(get_current_user)):
     await RecipeService().delete_recipe(recipe_id, user)
     return {"message": "Recipe deleted successfully."}
 
@@ -91,6 +93,3 @@ async def create_recipe(request: CreateRecipeSchema, user=Depends(get_current_us
 # async def update_recipe(recipe_id: int, request: UserCreateRecipeRequestSchema):
 #     await RecipeService().update_recipe(recipe_id, request)
 #     return await RecipeService().get_recipe_by_id(recipe_id)
-
-
-
