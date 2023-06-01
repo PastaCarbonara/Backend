@@ -58,7 +58,7 @@ class RecipeService:
         List[Recipe]
             A list of recipes.
         """
-        recipes, total_count = await self.recipe_repo.get(limit, offset)
+        recipes, total_count = await self.recipe_repo.get_recipes(limit, offset)
         return {"total_count": total_count, "recipes": recipes}
 
     async def get_recipe_by_id(self, recipe_id: int) -> Recipe:
@@ -79,7 +79,7 @@ class RecipeService:
         RecipeNotFoundException
             If the recipe with the given id does not exist.
         """
-        recipe = await self.recipe_repo.get_by_id(recipe_id)
+        recipe = await self.recipe_repo.get_recipe_by_id(recipe_id)
         if not recipe:
             raise RecipeNotFoundException()
 
@@ -98,7 +98,7 @@ class RecipeService:
         like : bool
             True if the user likes the recipe, False if the user dislikes the recipe.
         """
-        recipe = await self.recipe_repo.get_by_id(recipe_id)
+        recipe = await self.recipe_repo.get_recipe_by_id(recipe_id)
         if not recipe:
             raise RecipeNotFoundException
 
@@ -132,7 +132,7 @@ class RecipeService:
             If the creator does not exist.
         """
 
-        image = await self.image_repo.get_by_name(recipe.filename)
+        image = await self.image_repo.get_image_by_name(recipe.filename)
         if not image:
             raise FileNotFoundException()
         await self.user_serv.get_by_id(user_id)
@@ -189,11 +189,11 @@ class RecipeService:
         """
         recipe_ingredients = []
         for ingredient in ingredients:
-            ingredient_object = await self.ingredient_repo.get_by_name(
+            ingredient_object = await self.ingredient_repo.get_ingredient_by_name(
                 ingredient.name
             )
             if not ingredient_object:
-                ingredient_object = await self.ingredient_repo.create(
+                ingredient_object = await self.ingredient_repo.create_ingredient(
                     ingredient.name
                 )
             recipe_ingredients.append(
@@ -220,7 +220,7 @@ class RecipeService:
         """
         recipe_tags = []
         for tag in tags:
-            tag_object = await self.tag_repo.get_by_name(tag.name)
+            tag_object = await self.tag_repo.get_tag_by_name(tag.name)
             if not tag_object:
                 tag_object = await self.tag_repo.create_tag(
                     tag.name, tag.tag_type
@@ -245,10 +245,10 @@ class RecipeService:
         Returns:
             str: A string indicating the successful deletion of the recipe.
         """
-        recipe = await self.recipe_repo.get_by_id(recipe_id)
+        recipe = await self.recipe_repo.get_recipe_by_id(recipe_id)
         if not recipe:
             raise RecipeNotFoundException()
         if recipe.creator_id != user.id and not user.is_admin:
             raise UnauthorizedException()
-        await self.recipe_repo.delete(recipe)
+        await self.recipe_repo.delete_recipe(recipe)
         return "Ok"

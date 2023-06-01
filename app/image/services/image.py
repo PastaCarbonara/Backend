@@ -82,7 +82,7 @@ class ImageService:
         Raises:
             FileNotFoundException: If no image is found with the provided filename.
         """
-        image = await self.image_repo.get_by_name(filename)
+        image = await self.image_repo.get_image_by_name(filename)
 
         if not image:
             raise FileNotFoundException
@@ -98,7 +98,7 @@ class ImageService:
         List[File]
             A list of image files.
         """
-        images = await self.image_repo.get()
+        images = await self.image_repo.get_images()
         return images
 
     @Transactional()
@@ -164,11 +164,11 @@ class ImageService:
             If the image could not be deleted from the object storage.
         """
 
-        image = await self.image_repo.get_by_name(filename)
+        image = await self.image_repo.get_image_by_name(filename)
         if not image:
             raise FileNotFoundException()
         try:
-            await self.image_repo.delete(image)
+            await self.image_repo.delete_image(image)
         except IntegrityError as exc:
             raise FileDependecyException() from exc
         try:

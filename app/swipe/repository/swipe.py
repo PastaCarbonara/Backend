@@ -9,9 +9,7 @@ class SwipeRepository(BaseRepo):
     def __init__(self):
         super().__init__(Swipe)
 
-    async def get_swipes_by_session_id_and_recipe_id_and_like(
-        self, swipe_session_id: int, recipe_id: int, like: bool
-    ) -> list[Swipe]:
+    async def get_swipes_by_session_id_and_recipe_id_and_like(swipe_session_id: int, recipe_id: int, like: bool) -> list[Swipe]:
         query = select(Swipe).where(
             and_(
                 Swipe.recipe_id == recipe_id,
@@ -21,8 +19,8 @@ class SwipeRepository(BaseRepo):
         )
         result = await session.execute(query)
         return result.scalars().all()
-
-    async def get_by_creds(self, recipe_id: int, swipe_session_id: int, user_id: int):
+    
+    async def get_by_creds(recipe_id: int, swipe_session_id: int, user_id: int):
         query = select(Swipe).where(
             and_(
                 Swipe.recipe_id == recipe_id,

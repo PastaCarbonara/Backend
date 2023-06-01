@@ -27,7 +27,7 @@ class GroupRepository(BaseRepo):
         result = await session.execute(query)
         return result.unique().scalars().all()
     
-    async def get_by_user_id(self, user_id) -> list[Group]:
+    async def get_by_user(self, user_id) -> list[Group]:
         query = (
             select(Group)
             .join(Group.users)

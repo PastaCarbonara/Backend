@@ -95,7 +95,7 @@ async def get_user_groups(user_id: int = Depends(get_path_user_id)):
 )
 @version(1)
 async def get_user_filters(user_id: int = Depends(get_path_user_id)):
-    return await FilterService().get_by_user_id(user_id)
+    return await FilterService().get_all_filters_user(user_id)
 
 
 @user_v1_router.post(
@@ -105,7 +105,7 @@ async def get_user_filters(user_id: int = Depends(get_path_user_id)):
 async def create_user_filter(
     user_filter: UserCreateSchema, user_id: int = Depends(get_path_user_id)
 ):
-    await FilterService().store_all(user_id, user_filter.tags)
+    await FilterService().store_filters(user_id, user_filter.tags)
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
         content={"message": "Filter created successfully."},
