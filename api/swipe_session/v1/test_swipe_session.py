@@ -714,7 +714,6 @@ async def test_swipe_session_4(
 
         data_1 = ws_admin.receive_json()
         data_2 = ws_normal_user.receive_json()
-        print(data_1)
 
         assert data_1.get("action") == ssae.SESSION_STATUS_UPDATE
         assert data_1.get("payload").get("status") == sse.COMPLETED

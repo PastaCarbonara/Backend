@@ -110,7 +110,6 @@ class SwipeSessionService:
             return now
 
         if session_date < now:
-            print(session_date, now, session_date < now)
             raise DateTooOldException
 
         return session_date

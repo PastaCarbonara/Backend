@@ -136,9 +136,7 @@ class RecipeService:
         if not image:
             raise FileNotFoundException()
         await self.user_serv.get_by_id(user_id)
-        print(recipe.__dict__)
         db_recipe = await self.create_recipe_object(recipe, user_id)
-        print(db_recipe.__dict__)
         await self.set_ingredients_of_recipe(db_recipe, recipe.ingredients)
         await self.set_tags_of_recipe(db_recipe, recipe.tags)
 
