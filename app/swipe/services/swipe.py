@@ -2,10 +2,11 @@
 Module containing the SwipeService class used for managing swipes.
 """
 
+from sqlalchemy import and_, select
 from app.swipe.schemas.swipe import CreateSwipeSchema
+from core.db import session
 from core.db.models import Swipe
 from core.db.transactional import Transactional
-from app.swipe.repository.swipe import SwipeRepository
 
 
 class SwipeService:
@@ -36,9 +37,6 @@ class SwipeService:
         ) -> list[Swipe]:
             Retrieve swipes by SessionID, RecipeID and Like.
     """
-    def __init__(self) -> None:
-        self.repo = SwipeRepository()
-
     @Transactional()
     async def create_swipe(self, request: CreateSwipeSchema) -> int:
         """Create and store swipe in database.
@@ -49,7 +47,12 @@ class SwipeService:
         Returns:
             int: ID of the created swipe.
         """
-        return self.repo.create(Swipe(**request.dict()))
+        db_swipe = Swipe(**request.dict())
+
+        session.add(db_swipe)
+        await session.flush()
+
+        return db_swipe.id
 
     async def get_swipe_by_id(self, swipe_id: int) -> Swipe:
         """Retrieve swipe by ID.
@@ -60,7 +63,9 @@ class SwipeService:
         Returns:
             Swipe: Swipe instance that matches the ID.
         """
-        return self.repo.get_by_id(swipe_id)
+        query = select(Swipe).where(Swipe.id == swipe_id)
+        result = await session.execute(query)
+        return result.scalars().first()
 
     async def get_swipe_by_creds(
         self, swipe_session_id: int, user_id: int, recipe_id: int
@@ -76,7 +81,15 @@ class SwipeService:
             Swipe: Swipe instance that matches the SessionID, UserID and RecipeID.
         """
 
-        self.repo.get_by_creds(recipe_id, swipe_session_id, user_id)
+        query = select(Swipe).where(
+            and_(
+                Swipe.recipe_id == recipe_id,
+                Swipe.swipe_session_id == swipe_session_id,
+                Swipe.user_id == user_id,
+            )
+        )
+        result = await session.execute(query)
+        return result.scalars().first()
 
     async def get_swipes_by_session_id_and_recipe_id_and_like(
         self, swipe_session_id: int, recipe_id: int, like: bool
@@ -91,5 +104,12 @@ class SwipeService:
         Returns:
             list[Swipe]: List of Swipe instances that matches the SessionID, RecipeID and Like.
         """
-        self.repo.get_swipes_by_session_id_and_recipe_id_and_like(swipe_session_id, recipe_id, like)
-        
+        query = select(Swipe).where(
+            and_(
+                Swipe.recipe_id == recipe_id,
+                Swipe.swipe_session_id == swipe_session_id,
+                Swipe.like == like,
+            )
+        )
+        result = await session.execute(query)
+        return result.scalars().all()

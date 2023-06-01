@@ -30,6 +30,7 @@ class Task(BaseTask):
             and_(File.group == None, File.recipe == None, File.user == None)
         )
         files_not_referenced = self.session.execute(query).scalars().all()
+        print(len(files_not_referenced))
         for file in files_not_referenced:
             # delete from blob storage
             asyncio.run(self.azure_blob_interface.delete_image(file.filename))

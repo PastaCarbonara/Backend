@@ -3,13 +3,15 @@ Class business logic for groups
 """
 
 from typing import List
+from sqlalchemy import select, and_
+from sqlalchemy.orm import joinedload
 from app.group.schemas.group import CreateGroupSchema
 from app.image.interface.image import ObjectStorageInterface
 from app.image.services.image import ImageService
 from app.swipe_session.services.swipe_session import SwipeSessionService
 from app.user.services.user import UserService
 from app.group.repository.group import GroupRepository
-from core.db.models import Group, GroupMember
+from core.db.models import Group, GroupMember, SwipeSession, User
 from core.db import Transactional, session
 from core.exceptions.group import (
     AdminLeavingException,
@@ -53,18 +55,6 @@ class GroupService:
         self.image_serv = ImageService
         self.swipe_session_serv = SwipeSessionService()
 
-    async def attach_matches(self, group: Group):
-        for swipe_session in group.swipe_sessions:
-            swipe_session.matches = await self.swipe_session_serv.get_matches(
-                swipe_session.id
-            )
-        return group
-
-    async def attach_matches_all(self, groups: list[Group]):
-        for group in groups:
-            group = await self.attach_matches(group)
-        return groups
-
     async def is_member(self, group_id: int, user_id: int) -> bool:
         """
         Checks if a given user is a member of a given group.
@@ -81,8 +71,12 @@ class GroupService:
         bool
             True if the user is a member of the group, False otherwise.
         """
-        user = await self.repo.get_member_by_ids(group_id, user_id)
-
+        result = await session.execute(
+            select(GroupMember).where(
+                and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id)
+            )
+        )
+        user = result.scalars().first()
         if not user:
             return False
 
@@ -104,8 +98,12 @@ class GroupService:
         bool
             True if the user is an admin of the group, False otherwise.
         """
-        user = await self.repo.get_member_by_ids(group_id, user_id)
-
+        result = await session.execute(
+            select(GroupMember).where(
+                and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id)
+            )
+        )
+        user = result.scalars().first()
         if not user:
             return False
 
@@ -120,8 +118,22 @@ class GroupService:
         List[Group]
             A list of all groups.
         """
-        groups: list[Group] = await self.repo.get()
-        groups = await self.attach_matches_all(groups)
+        query = select(Group).options(
+            joinedload(Group.users)
+            .joinedload(GroupMember.user)
+            .joinedload(User.account_auth),
+            joinedload(Group.users).joinedload(GroupMember.user).joinedload(User.image),
+            joinedload(Group.swipe_sessions).joinedload(SwipeSession.swipes),
+            joinedload(Group.image),
+        )
+        result = await session.execute(query)
+        groups: list[Group] = result.unique().scalars().all()
+
+        for group in groups:
+            for swipe_session in group.swipe_sessions:
+                swipe_session.matches = await self.swipe_session_serv.get_matches(
+                    swipe_session.id
+                )
 
         return groups
 
@@ -135,8 +147,29 @@ class GroupService:
         Returns:
             list[Group]: A list of Group objects that the user is a member of.
         """
-        groups = await self.repo.get_by_user(user_id)
-        groups = await self.attach_matches_all(groups)
+        query = (
+            select(Group)
+            .join(Group.users)
+            .where(GroupMember.user_id == user_id)
+            .options(
+                joinedload(Group.users)
+                .joinedload(GroupMember.user)
+                .joinedload(User.account_auth),
+                joinedload(Group.users)
+                .joinedload(GroupMember.user)
+                .joinedload(User.image),
+                joinedload(Group.swipe_sessions).joinedload(SwipeSession.swipes),
+                joinedload(Group.image),
+            )
+        )
+        result = await session.execute(query)
+        groups: list[Group] = result.unique().scalars().all()
+
+        for group in groups:
+            for swipe_session in group.swipe_sessions:
+                swipe_session.matches = await self.swipe_session_serv.get_matches(
+                    swipe_session.id
+                )
 
         return groups
 
@@ -191,8 +224,27 @@ class GroupService:
         Returns:
             Group: The Group object with the specified ID.
         """
-        group = await self.repo.get_by_id(group_id)
-        group = await self.attach_matches(group)
+        query = (
+            select(Group)
+            .where(Group.id == group_id)
+            .options(
+                joinedload(Group.users)
+                .joinedload(GroupMember.user)
+                .joinedload(User.account_auth),
+                joinedload(Group.users)
+                .joinedload(GroupMember.user)
+                .joinedload(User.image),
+                joinedload(Group.swipe_sessions).joinedload(SwipeSession.swipes),
+                joinedload(Group.image),
+            )
+        )
+        result = await session.execute(query)
+        group: Group = result.unique().scalars().first()
+
+        for swipe_session in group.swipe_sessions:
+            swipe_session.matches = await self.swipe_session_serv.get_matches(
+                swipe_session.id
+            )
 
         return group
 

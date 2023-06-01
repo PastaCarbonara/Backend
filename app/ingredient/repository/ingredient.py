@@ -6,10 +6,9 @@ from typing import List
 from sqlalchemy import select
 from core.db import session
 from core.db.models import Ingredient
-from core.repository.base import BaseRepo
 
 
-class IngredientRepository(BaseRepo):
+class IngredientRepository:
     """Repository for ingredient related database operations"""
 
     async def create_ingredient(self, name: str) -> Ingredient:
