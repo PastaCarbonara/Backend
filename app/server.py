@@ -3,7 +3,8 @@ Initialize app
 """
 
 
-from typing import List
+from datetime import datetime
+import logging
 
 from fastapi import FastAPI, Depends, Request
 from fastapi.middleware import Middleware
@@ -39,7 +40,7 @@ def init_listeners(app_: FastAPI) -> None:
     """
     Initialize app listeners
     """
-    # Exception handler
+
     @app_.exception_handler(CustomException)
     async def custom_exception_handler(request: Request, exc: CustomException):
         del request
@@ -47,6 +48,35 @@ def init_listeners(app_: FastAPI) -> None:
         return JSONResponse(
             status_code=exc.code,
             content={"error_code": exc.error_code, "message": exc.message},
+        )
+
+    @app_.exception_handler(Exception)
+    async def unicorn_exception_handler(request: Request, exc: Exception):
+        log_name = "_".join(
+            [
+                datetime.now().strftime("%m%d%Y-%H%M%S"),
+                (str(exc).lower() or "untitled"),
+            ]
+        ).replace(" ", "_")
+
+        logging.basicConfig(
+            filename=f"logs/{log_name}.log",
+            format="%(levelname)s\t%(asctime)s: %(message)s",
+            encoding="utf-8",
+            level=logging.INFO,
+            force=True,
+        )
+
+        logging.info(request.scope.get("raw_path"))
+        logging.info(request.__dict__)
+        logging.exception(exc)
+
+        return JSONResponse(
+            status_code=500,
+            content={
+                "Exception": f"{exc.__class__.__name__}{exc.args}",
+                "message": f"See internal log '{log_name}.log' for more info",
+            },
         )
 
 
@@ -66,7 +96,7 @@ def on_auth_error(exc: Exception):
     )
 
 
-def make_middleware() -> List[Middleware]:
+def make_middleware() -> list[Middleware]:
     """
     Initialize FastAPI middleware
     """
@@ -131,10 +161,12 @@ def create_app() -> FastAPI:
 
 app = create_app()
 
+
 @app.get("/")
 async def get():
     with open("tests/ws_test.html", "r", encoding="utf-8") as ws_test:
         html = ws_test.read()
     return HTMLResponse(html)
+
 
 # Greg is disappointed
