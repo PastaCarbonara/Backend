@@ -47,7 +47,7 @@ class TagService:
         tags : List[Tag]
             A list of all tags.
         """
-        return await self.tag_repo.get_tags()
+        return await self.tag_repo.get()
 
     @Transactional()
     async def create_tag(self, request: CreateTagSchema) -> Tag:
@@ -69,11 +69,11 @@ class TagService:
         TagAlreadyExistsException
             If a tag with the given name already exists.
         """
-        tag = await self.tag_repo.get_tag_by_name(request.name)
+        tag = await self.tag_repo.get_by_name(request.name)
         if tag:
             raise TagAlreadyExistsException
 
-        return await self.tag_repo.create_tag(request.name, request.tag_type)
+        return await self.tag_repo.create(request.name, request.tag_type)
 
     async def get_tag_by_id(self, tag_id: int) -> Tag:
         """
@@ -95,7 +95,7 @@ class TagService:
             If no tag with the given ID exists.
         """
 
-        tag = await self.tag_repo.get_tag_by_id(tag_id)
+        tag = await self.tag_repo.get_by_id(tag_id)
         if not tag:
             raise TagNotFoundException()
         return tag
@@ -120,7 +120,7 @@ class TagService:
             If no tag with the given name exists.
         """
 
-        tag = await self.tag_repo.get_tag_by_name(name)
+        tag = await self.tag_repo.get_by_name(name)
         if not tag:
             raise TagNotFoundException()
         return tag
@@ -142,11 +142,11 @@ class TagService:
         tag : Tag
             The updated tag.
         """
-        tag = await self.tag_repo.get_tag_by_id(tag_id)
+        tag = await self.tag_repo.get_by_id(tag_id)
         if not tag:
             raise TagNotFoundException
         try:
-            tag = await self.tag_repo.update_tag(tag, request.name, request.tag_type)
+            tag = await self.tag_repo.update(tag, request.name, request.tag_type)
         except IntegrityError as exc:
             raise TagAlreadyExistsException from exc
         return tag
@@ -166,10 +166,10 @@ class TagService:
         TagNotFoundException
             If no tag with the given ID exists.
         """
-        tag = await self.tag_repo.get_tag_by_id(tag_id)
+        tag = await self.tag_repo.get_by_id(tag_id)
         if not tag:
             raise TagNotFoundException
         try:
-            await self.tag_repo.delete_tag(tag)
+            await self.tag_repo.delete(tag)
         except AssertionError as exc:
             raise TagDependecyException from exc

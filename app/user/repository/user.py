@@ -20,7 +20,7 @@ class UserRepository(BaseRepo):
         super().__init__(User)
 
     @Transactional()
-    async def create_user(self, display_name: str, ctoken: uuid.UUID) -> None:
+    async def create(self, display_name: str, ctoken: uuid.UUID) -> None:
         """Create a new user.
 
         Parameters

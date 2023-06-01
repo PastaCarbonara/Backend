@@ -83,12 +83,8 @@ class GroupService:
         bool
             True if the user is a member of the group, False otherwise.
         """
-        result = await session.execute(
-            select(GroupMember).where(
-                and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id)
-            )
-        )
-        user = result.scalars().first()
+        user = await self.repo.get_member(user_id, group_id)
+
         if not user:
             return False
 
@@ -110,12 +106,8 @@ class GroupService:
         bool
             True if the user is an admin of the group, False otherwise.
         """
-        result = await session.execute(
-            select(GroupMember).where(
-                and_(GroupMember.user_id == user_id, GroupMember.group_id == group_id)
-            )
-        )
-        user = result.scalars().first()
+        user = await self.repo.get_member(user_id, group_id)
+
         if not user:
             return False
 
@@ -130,17 +122,7 @@ class GroupService:
         List[Group]
             A list of all groups.
         """
-        query = select(Group).options(
-            joinedload(Group.users)
-            .joinedload(GroupMember.user)
-            .joinedload(User.account_auth),
-            joinedload(Group.users).joinedload(GroupMember.user).joinedload(User.image),
-            joinedload(Group.swipe_sessions).joinedload(SwipeSession.swipes),
-            joinedload(Group.image),
-        )
-        result = await session.execute(query)
-        groups: list[Group] = result.unique().scalars().all()
-
+        groups: list[Group] = await self.repo.get()
         groups = await self.attach_matches_all(groups)
 
         return groups
@@ -155,24 +137,7 @@ class GroupService:
         Returns:
             list[Group]: A list of Group objects that the user is a member of.
         """
-        query = (
-            select(Group)
-            .join(Group.users)
-            .where(GroupMember.user_id == user_id)
-            .options(
-                joinedload(Group.users)
-                .joinedload(GroupMember.user)
-                .joinedload(User.account_auth),
-                joinedload(Group.users)
-                .joinedload(GroupMember.user)
-                .joinedload(User.image),
-                joinedload(Group.swipe_sessions).joinedload(SwipeSession.swipes),
-                joinedload(Group.image),
-            )
-        )
-        result = await session.execute(query)
-        groups: list[Group] = result.unique().scalars().all()
-
+        groups: list[Group] = await self.repo.get_by_user_id(user_id)
         groups = await self.attach_matches_all(groups)
 
         return groups
@@ -213,10 +178,7 @@ class GroupService:
             )
         )
 
-        session.add(db_group)
-        await session.flush()
-
-        return db_group.id
+        return await self.repo.create(db_group)
 
     async def get_group_by_id(self, group_id: int) -> Group:
         """
@@ -228,23 +190,7 @@ class GroupService:
         Returns:
             Group: The Group object with the specified ID.
         """
-        query = (
-            select(Group)
-            .where(Group.id == group_id)
-            .options(
-                joinedload(Group.users)
-                .joinedload(GroupMember.user)
-                .joinedload(User.account_auth),
-                joinedload(Group.users)
-                .joinedload(GroupMember.user)
-                .joinedload(User.image),
-                joinedload(Group.swipe_sessions).joinedload(SwipeSession.swipes),
-                joinedload(Group.image),
-            )
-        )
-        result = await session.execute(query)
-        group: Group = result.unique().scalars().first()
-
+        group: Group = await self.repo.get_by_id(group_id)
         group = await self.attach_matches(group)
 
         return group

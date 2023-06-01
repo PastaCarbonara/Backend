@@ -58,7 +58,7 @@ class UserService:
         """
         user_dict = updated_user.dict()
 
-        if updated_user.filename and not await self.image_repo.get_image_by_name(
+        if updated_user.filename and not await self.image_repo.get_by_name(
             updated_user.filename
         ):
             raise FileNotFoundException
@@ -176,7 +176,7 @@ class UserService:
             raise DuplicateUsernameException()
         hashed_pwd = get_password_hash(password)
 
-        user_id = await self.repo.create_user(username, uuid.uuid4())
+        user_id = await self.repo.create(username, uuid.uuid4())
         await self.repo.create_account_auth(user_id, username, hashed_pwd)
         return user_id
 
@@ -210,7 +210,7 @@ class UserService:
         if await self.get_by_client_token(ctoken):
             raise DuplicateClientTokenException
 
-        return await self.repo.create_user(display_name, ctoken)
+        return await self.repo.create(display_name, ctoken)
 
     async def set_admin(self, user_id: int, is_admin: bool):
         """Set admin status for a user.
