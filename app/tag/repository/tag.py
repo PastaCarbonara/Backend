@@ -6,10 +6,14 @@ from typing import List
 from sqlalchemy import select
 from core.db import session
 from core.db.models import Tag
+from core.repository.base import BaseRepo
 
 
-class TagRepository:
+class TagRepository(BaseRepo):
     """Repository for tag related database operations"""
+
+    def __init__(self):
+        super().__init__(Tag)
 
     async def create_tag(self, name: str, tag_type: str) -> Tag:
         """

@@ -7,13 +7,16 @@ from typing import List
 from sqlalchemy import select
 from core.db.models import File
 from core.db import session
+from core.repository.base import BaseRepo
 from app.image.exceptions.image import DuplicateFileNameException
 
-
-class ImageRepository:
+class ImageRepository(BaseRepo):
     """
     A class that interacts with the database to perform CRUD operations on the 'files' table.
     """
+
+    def __init__(self):
+        super().__init__(File)
 
     async def store_image(self, filename: str) -> File:
         """

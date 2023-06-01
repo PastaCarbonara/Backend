@@ -13,9 +13,10 @@ from core.db.models import (
     RecipeJudgement,
     User,
 )
+from core.repository.base import BaseRepo
 
 
-class RecipeRepository:
+class RecipeRepository(BaseRepo):
     """Recipe repository.
 
     Attributes
@@ -36,6 +37,9 @@ class RecipeRepository:
     get_recipe_jugment(recipe_id, user_id)
         Get a recipe judgement by recipe id and user id.
     """
+
+    def __init__(self):
+        super().__init__(Recipe)
 
     async def get_recipes(self, limit: int, offset: int) -> List[Recipe]:
         """Get a list of recipes.

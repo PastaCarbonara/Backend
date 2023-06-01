@@ -3,10 +3,14 @@
 from sqlalchemy import select, delete
 from core.db import session
 from core.db.models import UserTag, Tag
+from core.repository.base import BaseRepo
 
 
-class FilterRepository:
+class FilterRepository(BaseRepo):
     """Responsible for interacting with the database to perform CRUD operations on the user tags."""
+
+    def __init__(self):
+        super().__init__(UserTag)
 
     async def store_filter(self, user_id: int, user_filter: int):
         """Store a filter for a user."""
