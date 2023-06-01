@@ -25,7 +25,7 @@ image_v1_router = APIRouter()
 )
 @version(1)
 async def get_images(object_storage=Depends(get_object_storage)):
-    return await ImageService(object_storage).get_images()
+    return await ImageService(object_storage).get()
 
 
 @image_v1_router.get(
@@ -36,7 +36,7 @@ async def get_images(object_storage=Depends(get_object_storage)):
 )
 @version(1)
 async def get_image(filename: str, object_storage=Depends(get_object_storage)):
-    return await ImageService(object_storage).get_image_by_name(filename)
+    return await ImageService(object_storage).get_by_name(filename)
 
 
 @image_v1_router.post(
@@ -59,4 +59,4 @@ async def create_image(
 )
 @version(1)
 async def delete_image(filename: str, object_storage=Depends(get_object_storage)):
-    return await ImageService(object_storage).delete_image(filename)
+    return await ImageService(object_storage).delete(filename)

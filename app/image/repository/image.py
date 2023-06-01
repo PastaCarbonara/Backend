@@ -3,7 +3,7 @@ The module contains a repository class that defines database operations for imag
 It implements CRUD functions for images which are stored in the database. 
 """
 
-from typing import List, Type
+from typing import List
 from sqlalchemy import select
 from core.db.models import File
 from core.db import session
@@ -15,9 +15,6 @@ class ImageRepository(BaseRepo):
     """
     A class that interacts with the database to perform CRUD operations on the 'files' table.
     """
-
-    def __init__(self):
-        super().__init__(File)
 
     async def store_image(self, filename: str) -> File:
         """

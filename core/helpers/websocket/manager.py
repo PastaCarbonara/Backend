@@ -2,7 +2,7 @@
 Connection manager for websockets
 """
 
-import json, time
+import json
 import random
 from fastapi import WebSocket, status
 from pydantic import ValidationError
@@ -55,13 +55,9 @@ class WebsocketConnectionManager:
 
 
         while queue[0] != ticket:
-            print(f"queueueueu! {queue}")
-            time.sleep(1)
             ...
 
-        print(f"running {func.__name__}, queue: {queue}, ticket: {ticket}")
         await func(**kwargs)
-        print(f"done with {func.__name__}")
 
         queue.pop(0)
 

@@ -11,7 +11,7 @@ import core.exceptions.websocket as exc
 from core.db.enums import SwipeSessionEnum as sse
 from core.db.enums import SwipeSessionActionEnum as ssae
 from core.exceptions.base import UnauthorizedException
-from app.recipe.exceptions.recipe import RecipeNotFoundException
+from core.exceptions.recipe import RecipeNotFoundException
 
 
 def assert_status_code(data, exception):
@@ -150,7 +150,6 @@ async def test_websocket_invalid_id(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
 ):
-    print("test_websocket_invalid_id")
     headers = await admin_token_headers
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
@@ -188,7 +187,6 @@ async def test_not_in_group(
     admin_token_headers: Dict[str, str],
     normal_user_token_headers: Dict[str, str],
 ):
-    print("test_not_in_group")
     headers = await admin_token_headers
     normal_headers = await normal_user_token_headers
 
@@ -218,7 +216,6 @@ async def test_inactive_session(
     admin_token_headers: Dict[str, str],
     normal_user_token_headers: Dict[str, str],
 ):
-    print("test_inactive_session")
     headers = await admin_token_headers
     normal_headers = await normal_user_token_headers
 
@@ -247,7 +244,6 @@ async def test_invalid_json(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
 ):
-    print("test_invalid_json")
     headers = await admin_token_headers
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
@@ -282,7 +278,6 @@ async def test_invalid_action(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
 ):
-    print("test_invalid_action")
     headers = await admin_token_headers
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
@@ -317,7 +312,6 @@ async def test_invalid_status_update(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
 ):
-    print("test_invalid_status_update")
     headers = await admin_token_headers
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
@@ -352,7 +346,6 @@ async def test_invalid_recipe(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
 ):
-    print("test_invalid_recipe")
     headers = await admin_token_headers
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
@@ -388,7 +381,6 @@ async def test_invalid_message(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
 ):
-    print("test_invalid_message")
     headers = await admin_token_headers
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
@@ -427,7 +419,6 @@ async def test_update_session_to_active(
     fastapi_client: TestClient,
     admin_token_headers: Dict[str, str],
 ):
-    print("test_update_session_to_active")
     headers = await admin_token_headers
 
     res = fastapi_client.get("/api/v1/swipe_sessions", headers=headers)
@@ -469,7 +460,6 @@ async def test_swipe_session_1(
     admin_token_headers: Dict[str, str],
     normal_user_token_headers: Dict[str, str],
 ):
-    print("test_swipe_session_1")
     headers = await admin_token_headers
     normal_headers = await normal_user_token_headers
 
@@ -496,7 +486,6 @@ async def test_swipe_session_1(
         ws_normal_user: WebSocketTestSession
 
         # Check connection
-        print("1st connection")
         data_1 = ws_admin.receive_json()
         data_2 = ws_normal_user.receive_json()
 
@@ -509,14 +498,12 @@ async def test_swipe_session_1(
 
         # Swipe already swipe recipe
         send_swipe(ws_admin, 1, False)
-        print("already swipet")
         data_1 = ws_admin.receive_json()
 
         assert_status_code(data_1, exc.AlreadySwipedException)
 
         # Swipe non existing recipe
         send_swipe(ws_admin, 999, False)
-        print("non recipe")
         data_1 = ws_admin.receive_json()
 
         assert_status_code(data_1, RecipeNotFoundException)
@@ -528,7 +515,6 @@ async def test_swipe_session_2(
     admin_token_headers: Dict[str, str],
     normal_user_token_headers: Dict[str, str],
 ):
-    print("test_swipe_session_2")
     headers = await admin_token_headers
     normal_headers = await normal_user_token_headers
 
@@ -610,7 +596,6 @@ async def test_swipe_session_3(
     admin_token_headers: Dict[str, str],
     normal_user_token_headers: Dict[str, str],
 ):
-    print("test_swipe_session_3")
     headers = await admin_token_headers
     normal_headers = await normal_user_token_headers
 
@@ -680,7 +665,6 @@ async def test_swipe_session_4(
     admin_token_headers: Dict[str, str],
     normal_user_token_headers: Dict[str, str],
 ):
-    print("test_swipe_session_4")
     headers = await admin_token_headers
     normal_headers = await normal_user_token_headers
 
