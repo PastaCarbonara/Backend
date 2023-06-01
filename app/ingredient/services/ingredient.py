@@ -140,7 +140,7 @@ class IngredientService:
         if ingredient:
             raise IngredientAlreadyExistsException
 
-        return await self.ingredient_repo.create(request.name)
+        return await self.ingredient_repo.create_by_name(request.name)
 
     @Transactional()
     async def update_ingredient(

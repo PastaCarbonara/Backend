@@ -65,7 +65,7 @@ class RecipeRepository(BaseRepo):
         # return recipes and count
         return result.unique().scalars().all(), result_count.scalar()
 
-    async def get_by_id(self, recipe_id) -> Recipe:
+    async def get_by_id(self, model_id) -> Recipe:
         """Get a recipe by id.
 
         Parameters
@@ -80,7 +80,7 @@ class RecipeRepository(BaseRepo):
         """
         query = (
             select(Recipe)
-            .where(Recipe.id == recipe_id)
+            .where(Recipe.id == model_id)
             .options(
                 joinedload(Recipe.tags).joinedload(RecipeTag.tag),
                 joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
@@ -172,23 +172,6 @@ class RecipeRepository(BaseRepo):
         result = await session.execute(query)
         return result.scalars().first()
 
-    async def create(self, recipe: Recipe) -> Recipe:
-        """Create a recipe.
-
-        Parameters
-        ----------
-        recipe : Recipe
-            The recipe to create.
-
-        Returns
-        -------
-        Recipe
-            The created recipe.
-        """
-        session.add(recipe)
-        await session.flush()
-        return recipe
-
     async def judge(self, recipe_id: int, user_id: int, like: bool) -> None:
         """Like a recipe.
 
@@ -224,13 +207,3 @@ class RecipeRepository(BaseRepo):
     #     """
     #     await session.flush()
     #     return recipe
-
-    async def delete(self, recipe: Recipe) -> None:
-        """Delete a recipe.
-
-        Parameters
-        ----------
-        recipe_id : int
-            The id of the recipe to delete.
-        """
-        await session.delete(recipe)

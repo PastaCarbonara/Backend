@@ -5,7 +5,11 @@ User service module
 from typing import List
 import uuid
 from app.image.repository.image import ImageRepository
-from app.user.exceptions.user import DuplicateClientTokenException, UserNotFoundException, DuplicateUsernameException
+from app.user.exceptions.user import (
+    DuplicateClientTokenException,
+    UserNotFoundException,
+    DuplicateUsernameException,
+)
 from app.user.utils import generate_name, get_password_hash
 from app.user.repository.user import UserRepository
 from app.user.schemas.user import UpdateUserSchema
@@ -172,7 +176,7 @@ class UserService:
             raise DuplicateUsernameException()
         hashed_pwd = get_password_hash(password)
 
-        user_id = await self.repo.create(username, uuid.uuid4())
+        user_id = await self.repo.create_user(username, uuid.uuid4())
         await self.repo.create_account_auth(user_id, username, hashed_pwd)
         return user_id
 
@@ -206,7 +210,7 @@ class UserService:
         if await self.get_by_client_token(ctoken):
             raise DuplicateClientTokenException
 
-        return await self.repo.create(display_name, ctoken)
+        return await self.repo.create_user(display_name, ctoken)
 
     async def set_admin(self, user_id: int, is_admin: bool):
         """Set admin status for a user.

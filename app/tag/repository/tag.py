@@ -15,7 +15,7 @@ class TagRepository(BaseRepo):
     def __init__(self):
         super().__init__(Tag)
 
-    async def create(self, name: str, tag_type: str) -> Tag:
+    async def create_tag(self, name: str, tag_type: str) -> Tag:
         """
         Creates a new tag with the given data and returns the ID of the new tag.
 
@@ -104,15 +104,3 @@ class TagRepository(BaseRepo):
         tag.tag_type = tag_type
         await session.flush()
         return tag
-
-    async def delete(self, tag: Tag):
-        """
-        Deletes the given tag.
-
-        Parameters
-        ----------
-        tag : Tag
-            The tag to delete.
-        """
-        await session.delete(tag)
-        await session.flush()

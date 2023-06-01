@@ -382,7 +382,8 @@ class SwipeSessionWebsocketService:
             Coroutine[Any, Any, None]: The result of the session status update handling.
 
         Raises:
-            UnauthorizedException: If the user is not authorized to perform the session status update.
+            UnauthorizedException: If the user is not authorized to perform the session status 
+            update.
         """
         if not await self.group_serv.is_admin(swipe_session.group_id, user.id):
             await self.manager.handle_connection_code(websocket, UnauthorizedException)

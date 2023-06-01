@@ -73,7 +73,7 @@ class TagService:
         if tag:
             raise TagAlreadyExistsException
 
-        return await self.tag_repo.create(request.name, request.tag_type)
+        return await self.tag_repo.create_tag(request.name, request.tag_type)
 
     async def get_tag_by_id(self, tag_id: int) -> Tag:
         """

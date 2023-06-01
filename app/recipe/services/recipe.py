@@ -194,7 +194,7 @@ class RecipeService:
                 ingredient.name
             )
             if not ingredient_object:
-                ingredient_object = await self.ingredient_repo.create(
+                ingredient_object = await self.ingredient_repo.create_by_name(
                     ingredient.name
                 )
             recipe_ingredients.append(
@@ -223,7 +223,7 @@ class RecipeService:
         for tag in tags:
             tag_object = await self.tag_repo.get_by_name(tag.name)
             if not tag_object:
-                tag_object = await self.tag_repo.create(
+                tag_object = await self.tag_repo.create_tag(
                     tag.name, tag.tag_type
                 )
             recipe_tags.append(RecipeTag(tag=tag_object, recipe=recipe))

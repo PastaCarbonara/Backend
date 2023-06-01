@@ -15,7 +15,7 @@ class IngredientRepository(BaseRepo):
     def __init__(self):
         super().__init__(Ingredient)
 
-    async def create(self, name: str) -> Ingredient:
+    async def create_by_name(self, name: str) -> Ingredient:
         """Create a new ingredient in the database
 
         Parameters:
@@ -40,7 +40,7 @@ class IngredientRepository(BaseRepo):
         result = await session.execute(query)
         return result.scalars().all()
 
-    async def get_by_id(self, ingredient_id: int) -> Ingredient:
+    async def get_by_id(self, model_id: int) -> Ingredient:
         """Get an ingredient by ID from the database
 
         Parameters:
@@ -50,7 +50,7 @@ class IngredientRepository(BaseRepo):
         -------
             Ingredient: Ingredient object matching the given ID, None if not found
         """
-        query = select(Ingredient).where(Ingredient.id == ingredient_id)
+        query = select(Ingredient).where(Ingredient.id == model_id)
         result = await session.execute(query)
         return result.scalars().first()
 
@@ -83,17 +83,3 @@ class IngredientRepository(BaseRepo):
         ingredient.name = name
         await session.flush()
         return ingredient
-
-    async def delete(self, ingredient: Ingredient) -> None:
-        """Delete an ingredient from the database
-
-        Parameters:
-        ----------
-            ingredient (Ingredient): Ingredient object to be deleted
-
-        Returns:
-        -------
-            None
-        """
-        await session.delete(ingredient)
-        await session.flush()

@@ -8,14 +8,14 @@ from app.image.services.image import ImageService
 from app.swipe_session.services.swipe_session import SwipeSessionService
 from app.user.services.user import UserService
 from app.group.repository.group import GroupRepository
-from core.db.models import Group, GroupMember
-from core.db import Transactional
 from app.group.exceptions.group import (
     AdminLeavingException,
     GroupNotFoundException,
     GroupJoinConflictException,
     NotInGroupException,
 )
+from core.db.models import Group, GroupMember
+from core.db import Transactional
 
 
 class GroupService:

@@ -2,10 +2,8 @@
 Module containing the SwipeService class used for managing swipes.
 """
 
-from sqlalchemy import and_, select
 from app.swipe.schemas.swipe import CreateSwipeSchema
 from app.swipe.repository.swipe import SwipeRepository
-from core.db import session
 from core.db.models import Swipe
 from core.db.transactional import Transactional
 

@@ -65,7 +65,7 @@ class ImageRepository(BaseRepo):
         result = await session.execute(query)
         return result.scalars().first()
 
-    async def delete(self, file: File) -> None:
+    async def delete(self, model: File) -> None:
         """
         Delete the given image file from the database.
 
@@ -75,5 +75,5 @@ class ImageRepository(BaseRepo):
         Returns:
             None
         """
-        await session.delete(file)
+        await session.delete(model)
         await session.flush()
