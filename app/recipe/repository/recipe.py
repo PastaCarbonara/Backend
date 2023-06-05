@@ -38,16 +38,14 @@ class RecipeRepository(BaseRepo):
         Get a list of recipes by tags.
     get_by_ingredients(ingredients)
         Get a list of recipes by ingredients.
-    get_jugment(recipe_id, user_id)
+    get_judgment(recipe_id, user_id)
         Get a recipe judgement by recipe id and user id.
     """
 
     def __init__(self):
         super().__init__(Recipe)
 
-    async def get(
-        self, limit: int, offset: int, user_id: int = None
-    ) -> List[Recipe]:
+    async def get(self, limit: int, offset: int, user_id: int = None) -> List[Recipe]:
         """Get a list of recipes.
 
         Returns
@@ -94,7 +92,6 @@ class RecipeRepository(BaseRepo):
         # return recipes and count
         return result.unique().scalars().all(), result_count.scalar()
 
-
     async def get_user_tags(self, user_id: int):
         query = select(Tag).join(UserTag).where(UserTag.user_id == user_id)
         result = await session.execute(query)
@@ -105,8 +102,8 @@ class RecipeRepository(BaseRepo):
     ) -> tuple:
         query = (
             select(Recipe)
-            .join(RecipeTag)
-            .join(Tag)
+            .outerjoin(RecipeTag)
+            .outerjoin(Tag)
             .filter(
                 and_(
                     not_(Tag.id.in_(not_wanted_tags)),
@@ -117,8 +114,8 @@ class RecipeRepository(BaseRepo):
         count_query = (
             select(func.count(func.distinct(Recipe.id)))
             .select_from(Recipe)
-            .join(RecipeTag)
-            .join(Tag)
+            .outerjoin(RecipeTag)
+            .outerjoin(Tag)
             .filter(
                 and_(
                     not_(Tag.id.in_(not_wanted_tags)),
@@ -132,15 +129,15 @@ class RecipeRepository(BaseRepo):
     def get_recipes_by_allergies(self, required_tags, not_wanted_tags) -> tuple:
         query = (
             select(Recipe)
-            .join(RecipeTag)
-            .join(Tag)
+            .outerjoin(RecipeTag)
+            .outerjoin(Tag)
             .filter(not_(Tag.id.in_(not_wanted_tags)))
         )
         count_query = (
             select(func.count(func.distinct(Recipe.id)))
             .select_from(Recipe)
-            .join(RecipeTag)
-            .join(Tag)
+            .outerjoin(RecipeTag)
+            .outerjoin(Tag)
             .filter(not_(Tag.id.in_(not_wanted_tags)))
         )
         return query, count_query
