@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 from app.group.schemas.group import GroupSchema
 from app.group.services.group import GroupService
-from app.user.exceptions.user import UserNotFoundException
 from app.user.schemas.user import UpdateMeSchema, UpdateUserSchema, UserSchema
 from app.filter.schemas.filter import FilterSchema, UserCreateSchema
 from app.filter.services.filter import FilterService
