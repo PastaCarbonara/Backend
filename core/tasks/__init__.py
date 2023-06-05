@@ -17,8 +17,8 @@ load_dotenv()
 
 def get_tasks(session) -> list[BaseTask]:
     """
-    Find and import task modules starting with "task_" from the tasks directory 
-    and return a list of instantiated task objects with the provided session and 
+    Find and import task modules starting with "task_" from the tasks directory
+    and return a list of instantiated task objects with the provided session and
     capture_exceptions arguments.
 
     Args:
@@ -42,7 +42,11 @@ def get_tasks(session) -> list[BaseTask]:
         sys.modules[spec.name] = module
         spec.loader.exec_module(module)
 
-        tasks.append(module.Task(session=session, capture_exceptions=config.TASK_CAPTURE_EXCEPTIONS))
+        tasks.append(
+            module.Task(
+                session=session, capture_exceptions=config.TASK_CAPTURE_EXCEPTIONS
+            )
+        )
 
     return tasks
 
@@ -64,7 +68,9 @@ def start_tasks() -> None:
         return
 
     # Not using the config's connection string as that uses async.
-    engine = create_engine(f"postgresql+psycopg2://{os.getenv('DU')}:{os.getenv('DP')}@{os.getenv('H')}:{os.getenv('P')}/{os.getenv('DB')}")
+    engine = create_engine(
+        f"postgresql+psycopg2://{os.getenv('DU')}:{os.getenv('DP')}@{os.getenv('H')}:{os.getenv('P')}/{os.getenv('DB')}"
+    )
     Session = sessionmaker(engine)
 
     with Session() as session:

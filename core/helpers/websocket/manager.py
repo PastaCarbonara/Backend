@@ -2,9 +2,10 @@
 Connection manager for websockets
 """
 
+import asyncio
 import json
 import logging
-import random
+# import random
 from fastapi import WebSocket, WebSocketDisconnect, status
 from pydantic import ValidationError
 from pydantic.main import ModelMetaclass
@@ -51,22 +52,25 @@ class WebsocketConnectionManager:
         self.permissions = permissions
 
     async def queued_run(self, pool_id, func, **kwargs):
-        ticket = random.random()
         queue = self.active_pools[pool_id]["queue"]
-        queue.append(ticket)
 
-        while queue[0] != ticket:
-            ...
-
-        try:
-            await func(**kwargs)
-        except WebSocketDisconnect:
-            ...
-        except Exception as exc:
-            get_logger(exc)
-            logging.info(f"pool_id {pool_id}, func: {func.__name__}")
-
-        queue.pop(0)
+        await queue.put((func, kwargs))  # Enqueue the function and its arguments
+        print(func.__name__, queue.qsize())
+        print(func.__name__, queue.qsize())
+        if queue.qsize() == 1:
+            print("entering:", queue.empty())
+            while not queue.empty():
+                print(queue.empty())
+                func, kwargs = await queue.get()
+                try:
+                    print(func.__name__)
+                    await func(**kwargs)
+                    print("Fin")
+                except WebSocketDisconnect:
+                    ...
+                except Exception as exc:
+                    get_logger(exc)
+                    logging.info(f"pool_id {pool_id}, func: {func.__name__}")
 
     async def check_auth(
         self, permissions: list[list[BaseWebsocketPermission]] = None, **kwargs
@@ -109,7 +113,7 @@ class WebsocketConnectionManager:
         await websocket.accept()
 
         if pool_id not in self.active_pools:
-            self.active_pools[pool_id] = {"connections": [], "queue": []}
+            self.active_pools[pool_id] = {"connections": [], "queue": asyncio.Queue(), "lock": asyncio.Lock()}
 
         self.active_pools[pool_id]["connections"].append(websocket)
 
