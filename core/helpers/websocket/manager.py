@@ -5,8 +5,7 @@ Connection manager for websockets
 import json
 import logging
 import random
-import time
-from fastapi import WebSocket, status
+from fastapi import WebSocket, WebSocketDisconnect, status
 from pydantic import ValidationError
 from pydantic.main import ModelMetaclass
 from core.db.enums import WebsocketActionEnum
@@ -56,17 +55,18 @@ class WebsocketConnectionManager:
         queue = self.active_pools[pool_id]["queue"]
         queue.append(ticket)
 
-        print(f"went in queue {pool_id}")
         while queue[0] != ticket:
-            print(f"queue {pool_id}, {ticket}, {queue}")
-            time.sleep(1)
             ...
 
-        print(f"{ticket} running {func.__name__}")
-        await func(**kwargs)
+        try:
+            await func(**kwargs)
+        except WebSocketDisconnect:
+            ...
+        except Exception as exc:
+            get_logger(exc)
+            logging.info(f"pool_id {pool_id}, func: {func.__name__}")
 
         queue.pop(0)
-        print(f"{ticket} finished {func.__name__}, queue: {queue}")
 
     async def check_auth(
         self, permissions: list[list[BaseWebsocketPermission]] = None, **kwargs
