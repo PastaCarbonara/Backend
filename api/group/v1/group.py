@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 
+from app.group.exceptions.group import GroupNotFoundException
 from app.group.schemas.group import GroupSchema, CreateGroupSchema, GroupInfoSchema
 from app.group.services.group import GroupService
 from app.recipe.schemas.recipe import GetFullRecipeResponseSchema
@@ -10,8 +11,12 @@ from app.swipe_session.schemas.swipe_session import (
 )
 from app.swipe_session.services.swipe_session import SwipeSessionService
 
-from core.exceptions import ExceptionResponseSchema, GroupNotFoundException
-from core.fastapi.dependencies.hashid import get_path_group_id, get_path_session_id
+from core.exceptions import ExceptionResponseSchema
+from core.fastapi.dependencies.hashid import (
+    get_path_group_id,
+    get_path_session_id,
+    get_path_user_id,
+)
 from core.fastapi.dependencies.object_storage import get_object_storage
 from core.fastapi.dependencies.user import get_current_user
 from core.fastapi.dependencies.permission import (
@@ -54,6 +59,22 @@ async def create_group(
     return await GroupService().get_group_by_id(group_id)
 
 
+@group_v1_router.put(
+    "{group_id}",
+    responses={"400": {"model": ExceptionResponseSchema}},
+    response_model=GroupSchema,
+    dependencies=[Depends(PermissionDependency([[IsGroupAdmin, IsAdmin]]))],
+)
+@version(1)
+async def edit_group(
+    request: CreateGroupSchema,
+    group_id: int = Depends(get_path_group_id),
+    object_storage=Depends(get_object_storage),
+):
+    group_id = await GroupService().edit_group(request, group_id, object_storage)
+    return await GroupService().get_group_by_id(group_id)
+
+
 @group_v1_router.get(
     "/{group_id}",
     responses={"400": {"model": ExceptionResponseSchema}},
@@ -74,10 +95,12 @@ async def get_group(group_id: int = Depends(get_path_group_id)):
 @group_v1_router.delete(
     "/{group_id}",
     status_code=204,
-    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupAdmin]]))]
+    dependencies=[
+        Depends(PermissionDependency([[IsAdmin], [IsAuthenticated, IsGroupAdmin]]))
+    ],
 )
 @version(1)
-async def delete_group(group_id = Depends(get_path_group_id)):
+async def delete_group(group_id=Depends(get_path_group_id)):
     return await GroupService().delete_group(group_id)
 
 
@@ -96,15 +119,37 @@ async def get_group_info(group_id: int = Depends(get_path_group_id)):
     return group
 
 
-@group_v1_router.get(
+@group_v1_router.post(
     "/{group_id}/join",
     responses={"400": {"model": ExceptionResponseSchema}},
     dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
 )
 @version(1)
 async def join_group(request: Request, group_id: int = Depends(get_path_group_id)):
-    if not await GroupService().is_member(group_id, request.user.id):
-        return await GroupService().join_group(group_id, request.user.id)
+    return await GroupService().join_group(group_id, request.user.id)
+
+
+@group_v1_router.post(
+    "/{group_id}/leave",
+    responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
+)
+@version(1)
+async def leave_group(request: Request, group_id: int = Depends(get_path_group_id)):
+    return await GroupService().leave_group(group_id, request.user.id)
+
+
+@group_v1_router.post(
+    "/{group_id}/remove-member/{user_id}",
+    responses={"400": {"model": ExceptionResponseSchema}},
+    dependencies=[Depends(PermissionDependency([[IsAdmin, IsGroupAdmin]]))],
+)
+@version(1)
+async def remove_member(
+    group_id: int = Depends(get_path_group_id),
+    user_id: int = Depends(get_path_user_id),
+):
+    return await GroupService().leave_group(group_id, user_id)
 
 
 @group_v1_router.get(

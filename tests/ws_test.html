@@ -28,7 +28,7 @@
             GLOBAL_MESSAGE: "GLOBAL_MESSAGE",
             RECIPE_MATCH: "RECIPE_MATCH",
             RECIPE_SWIPE: "RECIPE_SWIPE",
-            SESSION_MESSAGE: "SESSION_MESSAGE",
+            POOL_MESSAGE: "POOL_MESSAGE",
             SESSION_STATUS_UPDATE: "SESSION_STATUS_UPDATE",
         }
 
@@ -96,22 +96,34 @@
     </head>
     <body>
         <h1>WebSocket Chat</h1>
-        <form action="" onsubmit="sendMessage(event)">
+        <div>
             <label>Item ID: <input type="text" id="itemId" autocomplete="off" value="foo"/></label>
             <label>Token: <input type="text" id="token" autocomplete="off" value="?token=bar"/></label>
             <button onclick="connect(event)">Connect</button>
             <hr>
             <label>Message: <input type="text" id="messageText" autocomplete="off"/></label>
-            <button>Send</button>
-        </form>
-        <ul id='messages'>
-        </ul>
+            <button onclick="sendMessage(event)">Send</button>
+            <hr>
+            <label>Recipe ID: <input type="text" id="recipeId" autocomplete="off"/></label>
+            <label>Like: <input type="checkbox" id="recipeLike"></label>
+            <button onclick="swipeMeal(event)">Send</button>
+        </div>
+        <ul id='messages'></ul>
         <script>
-        var ws = null;
+            const actions = {
+                CONNECTION_CODE: "CONNECTION_CODE",
+                GLOBAL_MESSAGE: "GLOBAL_MESSAGE",
+                RECIPE_MATCH: "RECIPE_MATCH",
+                RECIPE_SWIPE: "RECIPE_SWIPE",
+                POOL_MESSAGE: "POOL_MESSAGE",
+                SESSION_STATUS_UPDATE: "SESSION_STATUS_UPDATE",
+            }
+            var ws = null;
             function connect(event) {
                 var itemId = document.getElementById("itemId")
                 var token = document.getElementById("token")
                 ws = new WebSocket("wss://munchie.azurewebsites.net/api/latest/swipe_sessions/" + itemId.value + token.value);
+                // ws = new WebSocket("ws://localhost:8000/api/latest/swipe_sessions/" + itemId.value + token.value);
                 ws.onmessage = function(event) {
                     var messages = document.getElementById('messages')
                     var message = document.createElement('li')
@@ -124,6 +136,22 @@
             function sendMessage(event) {
                 var input = document.getElementById("messageText")
                 ws.send(input.value)
+                input.value = ''
+                event.preventDefault()
+            }
+
+            function swipeMeal(event) {
+                var input = document.getElementById("recipeId")
+                var input_2 = document.getElementById("recipeLike")
+                var packet = {
+                    action: actions.RECIPE_SWIPE,
+                    payload: {
+                        recipe_id: parseInt(input.value),
+                        like: input_2.checked
+                    }
+                }
+                console.log(JSON.stringify(packet))
+                ws.send(JSON.stringify(packet))
                 input.value = ''
                 event.preventDefault()
             }

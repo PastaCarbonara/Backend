@@ -6,10 +6,14 @@ from typing import List
 from sqlalchemy import select
 from core.db import session
 from core.db.models import Tag
+from core.repository.base import BaseRepo
 
 
-class TagRepository:
+class TagRepository(BaseRepo):
     """Repository for tag related database operations"""
+
+    def __init__(self):
+        super().__init__(Tag)
 
     async def create_tag(self, name: str, tag_type: str) -> Tag:
         """
@@ -31,7 +35,7 @@ class TagRepository:
         await session.flush()
         return db_tag
 
-    async def get_tags(self) -> List[Tag]:
+    async def get(self) -> List[Tag]:
         """
         Returns a list of all tags.
 
@@ -44,7 +48,7 @@ class TagRepository:
         result = await session.execute(query)
         return result.scalars().all()
 
-    async def get_tag_by_id(self, tag_id: int) -> Tag:
+    async def get_by_id(self, model_id: int) -> Tag:
         """
         Returns the tag with the given ID.
 
@@ -58,11 +62,11 @@ class TagRepository:
         tag : Tag
             The tag with the given ID.
         """
-        query = select(Tag).where(Tag.id == tag_id)
+        query = select(Tag).where(Tag.id == model_id)
         result = await session.execute(query)
         return result.scalars().first()
 
-    async def get_tag_by_name(self, tag_name: str) -> Tag:
+    async def get_by_name(self, tag_name: str) -> Tag:
         """
         Returns the tag with the given name.
 
@@ -80,7 +84,7 @@ class TagRepository:
         result = await session.execute(query)
         return result.scalars().first()
 
-    async def update_tag(self, tag: Tag, name: str, tag_type: str) -> Tag:
+    async def update(self, tag: Tag, name: str, tag_type: str) -> Tag:
         """
         Updates the tag with the given ID with the given data.
 
@@ -100,15 +104,3 @@ class TagRepository:
         tag.tag_type = tag_type
         await session.flush()
         return tag
-
-    async def delete_tag(self, tag: Tag):
-        """
-        Deletes the given tag.
-
-        Parameters
-        ----------
-        tag : Tag
-            The tag to delete.
-        """
-        await session.delete(tag)
-        await session.flush()

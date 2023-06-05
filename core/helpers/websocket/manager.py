@@ -3,8 +3,9 @@ Connection manager for websockets
 """
 
 import json
+import logging
 import random
-from fastapi import WebSocket, status
+from fastapi import WebSocket, WebSocketDisconnect, status
 from pydantic import ValidationError
 from pydantic.main import ModelMetaclass
 from core.db.enums import WebsocketActionEnum
@@ -16,6 +17,7 @@ from core.exceptions.websocket import (
     JSONSerializableException,
     NoMessageException,
 )
+from core.helpers.logger import get_logger
 from core.helpers.schemas.websocket import WebsocketPacketSchema
 from core.helpers.websocket.auth import (
     AllowAll,
@@ -53,11 +55,16 @@ class WebsocketConnectionManager:
         queue = self.active_pools[pool_id]["queue"]
         queue.append(ticket)
 
-
         while queue[0] != ticket:
             ...
 
-        await func(**kwargs)
+        try:
+            await func(**kwargs)
+        except WebSocketDisconnect:
+            ...
+        except Exception as exc:
+            get_logger(exc)
+            logging.info(f"pool_id {pool_id}, func: {func.__name__}")
 
         queue.pop(0)
 
@@ -183,8 +190,12 @@ class WebsocketConnectionManager:
         """
         pool = self.active_pools.get(pool_id)
 
-        if not pool:  # Error Log this
-            print("Tried to disconnect for non existing pool")
+        if not pool:
+            get_logger("disconnect_from_no_pool")
+            logging.error("Tried to disconnect from non existing pool")
+            logging.info("pool_id: %s", pool_id)
+            logging.info("sending packet: %s", packet)
+            logging.info("manager object: %s", self.__dict__)
             return
 
         connections = [ws for ws in pool["connections"]]

@@ -3,12 +3,12 @@ Initialize app
 """
 
 
-from typing import List
+import logging
 
 from fastapi import FastAPI, Depends, Request
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 
 from api import router
 from api.home.home import home_router
@@ -24,6 +24,7 @@ from core.fastapi.middlewares import (
 )
 from core.fastapi_versioning import VersionedFastAPI
 from core.helpers.cache import Cache, RedisBackend, CustomKeyMaker
+from core.helpers.logger import get_logger
 from core.tasks import start_tasks
 
 
@@ -39,7 +40,7 @@ def init_listeners(app_: FastAPI) -> None:
     """
     Initialize app listeners
     """
-    # Exception handler
+
     @app_.exception_handler(CustomException)
     async def custom_exception_handler(request: Request, exc: CustomException):
         del request
@@ -47,6 +48,22 @@ def init_listeners(app_: FastAPI) -> None:
         return JSONResponse(
             status_code=exc.code,
             content={"error_code": exc.error_code, "message": exc.message},
+        )
+
+    @app_.exception_handler(Exception)
+    async def unicorn_exception_handler(request: Request, exc: Exception):
+        log_name = get_logger(exc)
+
+        logging.info(request.scope.get("raw_path"))
+        logging.info(request.__dict__)
+        logging.exception(exc)
+
+        return JSONResponse(
+            status_code=500,
+            content={
+                "Exception": f"{exc.__class__.__name__}{exc.args}",
+                "message": f"See internal log '{log_name}.log' for more info",
+            },
         )
 
 
@@ -66,7 +83,7 @@ def on_auth_error(exc: Exception):
     )
 
 
-def make_middleware() -> List[Middleware]:
+def make_middleware() -> list[Middleware]:
     """
     Initialize FastAPI middleware
     """
@@ -103,7 +120,7 @@ def create_app() -> FastAPI:
     app_ = FastAPI(
         title="Munchie",
         description="Munchie API",
-        version="0.4.0",
+        version="0.4.3",
         docs_url=None if config.ENV == "production" else "/docs",
         redoc_url=None if config.ENV == "production" else "/redoc",
         dependencies=[Depends(Logging)],
@@ -131,11 +148,12 @@ def create_app() -> FastAPI:
 
 app = create_app()
 
-from fastapi.responses import HTMLResponse
+
 @app.get("/")
 async def get():
-    with open("tests/ws_test.html", "r", encoding="utf-8") as f:
-        html = f.read()
+    with open("tests/ws_test.html", "r", encoding="utf-8") as ws_test:
+        html = ws_test.read()
     return HTMLResponse(html)
+
 
 # Greg is disappointed

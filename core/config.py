@@ -11,10 +11,10 @@ class Config(BaseSettings):
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8000
     WRITER_DB_URL: str = (
-        f"postgresql+asyncpg://postgres:postgres@localhost:3301/mealmatch"
+        "postgresql+asyncpg://postgres:postgres@localhost:3301/mealmatch"
     )
     READER_DB_URL: str = (
-        f"postgresql+asyncpg://postgres:postgres@localhost:3301/mealmatch"
+        "postgresql+asyncpg://postgres:postgres@localhost:3301/mealmatch"
     )
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY")
     JWT_ALGORITHM: str = "HS256"
@@ -29,7 +29,6 @@ class Config(BaseSettings):
     AZURE_IMAGE_URL_BASE: str = os.getenv("AZURE_IMAGE_URL_BASE")
     OBJECT_STORAGE_INTERFACE: str = "azure"
     IMAGE_MAX_SIZE = 5 * 1024 * 1024  # 5 MB
-    PRIVATE_KEY_PASSWORD: str = os.getenv("PRIVATE_KEY_PASSWORD")
     ACCESS_TOKEN_EXPIRE_PERIOD: int = 3600
     REFRESH_TOKEN_EXPIRE_PERIOD: int = 3600 * 24
     TASK_CAPTURE_EXCEPTIONS: bool = os.getenv("TASK_CAPTURE_EXCEPTIONS")

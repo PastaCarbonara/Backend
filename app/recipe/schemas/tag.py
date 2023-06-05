@@ -17,6 +17,7 @@ class CreateRecipeTagSchema(BaseModel):
 class FlattenedRecipeTagSchema(BaseModel):
     id: int = Field(..., description="ID")
     name: str = Field(..., description="Tag name")
+    tag_type: str = Field(..., description="Tag type")
 
     @root_validator(pre=True)
     def flatten_recipe_tag(cls, values: GetterDict) -> GetterDict | dict[str, object]:
@@ -27,6 +28,7 @@ class FlattenedRecipeTagSchema(BaseModel):
         return {
             "id": tag.id,
             "name": tag.name,
+            "tag_type": tag.tag_type,
         } | dict(values)
 
     class Config:

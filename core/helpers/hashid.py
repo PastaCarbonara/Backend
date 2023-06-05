@@ -8,8 +8,8 @@ from hashids import Hashids
 from core.exceptions.hashids import IncorrectHashIDException
 
 
-salt = os.getenv('HASH_SALT')
-min_length = int(os.getenv('HASH_MIN_LEN'))
+salt = os.getenv("HASH_SALT")
+min_length = int(os.getenv("HASH_MIN_LEN"))
 
 hashids = Hashids(salt=salt, min_length=min_length)
 
