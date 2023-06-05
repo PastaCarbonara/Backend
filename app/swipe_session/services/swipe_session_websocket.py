@@ -144,10 +144,12 @@ class SwipeSessionWebsocketService:
         --------
         None
         """
+        print(f"Start of handler: id: {swipe_session_id}, token: {access_token}")
         exc = await self.manager.check_auth(
             access_token=access_token, swipe_session_id=swipe_session_id
         )
         if exc:
+            print(f"exc: {exc.error_code} - {exc.message}")
             await websocket.accept()
             await self.manager.handle_connection_code(websocket, exc)
             await websocket.close()
@@ -156,6 +158,7 @@ class SwipeSessionWebsocketService:
         user, swipe_session = await self.get_user_and_swipe_session(
             access_token=access_token, swipe_session_id=swipe_session_id
         )
+        print(user, swipe_session)
 
         await self.manager.connect(websocket, swipe_session.id)
         await self.manager.handle_connection_code(websocket, SuccessfullConnection)
@@ -174,6 +177,7 @@ class SwipeSessionWebsocketService:
                     await self.manager.handle_connection_code(websocket, exc)
 
                 else:
+                    print(f"user: {user.id}/{user.display_name} -> {packet}")
                     func = self.actions.get(
                         packet.action, self.handle_action_not_implemented
                     )
@@ -188,6 +192,7 @@ class SwipeSessionWebsocketService:
                     )
 
         except WebSocketDisconnect as exc:
+            print(f"user: {user.id}/{user.display_name} -> WebsocketDisconnect")
             # Check because sometimes the exception is raised but it's already disconnected
             if websocket.client_state == WebSocketState.CONNECTED:
                 await self.manager.disconnect(websocket, swipe_session.id)
@@ -275,6 +280,7 @@ class SwipeSessionWebsocketService:
         Returns:
             None.
         """
+        print("1")
         try:
             swipe_schema = CreateSwipeSchema(
                 swipe_session_id=swipe_session.id, user_id=user.id, **packet.payload
@@ -286,6 +292,7 @@ class SwipeSessionWebsocketService:
             )
             return
 
+        print("2")
         try:
             await self.recipe_serv.get_recipe_by_id(packet.payload["recipe_id"])
         except RecipeNotFoundException:
@@ -294,18 +301,22 @@ class SwipeSessionWebsocketService:
             )
             return
 
+        print("3")
         existing_swipe = await self.swipe_serv.get_swipe_by_creds(
             swipe_session_id=swipe_session.id,
             user_id=user.id,
             recipe_id=packet.payload["recipe_id"],
         )
 
+        print("3.1")
         if existing_swipe:
             await self.manager.handle_connection_code(websocket, AlreadySwipedException)
             return
 
+        print("4")
         await self.swipe_serv.create_swipe(swipe_schema)
 
+        print("1 pre match check")
         matching_swipes = (
             await self.swipe_serv.get_swipes_by_session_id_and_recipe_id_and_like(
                 swipe_session_id=swipe_session.id,
@@ -313,6 +324,7 @@ class SwipeSessionWebsocketService:
                 like=True,
             )
         )
+        print("2", matching_swipes)
 
         group = await self.group_serv.get_group_by_id(swipe_session.group_id)
 

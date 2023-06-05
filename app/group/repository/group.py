@@ -43,7 +43,7 @@ class GroupRepository(BaseRepo):
         )
         result = await session.execute(query)
         return result.unique().scalars().first()
-    
+
     async def get_by_user_id(self, user_id) -> list[Group]:
         query = (
             select(Group)
