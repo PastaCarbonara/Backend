@@ -58,7 +58,7 @@ class IngredientService:
         list[Ingredient]
             A list of all the ingredients.
         """
-        return await self.ingredient_repo.get_ingredients()
+        return await self.ingredient_repo.get()
 
     async def get_ingredient_by_id(self, ingredient_id: int) -> Ingredient:
         """
@@ -79,12 +79,12 @@ class IngredientService:
         IngredientNotFoundException
             If no ingredient with the given ID exists.
         """
-        ingredient = await self.ingredient_repo.get_ingredient_by_id(
+        ingredient = await self.ingredient_repo.get_by_id(
             ingredient_id
         )
         if not ingredient:
             raise IngredientNotFoundException
-        return await self.ingredient_repo.get_ingredient_by_id(ingredient_id)
+        return await self.ingredient_repo.get_by_id(ingredient_id)
 
     async def get_ingredient_by_name(self, ingredient_name: str) -> Ingredient:
         """
@@ -105,7 +105,7 @@ class IngredientService:
         IngredientNotFoundException
             If no ingredient with the given name exists.
         """
-        ingredient = await self.ingredient_repo.get_ingredient_by_name(
+        ingredient = await self.ingredient_repo.get_by_name(
             ingredient_name
         )
         if not ingredient:
@@ -134,13 +134,13 @@ class IngredientService:
         IngredientAlreadyExistsException
             If an ingredient with the same name already exists.
         """
-        ingredient = await self.ingredient_repo.get_ingredient_by_name(
+        ingredient = await self.ingredient_repo.get_by_name(
             request.name
         )
         if ingredient:
             raise IngredientAlreadyExistsException
 
-        return await self.ingredient_repo.create_ingredient(request.name)
+        return await self.ingredient_repo.create_by_name(request.name)
 
     @Transactional()
     async def update_ingredient(
@@ -170,13 +170,13 @@ class IngredientService:
         IngredientAlreadyExistsException
             If an ingredient with the same name already exists.
         """
-        ingredient = await self.ingredient_repo.get_ingredient_by_id(
+        ingredient = await self.ingredient_repo.get_by_id(
             ingredient_id
         )
         if not ingredient:
             raise IngredientNotFoundException
         try:
-            return await self.ingredient_repo.update_ingredient(
+            return await self.ingredient_repo.update(
                 ingredient, request.name
             )
         except IntegrityError as exc:
@@ -203,13 +203,13 @@ class IngredientService:
         -------
         None
         """
-        ingredient = await self.ingredient_repo.get_ingredient_by_id(
+        ingredient = await self.ingredient_repo.get_by_id(
             ingredient_id
         )
         if not ingredient:
             raise IngredientNotFoundException
 
         try:
-            await self.ingredient_repo.delete_ingredient(ingredient)
+            await self.ingredient_repo.delete(ingredient)
         except AssertionError as exc:
             raise IngredientDependecyException from exc

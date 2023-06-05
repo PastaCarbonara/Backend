@@ -82,7 +82,7 @@ class ImageService:
         Raises:
             FileNotFoundException: If no image is found with the provided filename.
         """
-        image = await self.image_repo.get_image_by_name(filename)
+        image = await self.image_repo.get_by_name(filename)
 
         if not image:
             raise FileNotFoundException
@@ -98,7 +98,7 @@ class ImageService:
         List[File]
             A list of image files.
         """
-        images = await self.image_repo.get_images()
+        images = await self.image_repo.get()
         return images
 
     @Transactional()
@@ -136,7 +136,7 @@ class ImageService:
                 await self.object_storage_interface.upload_image(image, unique_filename)
             except Exception as exc:
                 raise AzureImageUploadException() from exc
-            image = await self.image_repo.store_image(unique_filename)
+            image = await self.image_repo.store(unique_filename)
             new_images.append(image)
         return new_images
 
@@ -164,11 +164,11 @@ class ImageService:
             If the image could not be deleted from the object storage.
         """
 
-        image = await self.image_repo.get_image_by_name(filename)
+        image = await self.image_repo.get_by_name(filename)
         if not image:
             raise FileNotFoundException()
         try:
-            await self.image_repo.delete_image(image)
+            await self.image_repo.delete(image)
         except IntegrityError as exc:
             raise FileDependecyException() from exc
         try:

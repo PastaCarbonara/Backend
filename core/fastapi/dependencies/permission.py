@@ -12,8 +12,6 @@ from app.user.services import UserService
 from core.exceptions import (
     CustomException,
     UnauthorizedException,
-    MissingUserIDException,
-    MissingGroupIDException,
 )
 from core.helpers.hashid import decode_single
     
