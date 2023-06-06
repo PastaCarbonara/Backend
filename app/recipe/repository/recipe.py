@@ -2,7 +2,7 @@
 
 from typing import List
 from sqlalchemy import select, func, and_, or_, not_
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, join
 from core.db import session
 from core.db.models import (
     Recipe,
@@ -55,20 +55,56 @@ class RecipeRepository(BaseRepo):
         """
         if user_id:
             user_tags = await self.get_user_tags(user_id)
-            required_tags = [
-                tag.id for tag in user_tags if tag.tag_type in WANTED_TAG_TYPES
-            ]
-            not_wanted_tags = [
-                tag.id for tag in user_tags if tag.tag_type in UNWANTED_TAG_TYPES
-            ]
-
-            if required_tags:
-                query, count_query = self.get_recipes_by_required_tags_and_allergies(
-                    required_tags, not_wanted_tags
-                )
+            if len(user_tags) == 0:
+                query = select(Recipe)
+                count_query = select(func.count()).select_from(Recipe)
             else:
-                query, count_query = self.get_recipes_by_allergies(
-                    required_tags, not_wanted_tags
+                # apply filters
+
+                query = (
+                    select(Recipe)
+                    .join(RecipeTag)
+                    .join(Tag)
+                    .join(UserTag, isouter=True)
+                    .where(
+                        Recipe.id.not_in(
+                            select(Recipe.id)
+                            .select_from(
+                                join(
+                                    Recipe, RecipeTag, Recipe.id == RecipeTag.recipe_id
+                                )
+                                .join(Tag, Tag.id == RecipeTag.tag_id)
+                                .join(UserTag, UserTag.tag_id == Tag.id)
+                            )
+                            .where(
+                                UserTag.user_id == user_id, Tag.tag_type == "Allergieën"
+                            )
+                        )
+                    )
+                    .where((UserTag.user_id.is_(None)) | (UserTag.user_id == user_id))
+                    .order_by(Recipe.id)
+                )
+                count_query = (
+                    select(func.count(Recipe.id))
+                    .join(RecipeTag)
+                    .join(Tag)
+                    .join(UserTag, isouter=True)
+                    .where(
+                        Recipe.id.not_in(
+                            select(Recipe.id)
+                            .select_from(
+                                join(
+                                    Recipe, RecipeTag, Recipe.id == RecipeTag.recipe_id
+                                )
+                                .join(Tag, Tag.id == RecipeTag.tag_id)
+                                .join(UserTag, UserTag.tag_id == Tag.id)
+                            )
+                            .where(
+                                UserTag.user_id == user_id, Tag.tag_type == "Allergieën"
+                            )
+                        )
+                    )
+                    .where((UserTag.user_id.is_(None)) | (UserTag.user_id == user_id))
                 )
         else:
             query = select(Recipe)
@@ -89,58 +125,15 @@ class RecipeRepository(BaseRepo):
         result = await session.execute(query)
         # get count of all recipes in database
         result_count = await session.execute(count_query)
+        recipes = result.unique().scalars().all()
+        count = result_count.scalar()
         # return recipes and count
-        return result.unique().scalars().all(), result_count.scalar()
+        return recipes, count
 
     async def get_user_tags(self, user_id: int):
         query = select(Tag).join(UserTag).where(UserTag.user_id == user_id)
         result = await session.execute(query)
         return result.scalars().all()
-
-    def get_recipes_by_required_tags_and_allergies(
-        self, required_tags: list[int], not_wanted_tags: list[int]
-    ) -> tuple:
-        query = (
-            select(Recipe)
-            .outerjoin(RecipeTag)
-            .outerjoin(Tag)
-            .filter(
-                and_(
-                    not_(Tag.id.in_(not_wanted_tags)),
-                    or_(*[Tag.id == t for t in required_tags]),
-                )
-            )
-        )
-        count_query = (
-            select(func.count(func.distinct(Recipe.id)))
-            .select_from(Recipe)
-            .outerjoin(RecipeTag)
-            .outerjoin(Tag)
-            .filter(
-                and_(
-                    not_(Tag.id.in_(not_wanted_tags)),
-                    or_(*[Tag.id == t for t in required_tags]),
-                )
-            )
-        )
-
-        return query, count_query
-
-    def get_recipes_by_allergies(self, required_tags, not_wanted_tags) -> tuple:
-        query = (
-            select(Recipe)
-            .outerjoin(RecipeTag)
-            .outerjoin(Tag)
-            .filter(not_(Tag.id.in_(not_wanted_tags)))
-        )
-        count_query = (
-            select(func.count(func.distinct(Recipe.id)))
-            .select_from(Recipe)
-            .outerjoin(RecipeTag)
-            .outerjoin(Tag)
-            .filter(not_(Tag.id.in_(not_wanted_tags)))
-        )
-        return query, count_query
 
     async def get_by_id(self, model_id) -> Recipe:
         """Get a recipe by id.
