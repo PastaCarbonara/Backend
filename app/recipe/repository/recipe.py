@@ -45,6 +45,129 @@ class RecipeRepository(BaseRepo):
     def __init__(self):
         super().__init__(Recipe)
 
+    def get_no_dieet_filter_queries(self, user_id, user_tags):
+        print("no dieet")
+        query = (
+            select(Recipe)
+            .join(RecipeTag)
+            .join(Tag)
+            .join(UserTag, isouter=True)
+            .where(
+                Recipe.id.not_in(
+                    select(Recipe.id)
+                    .select_from(
+                        join(Recipe, RecipeTag, Recipe.id == RecipeTag.recipe_id)
+                        .join(Tag, Tag.id == RecipeTag.tag_id)
+                        .join(UserTag, UserTag.tag_id == Tag.id)
+                    )
+                    .where(UserTag.user_id == user_id, Tag.tag_type == "Allergieën")
+                )
+            )
+            .where((UserTag.user_id.is_(None)) | (UserTag.user_id == user_id))
+            .order_by(Recipe.id)
+        )
+        count_query = (
+            select(func.count(Recipe.id))
+            .join(RecipeTag)
+            .join(Tag)
+            .join(UserTag, isouter=True)
+            .where(
+                Recipe.id.not_in(
+                    select(Recipe.id)
+                    .select_from(
+                        join(Recipe, RecipeTag, Recipe.id == RecipeTag.recipe_id)
+                        .join(Tag, Tag.id == RecipeTag.tag_id)
+                        .join(UserTag, UserTag.tag_id == Tag.id)
+                    )
+                    .where(UserTag.user_id == user_id, Tag.tag_type == "Allergieën")
+                )
+            )
+            .where((UserTag.user_id.is_(None)) | (UserTag.user_id == user_id))
+        )
+        return query, count_query
+
+    def get_vegan_filter_queries(self, user_id, user_tags):
+        print("vegan")
+        query = (
+            select(Recipe)
+            .join(RecipeTag)
+            .join(Tag)
+            .join(UserTag, isouter=True)
+            .where(
+                Recipe.id.not_in(
+                    select(Recipe.id)
+                    .select_from(
+                        join(Recipe, RecipeTag, Recipe.id == RecipeTag.recipe_id)
+                        .join(Tag, Tag.id == RecipeTag.tag_id)
+                        .join(UserTag, UserTag.tag_id == Tag.id)
+                    )
+                    .where(UserTag.user_id == user_id, Tag.tag_type == "Allergieën")
+                )
+            )
+            .where((UserTag.user_id.is_(None)) | (UserTag.user_id == user_id))
+            .where(Tag.name == "Vegan")
+            .order_by(Recipe.id)
+        )
+        count_query = (
+            select(func.count(Recipe.id))
+            .join(RecipeTag)
+            .join(Tag)
+            .join(UserTag, isouter=True)
+            .where(
+                Recipe.id.not_in(
+                    select(Recipe.id)
+                    .select_from(
+                        join(Recipe, RecipeTag, Recipe.id == RecipeTag.recipe_id)
+                        .join(Tag, Tag.id == RecipeTag.tag_id)
+                        .join(UserTag, UserTag.tag_id == Tag.id)
+                    )
+                    .where(UserTag.user_id == user_id, Tag.tag_type == "Allergieën")
+                )
+            )
+            .where((UserTag.user_id.is_(None)) | (UserTag.user_id == user_id))
+            .where(Tag.name == "Vegan")
+        )
+        return query, count_query
+
+    def get_vegetarian_filter_queries(self, user_id, user_tags):
+        print("vegetarian")
+        query = (
+            select(Recipe)
+            .join(RecipeTag)
+            .join(Tag)
+            .where(
+                Recipe.id.not_in(
+                    select(Recipe.id)
+                    .select_from(
+                        join(Recipe, RecipeTag, Recipe.id == RecipeTag.recipe_id)
+                        .join(Tag, Tag.id == RecipeTag.tag_id)
+                        .join(UserTag, UserTag.tag_id == Tag.id)
+                    )
+                    .where(UserTag.user_id == user_id, Tag.tag_type == "Allergieën")
+                )
+            )
+            .where((Tag.name == "Vegan") | (Tag.name == "Vegetarisch"))
+            .order_by(Recipe.id)
+        )
+        count_query = (
+            select(func.count(Recipe.id))
+            .join(RecipeTag)
+            .join(Tag)
+            .where(
+                Recipe.id.not_in(
+                    select(Recipe.id)
+                    .select_from(
+                        join(Recipe, RecipeTag, Recipe.id == RecipeTag.recipe_id)
+                        .join(Tag, Tag.id == RecipeTag.tag_id)
+                        .join(UserTag, UserTag.tag_id == Tag.id)
+                    )
+                    .where(UserTag.user_id == user_id, Tag.tag_type == "Allergieën")
+                )
+            )
+            .where((Tag.name == "Vegan") | (Tag.name == "Vegetarisch"))
+        )
+        return query, count_query
+
     async def get(self, limit: int, offset: int, user_id: int = None) -> List[Recipe]:
         """Get a list of recipes.
 
@@ -60,57 +183,25 @@ class RecipeRepository(BaseRepo):
                 count_query = select(func.count()).select_from(Recipe)
             else:
                 # apply filters
+                if "Vegan" in [tag.name for tag in user_tags]:
+                    ## apply vegan filter
+                    query, count_query = self.get_vegan_filter_queries(
+                        user_id, user_tags
+                    )
+                elif "Vegetarisch" in [tag.name for tag in user_tags]:
+                    ## apply vegetarian filter
+                    query, count_query = self.get_vegetarian_filter_queries(
+                        user_id, user_tags
+                    )
+                else:
+                    ## apply no dieet filters
+                    query, count_query = self.get_no_dieet_filter_queries(
+                        user_id, user_tags
+                    )
 
-                query = (
-                    select(Recipe)
-                    .join(RecipeTag)
-                    .join(Tag)
-                    .join(UserTag, isouter=True)
-                    .where(
-                        Recipe.id.not_in(
-                            select(Recipe.id)
-                            .select_from(
-                                join(
-                                    Recipe, RecipeTag, Recipe.id == RecipeTag.recipe_id
-                                )
-                                .join(Tag, Tag.id == RecipeTag.tag_id)
-                                .join(UserTag, UserTag.tag_id == Tag.id)
-                            )
-                            .where(
-                                UserTag.user_id == user_id, Tag.tag_type == "Allergieën"
-                            )
-                        )
-                    )
-                    .where((UserTag.user_id.is_(None)) | (UserTag.user_id == user_id))
-                    .order_by(Recipe.id)
-                )
-                count_query = (
-                    select(func.count(Recipe.id))
-                    .join(RecipeTag)
-                    .join(Tag)
-                    .join(UserTag, isouter=True)
-                    .where(
-                        Recipe.id.not_in(
-                            select(Recipe.id)
-                            .select_from(
-                                join(
-                                    Recipe, RecipeTag, Recipe.id == RecipeTag.recipe_id
-                                )
-                                .join(Tag, Tag.id == RecipeTag.tag_id)
-                                .join(UserTag, UserTag.tag_id == Tag.id)
-                            )
-                            .where(
-                                UserTag.user_id == user_id, Tag.tag_type == "Allergieën"
-                            )
-                        )
-                    )
-                    .where((UserTag.user_id.is_(None)) | (UserTag.user_id == user_id))
-                )
         else:
             query = select(Recipe)
-            count_query = select(func.count(func.distinct(Recipe.id))).select_from(
-                Recipe
-            )
+            count_query = select(func.count()).select_from(Recipe)
         # eager load all relationships
         query = query.options(
             joinedload(Recipe.tags).joinedload(RecipeTag.tag),
