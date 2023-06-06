@@ -66,7 +66,10 @@ class UserRepository(BaseRepo):
         None
         """
         user = await self.get_by_id(user_id)
-        user.account_auth = AccountAuth(username=username, password=password)
+        account_auth = AccountAuth(username=username, password=password)
+        session.add(account_auth)
+        user.account_auth = account_auth
+        return user
 
     async def get_by_client_token(self, ctoken: uuid.UUID) -> User:
         """Retrieve a user by client token.
