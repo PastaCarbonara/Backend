@@ -17,6 +17,7 @@ from app.swipe_session.schemas.swipe_session import (
     UpdateSwipeSessionSchema,
 )
 from app.swipe_session.services.swipe_session import SwipeSessionService
+from core.config import config
 from core.exceptions.websocket import (
     ActionNotImplementedException,
     AlreadySwipedException,
@@ -116,12 +117,14 @@ class SwipeSessionWebsocketService:
         self.swipe_session_serv = SwipeSessionService()
         self.swipe_serv = SwipeService()
         self.group_serv = GroupService()
+        self.queue_serv = SwipeSessionRecipeQueueService()
 
         self.actions = {
             SwipeSessionActionEnum.GLOBAL_MESSAGE: self.handle_global_message,
             SwipeSessionActionEnum.RECIPE_SWIPE: self.handle_recipe_swipe,
             SwipeSessionActionEnum.POOL_MESSAGE: self.handle_pool_message,
             SwipeSessionActionEnum.SESSION_STATUS_UPDATE: self.handle_session_status_update_auth,
+            "placeholder": self.get_recipes,
         }
 
     async def handler(
@@ -195,6 +198,20 @@ class SwipeSessionWebsocketService:
         except WebSocketException as exc:
             print("???")
             print(exc)
+
+    async def get_recipes(
+        self,
+        packet: SwipeSessionPacketSchema,
+        websocket: WebSocket,
+        user: User,
+        swipe_session: SwipeSession,
+    ):
+        recipe_queue = self.queue_serv.get_by_id(swipe_session.id)
+
+        if not recipe_queue:
+            ...
+        
+        return recipe_queue[:config.SWIPE_SESSION_RECIPE_QUEUE]
 
     async def get_user_and_swipe_session(
         self, access_token: str, swipe_session_id: str
@@ -382,7 +399,7 @@ class SwipeSessionWebsocketService:
             Coroutine[Any, Any, None]: The result of the session status update handling.
 
         Raises:
-            UnauthorizedException: If the user is not authorized to perform the session status 
+            UnauthorizedException: If the user is not authorized to perform the session status
             update.
         """
         if not await self.group_serv.is_admin(swipe_session.group_id, user.id):

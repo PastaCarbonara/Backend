@@ -10,7 +10,6 @@ from sqlalchemy import (
     JSON,
     func,
 )
-
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.ext.hybrid import hybrid_property
 from core.db import Base
@@ -19,6 +18,7 @@ from core.db.enums import SwipeSessionEnum, TagType
 from core.config import config
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=missing-class-docstring
 
 
 class RecipeJudgement(Base, TimestampMixin):
@@ -228,7 +228,16 @@ class SwipeSession(Base, TimestampMixin):
         return f"SwipeSession({self.id}, {self.session_date}, {self.status})"
 
 
-class Swipe(Base):
+class SwipeSessionRecipeQueue(Base):
+    __tablename__ = "session_recipe_queue"
+
+    swipe_session_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id"), primary_key=True
+    )
+    queue: Mapped[JSON] = Column(JSON)
+
+
+class Swipe(Base, TimestampMixin):
     __tablename__ = "swipe"
 
     id: Mapped[int] = mapped_column(primary_key=True)

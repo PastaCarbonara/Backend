@@ -113,6 +113,26 @@ class WebsocketConnectionManager:
 
         self.active_pools[pool_id]["connections"].append(websocket)
 
+        # {
+        #     pool_id: {
+        #         "connections": [
+        #             user_id: {
+        #                 "websocket": WebSocket,
+        #                 "queue": [],
+        #             },
+        #         ],
+        #         "queue": [function]
+        #     }
+        # }
+
+        # SELECT *
+        # FROM recipe
+        # WHERE recipe.id is (
+        #     SELECT swipe.recipe_id 
+        #     FROM swipe 
+        #     WHERE swipe.
+        # )
+
         return websocket
 
     async def receive_data(self, websocket: WebSocket, schema: ModelMetaclass):
