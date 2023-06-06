@@ -6,6 +6,7 @@ from pathlib import Path
 import unicodedata
 import re
 
+
 def slugify(value, allow_unicode=False):
     """
     Taken from https://github.com/django/django/blob/master/django/utils/text.py
@@ -25,8 +26,6 @@ def slugify(value, allow_unicode=False):
 
 def get_logger(exc: Exception | str = None):
     """Initializes logger and generates log name."""
-    print(exc)
-    print(str(exc))
 
     Path(os.getcwd() + "/logs").mkdir(parents=True, exist_ok=True)
 

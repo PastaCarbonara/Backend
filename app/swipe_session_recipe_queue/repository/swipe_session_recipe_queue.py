@@ -18,7 +18,9 @@ class SwipeSessionRecipeQueueRepository(BaseRepo):
     #     result = await session.execute(query)
 
     async def get_by_id(self, model_id: int) -> SwipeSessionRecipeQueue:
-        return await super().get_by_id(model_id)
+        query = select(self.model).where(self.model.swipe_session_id == model_id)
+        result = await session.execute(query)
+        return result.scalars().first()
 
     async def get_by_id_and_filter_swiped(self, model_id, user_id):
         # query = select(SwipeSessionRecipeQueue).filter(

@@ -12,4 +12,4 @@ async def home():
 
 @home_router.get("/test", dependencies=[Depends(PermissionDependency([[AllowAll]]))])
 async def test():
-    return await SwipeSessionRecipeQueueService().get_and_progress_queue(1, 2)
+    return await SwipeSessionRecipeQueueService().create_queue(2)

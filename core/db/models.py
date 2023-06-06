@@ -165,13 +165,13 @@ class Recipe(Base, TimestampMixin):
 
     def __repr__(self) -> str:
         return (
-            f"id='{self.id}' "
+            f"Recipe(id='{self.id}' "
             + f"name='{self.name}' "
             + f"description='{self.description}' "
             + f"instructions='{self.instructions}' "
             + f"preparation_time='{self.preparation_time}' "
             + f"image='{self.image}' "
-            + f"creator_id='{self.creator_id}' "
+            + f"creator_id='{self.creator_id}')"
         )
 
     @hybrid_property

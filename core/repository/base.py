@@ -5,6 +5,7 @@ Base reposity to contain crud logic
 from typing import TypeVar, Type, Optional, Generic
 
 from sqlalchemy import select, update, delete
+from sqlalchemy.inspection import inspect
 
 from core.db.session import Base, session
 from core.db.transactional import Transactional
@@ -95,4 +96,4 @@ class BaseRepo(Generic[Model]):
         """
         session.add(model)
         await session.flush()
-        return model.id
+        return model.__dict__.get(inspect(self.model).primary_key[0].name)

@@ -167,8 +167,28 @@ class RecipeRepository(BaseRepo):
             .where((Tag.name == "Vegan") | (Tag.name == "Vegetarisch"))
         )
         return query, count_query
+    
+    async def get(self, limit: int = None, offset: int = None):
+        query = (
+            select(Recipe)
+        )
+        if limit:
+            query = query.limit(limit)
+        if offset: 
+            query = query.offset(offset)
+        query = query.options(
+            joinedload(Recipe.tags).joinedload(RecipeTag.tag),
+            joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
+            joinedload(Recipe.creator).joinedload(User.account_auth),
+            joinedload(Recipe.creator).joinedload(User.image),
+            joinedload(Recipe.judgements),
+            joinedload(Recipe.image),
+        )
 
-    async def get(self, limit: int, offset: int, user_id: int = None) -> List[Recipe]:
+        result = await session.execute(query)
+        return result.scalars().unique().all()
+
+    async def get_filtered(self, limit: int, offset: int, user_id: int = None) -> List[Recipe]:
         """Get a list of recipes.
 
         Returns
@@ -178,7 +198,7 @@ class RecipeRepository(BaseRepo):
         """
         if user_id:
             user_tags = await self.get_user_tags(user_id)
-            if len(user_tags) == 0:
+            if not user_tags:
                 query = select(Recipe)
                 count_query = select(func.count()).select_from(Recipe)
             else:
