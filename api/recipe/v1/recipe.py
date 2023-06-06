@@ -6,6 +6,7 @@ from core.fastapi.dependencies.user import get_current_user
 from core.fastapi_versioning import version
 from core.fastapi.dependencies.permission import (
     AllowAll,
+    IsAdmin,
     PermissionDependency,
     IsAuthenticated,
 )
@@ -75,7 +76,7 @@ async def judge_recipe(
     "",
     response_model=GetFullRecipeResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
+    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
 @version(1)
 async def create_recipe(request: CreateRecipeSchema, user=Depends(get_current_user)):

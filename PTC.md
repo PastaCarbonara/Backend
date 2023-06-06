@@ -27,3 +27,7 @@ Did you `await session.commit()`?
 ## Pytest
 
 `AssertionError: assert None` make sure you're not asserting the returns of a function that does not return anything.
+
+## Unable to connect to websocket
+
+Are you connecting to localhost or to the live version?

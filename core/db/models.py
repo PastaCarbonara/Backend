@@ -49,12 +49,21 @@ class User(Base, TimestampMixin):
 
     image: Mapped["File"] = relationship(back_populates="user", lazy="immediate")
     account_auth: Mapped["AccountAuth"] = relationship(
-        back_populates="user", lazy="immediate", cascade="delete"
+        back_populates="user",
+        lazy="immediate",
+        cascade="all, delete",
+        passive_deletes=True,
     )
     recipes: Mapped[List["Recipe"]] = relationship(back_populates="creator")
-    judged_recipes: Mapped[List[RecipeJudgement]] = relationship(back_populates="user", cascade="all, delete")
-    groups: Mapped[List["GroupMember"]] = relationship(back_populates="user", cascade="all, delete")
-    filters: Mapped[List["UserTag"]] = relationship(back_populates="user", cascade="all, delete")
+    judged_recipes: Mapped[List[RecipeJudgement]] = relationship(
+        back_populates="user", cascade="all, delete"
+    )
+    groups: Mapped[List["GroupMember"]] = relationship(
+        back_populates="user", cascade="all, delete"
+    )
+    filters: Mapped[List["UserTag"]] = relationship(
+        back_populates="user", cascade="all, delete"
+    )
 
 
 class AccountAuth(Base, TimestampMixin):
@@ -64,7 +73,9 @@ class AccountAuth(Base, TimestampMixin):
     username: Mapped[str] = mapped_column(String(50))
     password: Mapped[str] = mapped_column()
 
-    user: Mapped[User] = relationship(back_populates="account_auth", cascade="delete")
+    user: Mapped[User] = relationship(
+        back_populates="account_auth", cascade="all, delete", passive_deletes=True
+    )
 
 
 class RecipeIngredient(Base):
@@ -239,8 +250,12 @@ class Group(Base, TimestampMixin):
     )
 
     image: Mapped[File] = relationship(back_populates="group")
-    users: Mapped[List["GroupMember"]] = relationship(back_populates="group", cascade="all, delete")
-    swipe_sessions: Mapped[List[SwipeSession]] = relationship(back_populates="group", cascade="all, delete")
+    users: Mapped[List["GroupMember"]] = relationship(
+        back_populates="group", cascade="all, delete"
+    )
+    swipe_sessions: Mapped[List[SwipeSession]] = relationship(
+        back_populates="group", cascade="all, delete"
+    )
 
 
 class GroupMember(Base):
