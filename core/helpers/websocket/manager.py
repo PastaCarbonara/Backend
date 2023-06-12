@@ -41,8 +41,9 @@ class WebsocketConnectionManager:
         pools and its connections.
 
         Args:
-            permissions (List[List[BaseWebsocketPermission]], optional): A two dimensional list
-            containing permission requirements for connecting to a manager. Defaults to AllowAll.
+            permissions (List[List[BaseWebsocketPermission]], optional): A two 
+            dimensional list containing permission requirements for connecting to a 
+            manager. Defaults to AllowAll.
         """
         if permissions is None:
             permissions = [[AllowAll]]
@@ -85,7 +86,8 @@ class WebsocketConnectionManager:
         """Check whether the client is authorized to perform the requested action.
 
         Args:
-            **kwargs: Arbitrary keyword arguments that will be passed to the permission check.
+            **kwargs: Arbitrary keyword arguments that will be passed to the permission
+            check.
 
         Raises:
             WebSocketException: If the permission check fails.
@@ -108,10 +110,12 @@ class WebsocketConnectionManager:
 
     async def connect(self, websocket: WebSocket, pool_id: str) -> None:
         """
-        Accepts a WebSocket connection and adds it to the active pools list for a given pool ID.
+        Accepts a WebSocket connection and adds it to the active pools list for a given
+        pool ID.
 
         Args:
-            websocket (WebSocket): The WebSocket connection to add to the active pools list.
+            websocket (WebSocket): The WebSocket connection to add to the active pools
+            list.
             pool_id (str): The ID of the pool to which the connection belongs.
 
         Returns:
@@ -158,8 +162,10 @@ class WebsocketConnectionManager:
             Any: The deserialized and validated data packet.
 
         Raises:
-            JSONSerializableException: If the received data cannot be decoded to a JSON object.
-            ActionNotFoundException: If the received data fails to validate against the given
+            JSONSerializableException: If the received data cannot be decoded to a JSON
+            object.
+            ActionNotFoundException: If the received data fails to validate against the
+            given
             schema.
         """
         data = await websocket.receive_text()
@@ -180,7 +186,8 @@ class WebsocketConnectionManager:
         self, websocket: WebSocket, exception: CustomException = AccessDeniedException
     ) -> None:
         """
-        Denies access to a WebSocket connection and closes the connection with a custom exception.
+        Denies access to a WebSocket connection and closes the connection with a custom
+        exception.
 
         Args:
             websocket (WebSocket): The WebSocket connection to deny access to.
@@ -199,7 +206,8 @@ class WebsocketConnectionManager:
         from the active pools dictionary.
 
         Args:
-            pool_id (str): The ID of the pool from which to remove the WebSocket connection.
+            pool_id (str): The ID of the pool from which to remove the WebSocket
+            connection.
             websocket (WebSocket): The WebSocket connection to remove from the active
             pools list.
         """
@@ -211,13 +219,14 @@ class WebsocketConnectionManager:
 
     async def disconnect_pool(self, pool_id, packet) -> None:
         """
-        Sends a packet to all WebSocket connections in a given pool and removes each connection
-        from the active pools list.
+        Sends a packet to all WebSocket connections in a given pool and removes each
+        connection from the active pools list.
 
         Args:
-            pool_id (str): The ID of the pool from which to disconnect all WebSocket connections.
-            packet (WebsocketPacketSchema): The packet to send to all WebSocket connections before
-            disconnecting.
+            pool_id (str): The ID of the pool from which to disconnect all WebSocket
+            connections.
+            packet (WebsocketPacketSchema): The packet to send to all WebSocket
+            connections before disconnecting.
         """
         pool = self.active_pools.get(pool_id)
 
@@ -292,8 +301,8 @@ class WebsocketConnectionManager:
 
         Args:
             websocket: WebSocket object representing the active WebSocket connection.
-            exception: A CustomException or ConnectionCode object representing the error to
-            report to the client.
+            exception: A CustomException or ConnectionCode object representing the error
+            to report to the client.
 
         Returns:
             None.
@@ -338,12 +347,12 @@ class WebsocketConnectionManager:
             await connection.send_json(packet.dict())
 
     def get_connection_count(self, pool_id: str | None = None) -> int:
-        """ "Gets the total number of active websocket connections across all pools, or the number
-        of connections for a specific pool if pool_id is provided.
+        """ "Gets the total number of active websocket connections across all pools, or
+        the number of connections for a specific pool if pool_id is provided.
 
         Args:
-            pool_id (str | None, optional): The ID of the pool to get connection count for.
-                Defaults to None.
+            pool_id (str | None, optional): The ID of the pool to get connection count
+            for. Defaults to None.
 
         Returns:
             int: The total number of active websocket connections.
