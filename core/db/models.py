@@ -162,6 +162,9 @@ class Recipe(Base, TimestampMixin):
     judgements: Mapped[RecipeJudgement] = relationship(
         back_populates="recipe", cascade="all, delete"
     )
+    swipe_session_matches: Mapped[list["SwipeSession"]] = relationship(
+        back_populates="swipe_match"
+    )
 
     def __repr__(self) -> str:
         return (
@@ -217,7 +220,9 @@ class SwipeSession(Base, TimestampMixin):
     )
     status: Mapped[SwipeSessionEnum] = mapped_column(default=SwipeSessionEnum.READY)
     group_id: Mapped[int] = mapped_column(ForeignKey("group.id"), nullable=True)
+    match_recipe_id: Mapped[int] = mapped_column(ForeignKey("recipe.id"), nullable=True)
 
+    swipe_match: Mapped[Recipe] = relationship(back_populates="swipe_session_matches")
     swipes: Mapped[List["Swipe"]] = relationship(
         back_populates="swipe_session", uselist=True
     )

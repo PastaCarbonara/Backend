@@ -26,6 +26,9 @@ class BaseRepo(Generic[Model]):
         :param model: The SQLAlchemy model class for which the repository should provide operations.
         """
         self.model = model
+    
+    def query_options(self, query):
+        return query
 
     async def get_by_id(self, model_id: int) -> Optional[Model]:
         """
@@ -35,6 +38,7 @@ class BaseRepo(Generic[Model]):
         :return: The model instance with the given ID, or None if no such instance exists.
         """
         query = select(self.model).where(self.model.id == model_id)
+        query = self.query_options(query)
         result = await session.execute(query)
         return result.scalars().first()
 
@@ -58,6 +62,7 @@ class BaseRepo(Generic[Model]):
             .values(**params)
             .execution_options(synchronize_session=synchronize_session)
         )
+        query = self.query_options(query)
         await session.execute(query)
 
     @Transactional()
