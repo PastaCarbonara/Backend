@@ -63,8 +63,19 @@ class WebsocketConnectionManager:
         except WebSocketDisconnect:
             ...
         except Exception as exc:
-            get_logger(exc)
+            log_name = get_logger(exc)
             logging.info(f"pool_id {pool_id}, func: {func.__name__}")
+            logging.exception(exc)
+
+            packet = WebsocketPacketSchema(
+                action=WebsocketActionEnum.CONNECTION_CODE,
+                payload={
+                    "code": "500",
+                    "message": f"An error happened, check the log \
+                        '{log_name}' for more info",
+                },
+            )
+            await self.pool_broadcast(pool_id, packet)
 
         queue.pop(0)
 
@@ -128,8 +139,8 @@ class WebsocketConnectionManager:
         # SELECT *
         # FROM recipe
         # WHERE recipe.id is (
-        #     SELECT swipe.recipe_id 
-        #     FROM swipe 
+        #     SELECT swipe.recipe_id
+        #     FROM swipe
         #     WHERE swipe.
         # )
 

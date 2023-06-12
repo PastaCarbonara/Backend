@@ -27,7 +27,6 @@ class SwipeSessionSchema(BaseModel):
     id: HashId
     session_date: date
     status: SwipeSessionEnum
-    user_id: HashId
     group_id: HashId
     swipes: List[SwipeSchema]
     matches: list[RecipeSchema] | None = []

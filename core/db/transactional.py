@@ -10,9 +10,9 @@ class Transactional:
             try:
                 result = await func(*args, **kwargs)
                 await session.commit()
-            except Exception as e:
+            except Exception as exc:
                 await session.rollback()
-                raise e
+                raise exc
 
             return result
 

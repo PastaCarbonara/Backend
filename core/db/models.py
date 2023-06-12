@@ -216,7 +216,6 @@ class SwipeSession(Base, TimestampMixin):
         default=func.now(), server_default=func.now()  # pylint: disable=not-callable
     )
     status: Mapped[SwipeSessionEnum] = mapped_column(default=SwipeSessionEnum.READY)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     group_id: Mapped[int] = mapped_column(ForeignKey("group.id"), nullable=True)
 
     swipes: Mapped[List["Swipe"]] = relationship(
@@ -232,7 +231,7 @@ class SwipeSessionRecipeQueue(Base):
     __tablename__ = "session_recipe_queue"
 
     swipe_session_id: Mapped[int] = mapped_column(
-        ForeignKey("user.id"), primary_key=True
+        ForeignKey("swipe_session.id"), primary_key=True
     )
     queue: Mapped[JSON] = Column(JSON)
 

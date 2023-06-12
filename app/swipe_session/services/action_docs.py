@@ -5,6 +5,7 @@ and returns.
 
 
 import enum
+from core.db.enums import SwipeSessionActionEnum
 
 
 class STANDARDS(str, enum.Enum):
@@ -16,7 +17,7 @@ class STANDARDS(str, enum.Enum):
 
 
 actions = {
-    "CONNECTION_CODE": {
+    SwipeSessionActionEnum.CONNECTION_CODE: {
         "info": "Action for responding with a HTTP status code",
         "expected_request": {
             "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,
@@ -33,7 +34,7 @@ actions = {
             }
         }
     },
-    "GLOBAL_MESSAGE": {
+    SwipeSessionActionEnum.GLOBAL_MESSAGE: {
         "info": "Action for sending a message to all connected users within the whole application.",
         "expected_request": {
             "parameters": {
@@ -52,7 +53,7 @@ actions = {
             }
         }
     },
-    "RECIPE_MATCH": {
+    SwipeSessionActionEnum.RECIPE_MATCH: {
         "info": "Action where a match is received",
         "expected_request": {
             "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,
@@ -69,7 +70,7 @@ actions = {
             }
         }
     },
-    "RECIPE_SWIPE": {
+    SwipeSessionActionEnum.RECIPE_SWIPE: {
         "info": "Action for liking a recipe",
         "expected_request": {
             "parameters": {
@@ -85,7 +86,7 @@ actions = {
             "parameters": {}
         }
     },
-    "POOL_MESSAGE": {
+    SwipeSessionActionEnum.POOL_MESSAGE: {
         "info": "Action for sending a message to all connected users within a pool.",
         "expected_request": {
             "parameters": {
@@ -104,7 +105,7 @@ actions = {
             }
         }
     },
-    "SESSION_STATUS_UPDATE": {
+    SwipeSessionActionEnum.SESSION_STATUS_UPDATE: {
         "info": "Action for updating the session status.",
         "expected_request": {
             "parameters": {
@@ -119,6 +120,22 @@ actions = {
                 "action": "string",
                 "payload": {
                     "status": "string"
+                }
+            }
+        }
+    },
+    SwipeSessionActionEnum.GET_RECIPES: {
+        "info": "Action for requesting or recipes.",
+        "expected_request": {
+            "parameters": {
+                "action": "string"
+            }
+        },
+        "expected_response": {
+            "parameters": {
+                "action": "string",
+                "payload": {
+                    "recipes": "list of recipes"
                 }
             }
         }
