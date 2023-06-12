@@ -20,6 +20,7 @@ from app.swipe_session.services.swipe_session import SwipeSessionService
 from app.swipe_session_recipe_queue.services.swipe_session_recipe_queue import (
     SwipeSessionRecipeQueueService,
 )
+from core.db import session
 from core.exceptions.websocket import (
     ActionNotImplementedException,
     AlreadySwipedException,
@@ -216,14 +217,10 @@ class SwipeSessionWebsocketService:
                 swipe_session.id, user.id
             )
 
-        recipes = [
-            GetFullRecipeResponseSchema(
-                **(
-                    await self.recipe_serv.get_recipe_by_id(queue_item["recipe_id"])
-                ).to_dict()
-            )
-            for queue_item in recipe_queue
-        ]
+        recipes = []
+        for queue_item in recipe_queue:
+            recipe = await self.recipe_serv.get_recipe_by_id(queue_item["recipe_id"])
+            recipes.append(GetFullRecipeResponseSchema(**recipe.to_dict()))
 
         packet = SwipeSessionPacketSchema(
             action=SwipeSessionActionEnum.GET_RECIPES,
@@ -362,7 +359,7 @@ class SwipeSessionWebsocketService:
         group = await self.group_serv.get_group_by_id(swipe_session.group_id)
 
         if len(matching_swipes) >= len(group.users):
-            await self.handle_session_match(websocket, swipe_session.id, recipe_id)
+            await self.handle_session_match(websocket, swipe_session, recipe_id)
 
             packet = SwipeSessionPacketSchema(
                 action=SwipeSessionActionEnum.SESSION_STATUS_UPDATE,
@@ -504,7 +501,7 @@ class SwipeSessionWebsocketService:
         )
 
     async def handle_session_match(
-        self, websocket: WebSocket, session_id: int, recipe_id: int
+        self, websocket: WebSocket, swipe_session: SwipeSession, recipe_id: int
     ) -> None:
         """
         Send a recipe match packet to all participants of a swipe session.
@@ -527,6 +524,9 @@ class SwipeSessionWebsocketService:
             )
             return
 
+        swipe_session.swipe_match = recipe
+        await session.commit()
+
         full_recipe = GetFullRecipeResponseSchema(**recipe.to_dict())
 
         payload = {"message": "A match has been found", "recipe": full_recipe}
@@ -534,4 +534,4 @@ class SwipeSessionWebsocketService:
             action=SwipeSessionActionEnum.RECIPE_MATCH, payload=payload
         )
 
-        await self.manager.pool_broadcast(session_id, packet)
+        await self.manager.pool_broadcast(swipe_session.id, packet)

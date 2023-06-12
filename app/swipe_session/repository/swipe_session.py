@@ -8,9 +8,13 @@ from core.db import session
 from core.db.enums import SwipeSessionEnum
 from core.db.models import (
     GroupMember,
+    Recipe,
+    RecipeIngredient,
+    RecipeTag,
     Swipe,
     SwipeSession,
     Group,
+    User,
 )
 from core.repository.base import BaseRepo
 
@@ -30,13 +34,21 @@ class SwipeSessionRepository(BaseRepo):
     def __init__(self):
         super().__init__(SwipeSession)
 
+    def query_options(self, query):
+        return query.options(
+            joinedload(SwipeSession.swipes),
+            joinedload(SwipeSession.swipe_match),
+            joinedload(SwipeSession.swipe_match).joinedload(Recipe.image),
+        )
+
     async def get(self):
         """Retrieve all swipe sessions with their swipes.
 
         Returns:
             list[SwipeSession]: List of `SwipeSession` instances with their `swipes`.
         """
-        query = select(self.model).options(joinedload(self.model.swipes))
+        query = select(self.model)
+        query = self.query_options(query)
 
         result = await session.execute(query)
         return result.unique().scalars().all()
@@ -53,10 +65,8 @@ class SwipeSessionRepository(BaseRepo):
         query = (
             select(self.model)
             .where(self.model.group_id == group_id)
-            .options(
-                joinedload(self.model.swipes),
-            )
         )
+        query = self.query_options(query)
         result = await session.execute(query)
         return result.scalars().unique().all()
 

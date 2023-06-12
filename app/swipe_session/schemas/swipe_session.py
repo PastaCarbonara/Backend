@@ -29,7 +29,7 @@ class SwipeSessionSchema(BaseModel):
     status: SwipeSessionEnum
     group_id: HashId
     swipes: List[SwipeSchema]
-    matches: list[RecipeSchema] | None = []
+    swipe_match: RecipeSchema = None
 
     class Config:
         orm_mode = True
