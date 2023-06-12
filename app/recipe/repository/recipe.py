@@ -92,7 +92,6 @@ class RecipeRepository(BaseRepo):
             select(Recipe)
             .join(RecipeTag)
             .join(Tag)
-            .join(UserTag, isouter=True)
             .where(
                 Recipe.id.not_in(
                     select(Recipe.id)
@@ -104,7 +103,6 @@ class RecipeRepository(BaseRepo):
                     .where(UserTag.user_id == user_id, Tag.tag_type == "Allergieën")
                 )
             )
-            .where((UserTag.user_id.is_(None)) | (UserTag.user_id == user_id))
             .where(Tag.name == "Vegan")
             .order_by(Recipe.id)
         )
@@ -112,7 +110,6 @@ class RecipeRepository(BaseRepo):
             select(func.count(Recipe.id))
             .join(RecipeTag)
             .join(Tag)
-            .join(UserTag, isouter=True)
             .where(
                 Recipe.id.not_in(
                     select(Recipe.id)
@@ -124,7 +121,6 @@ class RecipeRepository(BaseRepo):
                     .where(UserTag.user_id == user_id, Tag.tag_type == "Allergieën")
                 )
             )
-            .where((UserTag.user_id.is_(None)) | (UserTag.user_id == user_id))
             .where(Tag.name == "Vegan")
         )
         return query, count_query
