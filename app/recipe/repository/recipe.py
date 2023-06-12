@@ -103,7 +103,7 @@ class RecipeRepository(BaseRepo):
                     .where(UserTag.user_id == user_id, Tag.tag_type == "Allergieën")
                 )
             )
-            .where(Tag.name == "Vegan")
+            .where(Tag.name == "Veganistisch")
             .order_by(Recipe.id)
         )
         count_query = (
@@ -121,7 +121,7 @@ class RecipeRepository(BaseRepo):
                     .where(UserTag.user_id == user_id, Tag.tag_type == "Allergieën")
                 )
             )
-            .where(Tag.name == "Vegan")
+            .where(Tag.name == "Veganistisch")
         )
         return query, count_query
 
@@ -142,7 +142,7 @@ class RecipeRepository(BaseRepo):
                     .where(UserTag.user_id == user_id, Tag.tag_type == "Allergieën")
                 )
             )
-            .where((Tag.name == "Vegan") | (Tag.name == "Vegetarisch"))
+            .where((Tag.name == "Veganistisch") | (Tag.name == "Vegetarisch"))
             .order_by(Recipe.id)
         )
         count_query = (
@@ -160,7 +160,7 @@ class RecipeRepository(BaseRepo):
                     .where(UserTag.user_id == user_id, Tag.tag_type == "Allergieën")
                 )
             )
-            .where((Tag.name == "Vegan") | (Tag.name == "Vegetarisch"))
+            .where((Tag.name == "Veganistisch") | (Tag.name == "Vegetarisch"))
         )
         return query, count_query
 
@@ -179,7 +179,7 @@ class RecipeRepository(BaseRepo):
                 count_query = select(func.count()).select_from(Recipe)
             else:
                 # apply filters
-                if "Vegan" in [tag.name for tag in user_tags]:
+                if "Veganistisch" in [tag.name for tag in user_tags]:
                     ## apply vegan filter
                     query, count_query = self.get_vegan_filter_queries(
                         user_id, user_tags
