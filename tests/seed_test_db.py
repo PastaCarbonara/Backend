@@ -41,9 +41,9 @@ def seed_db():
 
         # done like this because session.flush() did not work.
         # user id 1 should be admin, group id 1 and 2 should be group_1 and .._2 respectivly
-        session_1 = SwipeSession(user_id=1, group_id=1)
-        session_2 = SwipeSession(user_id=1, group_id=2)
-        session_3 = SwipeSession(user_id=1, group_id=2)
+        session_1 = SwipeSession(group_id=1)
+        session_2 = SwipeSession(group_id=2)
+        session_3 = SwipeSession(group_id=2)
 
         recipe_1 = Recipe(
             name="Union pie",

@@ -492,9 +492,34 @@ async def test_swipe_session_1(
         assert_status_code(data_1, exc.SuccessfullConnection)
         assert_status_code(data_2, exc.SuccessfullConnection)
 
+        # Get recipes
+        ws_admin.send_json({"action": ssae.GET_RECIPES})
+        data_1 = ws_admin.receive_json()
+
+        assert data_1.get("action") == ssae.GET_RECIPES
+
+        payload_1 = data_1.get("payload")
+        assert payload_1 is not None
+        assert type(payload_1.get("recipes")) == list
+
+        ws_normal_user.send_json({"action": ssae.GET_RECIPES})
+        data_2 = ws_normal_user.receive_json()
+
+        assert data_2.get("action") == ssae.GET_RECIPES
+
+        payload_2 = data_2.get("payload")
+        assert payload_2 is not None
+        assert type(payload_2.get("recipes")) == list
+
+        admin_recipes = payload_1.get("recipes")
+        user_recipes = payload_2.get("recipes")
+
         # Swipe recipes (does not return anything)
-        send_swipe(ws_admin, 1, False)
-        send_swipe(ws_normal_user, 1, True)
+        for recipe in admin_recipes:
+            send_swipe(ws_admin, recipe["id"], True)
+
+        for recipe in user_recipes:
+            send_swipe(ws_normal_user, recipe["id"], True)
 
         # Swipe already swipe recipe
         send_swipe(ws_admin, 1, False)
@@ -697,14 +722,26 @@ async def test_swipe_session_4(
         assert_status_code(data_1, exc.SuccessfullConnection)
         assert_status_code(data_2, exc.SuccessfullConnection)
 
+        # Get new recipes for user
+        ws_normal_user.send_json({"action": ssae.GET_RECIPES})
+        data_2 = ws_normal_user.receive_json()
+        print(data_2)
+
+        assert data_2.get("action") == ssae.GET_RECIPES
+
+        payload_2 = data_2.get("payload")
+        assert payload_2 is not None
+        assert type(payload_2.get("recipes")) == list
+
+        user_recipes = payload_2.get("recipes")
         # Swipe match
-        send_swipe(ws_normal_user, 2, True)
-        send_swipe(ws_admin, 2, True)
+        send_swipe(ws_normal_user, user_recipes[0]["id"], True)
 
         # should be closing
 
         data_1 = ws_admin.receive_json()
         data_2 = ws_normal_user.receive_json()
+        print(data_1)
 
         assert data_1.get("action") == ssae.RECIPE_MATCH
         assert data_1.get("payload").get("recipe").get("id") == 2

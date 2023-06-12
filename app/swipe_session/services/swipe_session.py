@@ -219,7 +219,7 @@ class SwipeSessionService:
             # pylint: enable=broad-exception-raised
 
         db_swipe_session = SwipeSession(
-            group_id=group_id, user_id=user.id, **request.dict()
+            group_id=group_id, **request.dict()
         )
 
         request.session_date = self.convert_date(request.session_date)

@@ -10,7 +10,6 @@ from sqlalchemy import (
     JSON,
     func,
 )
-
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.ext.hybrid import hybrid_property
 from core.db import Base
@@ -19,6 +18,7 @@ from core.db.enums import SwipeSessionEnum, TagType
 from core.config import config
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=missing-class-docstring
 
 
 class RecipeJudgement(Base, TimestampMixin):
@@ -165,13 +165,13 @@ class Recipe(Base, TimestampMixin):
 
     def __repr__(self) -> str:
         return (
-            f"id='{self.id}' "
+            f"Recipe(id='{self.id}' "
             + f"name='{self.name}' "
             + f"description='{self.description}' "
             + f"instructions='{self.instructions}' "
             + f"preparation_time='{self.preparation_time}' "
             + f"image='{self.image}' "
-            + f"creator_id='{self.creator_id}' "
+            + f"creator_id='{self.creator_id}')"
         )
 
     @hybrid_property
@@ -216,7 +216,6 @@ class SwipeSession(Base, TimestampMixin):
         default=func.now(), server_default=func.now()  # pylint: disable=not-callable
     )
     status: Mapped[SwipeSessionEnum] = mapped_column(default=SwipeSessionEnum.READY)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     group_id: Mapped[int] = mapped_column(ForeignKey("group.id"), nullable=True)
 
     swipes: Mapped[List["Swipe"]] = relationship(
@@ -228,7 +227,16 @@ class SwipeSession(Base, TimestampMixin):
         return f"SwipeSession({self.id}, {self.session_date}, {self.status})"
 
 
-class Swipe(Base):
+class SwipeSessionRecipeQueue(Base):
+    __tablename__ = "session_recipe_queue"
+
+    swipe_session_id: Mapped[int] = mapped_column(
+        ForeignKey("swipe_session.id"), primary_key=True
+    )
+    queue: Mapped[JSON] = Column(JSON)
+
+
+class Swipe(Base, TimestampMixin):
     __tablename__ = "swipe"
 
     id: Mapped[int] = mapped_column(primary_key=True)
