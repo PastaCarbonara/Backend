@@ -44,6 +44,16 @@ class RecipeRepository(BaseRepo):
 
     def __init__(self):
         super().__init__(Recipe)
+        
+    def query_options(self, query):
+        return query.options(
+            joinedload(Recipe.tags).joinedload(RecipeTag.tag),
+            joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
+            joinedload(Recipe.creator).joinedload(User.account_auth),
+            joinedload(Recipe.creator).joinedload(User.image),
+            joinedload(Recipe.judgements),
+            joinedload(Recipe.image),
+        )
 
     def get_no_dieet_filter_queries(self, user_id, user_tags):
         print("no dieet")
@@ -172,14 +182,7 @@ class RecipeRepository(BaseRepo):
             query = query.limit(limit)
         if offset: 
             query = query.offset(offset)
-        query = query.options(
-            joinedload(Recipe.tags).joinedload(RecipeTag.tag),
-            joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
-            joinedload(Recipe.creator).joinedload(User.account_auth),
-            joinedload(Recipe.creator).joinedload(User.image),
-            joinedload(Recipe.judgements),
-            joinedload(Recipe.image),
-        )
+        query = self.query_options(query)
 
         result = await session.execute(query)
         return result.scalars().unique().all()
@@ -219,14 +222,7 @@ class RecipeRepository(BaseRepo):
             query = select(Recipe)
             count_query = select(func.count()).select_from(Recipe)
         # eager load all relationships
-        query = query.options(
-            joinedload(Recipe.tags).joinedload(RecipeTag.tag),
-            joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
-            joinedload(Recipe.creator).joinedload(User.account_auth),
-            joinedload(Recipe.creator).joinedload(User.image),
-            joinedload(Recipe.judgements),
-            joinedload(Recipe.image),
-        )
+        query = self.query_options(query)
         # apply limit and offset
         query = query.limit(limit).offset(offset)
         result = await session.execute(query)
@@ -258,15 +254,8 @@ class RecipeRepository(BaseRepo):
         query = (
             select(Recipe)
             .where(Recipe.id == model_id)
-            .options(
-                joinedload(Recipe.tags).joinedload(RecipeTag.tag),
-                joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
-                joinedload(Recipe.creator).joinedload(User.account_auth),
-                joinedload(Recipe.creator).joinedload(User.image),
-                joinedload(Recipe.judgements),
-                joinedload(Recipe.image),
-            )
         )
+        query = self.query_options(query)
         result = await session.execute(query)
         return result.scalars().first()
 
@@ -287,14 +276,8 @@ class RecipeRepository(BaseRepo):
             select(Recipe)
             .join(Recipe.tags)
             .where(Tag.name.in_(tags))
-            .options(
-                joinedload(Recipe.tags).joinedload(RecipeTag.tag),
-                joinedload(Recipe.creator),
-                joinedload(Recipe.judgements),
-                joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
-                joinedload(Recipe.image),
-            )
         )
+        query = self.query_options(query)
         result = await session.execute(query)
         return result.scalars().all()
 
@@ -315,14 +298,8 @@ class RecipeRepository(BaseRepo):
             select(Recipe)
             .join(Recipe.ingredients)
             .where(Ingredient.name.in_(ingredients))
-            .options(
-                joinedload(Recipe.tags).joinedload(RecipeTag.tag),
-                joinedload(Recipe.creator),
-                joinedload(Recipe.judgements),
-                joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
-                joinedload(Recipe.image),
-            )
         )
+        query = self.query_options(query)
         result = await session.execute(query)
         return result.scalars().all()
 

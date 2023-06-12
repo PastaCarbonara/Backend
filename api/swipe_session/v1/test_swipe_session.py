@@ -725,7 +725,6 @@ async def test_swipe_session_4(
         # Get new recipes for user
         ws_normal_user.send_json({"action": ssae.GET_RECIPES})
         data_2 = ws_normal_user.receive_json()
-        print(data_2)
 
         assert data_2.get("action") == ssae.GET_RECIPES
 
@@ -741,7 +740,6 @@ async def test_swipe_session_4(
 
         data_1 = ws_admin.receive_json()
         data_2 = ws_normal_user.receive_json()
-        print(data_1)
 
         assert data_1.get("action") == ssae.RECIPE_MATCH
         assert data_1.get("payload").get("recipe").get("id") == 2

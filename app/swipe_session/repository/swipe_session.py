@@ -70,25 +70,6 @@ class SwipeSessionRepository(BaseRepo):
         result = await session.execute(query)
         return result.scalars().unique().all()
 
-    async def get_by_id(self, model_id: int) -> SwipeSession:
-        """Retrieve a swipe session by ID.
-
-        Args:
-            id (int): ID of the swipe session.
-
-        Returns:
-            SwipeSession: The `SwipeSession` instance with the specified ID.
-        """
-        query = (
-            select(self.model)
-            .where(self.model.id == model_id)
-            .options(
-                joinedload(self.model.swipes),
-            )
-        )
-        result = await session.execute(query)
-        return result.scalars().first()
-
     async def update_by_group_to_paused(self, group_id: int) -> None:
         """Update swipe sessions for a group to `PAUSED` status.
 
