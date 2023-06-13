@@ -58,7 +58,8 @@ class WebsocketConnectionManager:
 
         while queue[0] != ticket:
             ...
-            print(queue)
+            # print(queue)
+            print(ticket, func.__name__)
 
         try:
             await func(**kwargs)
