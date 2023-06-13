@@ -18,6 +18,12 @@ class UserRepository(BaseRepo):
 
     def __init__(self):
         super().__init__(User)
+        
+    def query_options(self, query):
+        return query.options(
+            joinedload(User.account_auth),
+            joinedload(User.image),
+        )
 
     @Transactional()
     async def create_user(self, display_name: str, ctoken: uuid.UUID) -> None:
@@ -87,36 +93,8 @@ class UserRepository(BaseRepo):
         query = (
             select(User)
             .where(User.client_token == ctoken)
-            .options(
-                joinedload(User.account_auth),
-                joinedload(User.image),
-            )
         )
-        result = await session.execute(query)
-        return result.scalars().first()
-
-    async def get_by_id(self, model_id: int) -> User:
-        """Get user by id.
-
-        Parameters
-        ----------
-        user_id : int
-            User id.
-
-
-        Returns
-        -------
-        User
-            User instance.
-        """
-        query = (
-            select(User)
-            .where(User.id == model_id)
-            .options(
-                joinedload(User.account_auth),
-                joinedload(User.image),
-            )
-        )
+        query = self.query_options(query)
         result = await session.execute(query)
         return result.scalars().first()
 
@@ -137,11 +115,8 @@ class UserRepository(BaseRepo):
             select(User)
             .join(User.account_auth)
             .where(AccountAuth.username == username)
-            .options(
-                joinedload(User.account_auth),
-                joinedload(User.image),
-            )
         )
+        query = self.query_options(query)
         result = await session.execute(query)
         return result.scalars().first()
 
@@ -162,11 +137,8 @@ class UserRepository(BaseRepo):
             select(User)
             .join(User.account_auth)
             .where(User.display_name == display_name)
-            .options(
-                joinedload(User.account_auth),
-                joinedload(User.image),
-            )
         )
+        query = self.query_options(query)
         result = await session.execute(query)
         return result.scalars().first()
 
@@ -178,10 +150,8 @@ class UserRepository(BaseRepo):
         List[User]
             User list.
         """
-        query = select(User).options(
-            joinedload(User.account_auth),
-            joinedload(User.image),
-        )
+        query = select(User)
+        query = self.query_options(query)
         result = await session.execute(query)
         return result.scalars().all()
 

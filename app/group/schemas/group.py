@@ -1,4 +1,3 @@
-from typing import Optional
 from pydantic import Field
 from pydantic import BaseModel, root_validator
 from pydantic.utils import GetterDict

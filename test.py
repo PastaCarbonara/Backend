@@ -1,8 +1,7 @@
 # pylint: skip-file
 
-def func(**kwargs):
-    print(kwargs)
-    x = {kwargs}
-    print(x)
 
-func(x="lol", y="chicken ")
+
+x = [1 ,2 ,3 ,4 ,5]
+
+print(x[1:])
