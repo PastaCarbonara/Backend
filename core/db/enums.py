@@ -11,6 +11,7 @@ class UserEnum(BaseEnum):
 
 class WebsocketActionEnum(str, BaseEnum):
     CONNECTION_CODE = "CONNECTION_CODE"
+    RECIPE_MATCH = "RECIPE_MATCH"
     POOL_MESSAGE = "POOL_MESSAGE"
     GLOBAL_MESSAGE = "GLOBAL_MESSAGE"
 
@@ -23,7 +24,6 @@ class SwipeSessionActionEnum(str, BaseEnum):
     GLOBAL_MESSAGE = "GLOBAL_MESSAGE"
     RECIPE_SWIPE = "RECIPE_SWIPE"
     SESSION_STATUS_UPDATE = "SESSION_STATUS_UPDATE"
-    GET_RECIPES = "GET_RECIPES"
 
 
 class SwipeSessionEnum(str, BaseEnum):

@@ -20,7 +20,7 @@ def slugify(value, allow_unicode=False):
         value = unicodedata.normalize('NFKC', value)
     else:
         value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
-    value = re.sub(r'[^\w\s-]', '-', value.lower())
+    value = re.sub(r'[^\w\s-]', '', value.lower())
     return re.sub(r'[-\s]+', '-', value).strip('-_')
 
 
@@ -32,9 +32,9 @@ def get_logger(exc: Exception | str = None):
     log_name = "_".join(
         [
             datetime.now().strftime("%m%d%Y-%H%M%S"),
-            (slugify(str(exc)[:50]) or "untitled"),
+            (slugify(str(exc)) or "untitled"),
         ]
-    ).lower()
+    ).lower().replace(" ", "_")
 
     logging.basicConfig(
         filename=f"logs/{log_name}.log",

@@ -15,7 +15,7 @@ from app.group.exceptions.group import (
     NotInGroupException,
 )
 from core.db.models import Group, GroupMember
-from core.db import Transactional, session
+from core.db import Transactional
 
 
 class GroupService:
@@ -34,8 +34,8 @@ class GroupService:
         Gets a list of all groups.
     get_groups_by_user(user_id) -> list[Group]
         Gets a list of groups for a given user.
-    create_group(request: CreateGroupSchema, user_id: int, object_storage: 
-    ObjectStorageInterface) -> int
+    create_group(request: CreateGroupSchema, user_id: int, object_storage: ObjectStorageInterface)
+    -> int
         Creates a new group with the given data and adds the user as an admin.
     get_group_by_id(group_id: int) -> Group
         Gets a group by ID.
@@ -52,17 +52,17 @@ class GroupService:
         self.image_serv = ImageService
         self.swipe_session_serv = SwipeSessionService()
 
-    # async def attach_matches(self, group: Group):
-    #     for swipe_session in group.swipe_sessions:
-    #         swipe_session.matches = await self.swipe_session_serv.get_matches(
-    #             swipe_session.id
-    #         )
-    #     return group
+    async def attach_matches(self, group: Group):
+        for swipe_session in group.swipe_sessions:
+            swipe_session.matches = await self.swipe_session_serv.get_matches(
+                swipe_session.id
+            )
+        return group
 
-    # async def attach_matches_all(self, groups: list[Group]):
-    #     for group in groups:
-    #         group = await self.attach_matches(group)
-    #     return groups
+    async def attach_matches_all(self, groups: list[Group]):
+        for group in groups:
+            group = await self.attach_matches(group)
+        return groups
 
     async def is_member(self, group_id: int, user_id: int) -> bool:
         """
@@ -120,7 +120,7 @@ class GroupService:
             A list of all groups.
         """
         groups: list[Group] = await self.repo.get()
-        # groups = await self.attach_matches_all(groups)
+        groups = await self.attach_matches_all(groups)
 
         return groups
 
@@ -135,7 +135,7 @@ class GroupService:
             list[Group]: A list of Group objects that the user is a member of.
         """
         groups: list[Group] = await self.repo.get_by_user_id(user_id)
-        # groups = await self.attach_matches_all(groups)
+        groups = await self.attach_matches_all(groups)
 
         return groups
 
@@ -223,7 +223,7 @@ class GroupService:
             Group: The Group object with the specified ID.
         """
         group: Group = await self.repo.get_by_id(group_id)
-        # group = await self.attach_matches(group)
+        group = await self.attach_matches(group)
 
         return group
 

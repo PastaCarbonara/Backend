@@ -32,7 +32,6 @@ class Config(BaseSettings):
     ACCESS_TOKEN_EXPIRE_PERIOD: int = 3600
     REFRESH_TOKEN_EXPIRE_PERIOD: int = 3600 * 24
     TASK_CAPTURE_EXCEPTIONS: bool = os.getenv("TASK_CAPTURE_EXCEPTIONS")
-    SWIPE_SESSION_RECIPE_QUEUE: int = 5
 
 
 class DevelopmentConfig(Config):

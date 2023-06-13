@@ -27,9 +27,10 @@ class SwipeSessionSchema(BaseModel):
     id: HashId
     session_date: date
     status: SwipeSessionEnum
+    user_id: HashId
     group_id: HashId
     swipes: List[SwipeSchema]
-    swipe_match: RecipeSchema = None
+    matches: list[RecipeSchema] | None = []
 
     class Config:
         orm_mode = True
