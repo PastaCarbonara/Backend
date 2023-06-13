@@ -52,18 +52,6 @@ class GroupService:
         self.image_serv = ImageService
         self.swipe_session_serv = SwipeSessionService()
 
-    # async def attach_matches(self, group: Group):
-    #     for swipe_session in group.swipe_sessions:
-    #         swipe_session.matches = await self.swipe_session_serv.get_matches(
-    #             swipe_session.id
-    #         )
-    #     return group
-
-    # async def attach_matches_all(self, groups: list[Group]):
-    #     for group in groups:
-    #         group = await self.attach_matches(group)
-    #     return groups
-
     async def is_member(self, group_id: int, user_id: int) -> bool:
         """
         Checks if a given user is a member of a given group.
@@ -120,7 +108,6 @@ class GroupService:
             A list of all groups.
         """
         groups: list[Group] = await self.repo.get()
-        # groups = await self.attach_matches_all(groups)
 
         return groups
 
