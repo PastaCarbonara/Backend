@@ -206,12 +206,15 @@ class ImageService:
             await self.image_repo.delete(image)
         except IntegrityError as exc:
             raise FileDependecyException() from exc
-        try:
-            await self.object_storage_interface.delete_image(filename)
-        except ResourceNotFoundError as exc:
-            raise AzureImageDeleteNotFoundException() from exc
-        except Exception as exc:
-            raise AzureImageDeleteException() from exc
+        for size_name, _ in SIZES:
+            try:
+                await self.object_storage_interface.delete_image(
+                    filename.split(".")[0] + f"-{size_name}.webp"
+                )
+            except ResourceNotFoundError as exc:
+                raise AzureImageDeleteNotFoundException() from exc
+            except Exception as exc:
+                raise AzureImageDeleteException() from exc
 
     async def validate_image(self, file: UploadFile):
         """
