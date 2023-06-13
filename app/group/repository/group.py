@@ -3,6 +3,7 @@ from core.db.session import session
 from core.db.models import (
     Group,
     GroupMember,
+    Recipe,
     User,
     SwipeSession,
 )
@@ -14,52 +15,28 @@ class GroupRepository(BaseRepo):
     def __init__(self):
         super().__init__(Group)
 
-    async def get(self) -> list[Group]:
-        query = select(Group).options(
-            joinedload(Group.users)
-            .joinedload(GroupMember.user)
-            .joinedload(User.account_auth),
+    def query_options(self, query):
+        return query.options(
+            joinedload(Group.users).joinedload(GroupMember.user).joinedload(User.account_auth),
             joinedload(Group.users).joinedload(GroupMember.user).joinedload(User.image),
             joinedload(Group.swipe_sessions).joinedload(SwipeSession.swipes),
+            joinedload(Group.swipe_sessions).joinedload(SwipeSession.swipe_match).joinedload(Recipe.image),
             joinedload(Group.image),
         )
+
+    async def get(self) -> list[Group]:
+        query = select(Group)
+        query = self.query_options(query)
         result = await session.execute(query)
         return result.unique().scalars().all()
-
-    async def get_by_id(self, model_id: int) -> Group:
-        query = (
-            select(Group)
-            .where(Group.id == model_id)
-            .options(
-                joinedload(Group.users)
-                .joinedload(GroupMember.user)
-                .joinedload(User.account_auth),
-                joinedload(Group.users)
-                .joinedload(GroupMember.user)
-                .joinedload(User.image),
-                joinedload(Group.swipe_sessions).joinedload(SwipeSession.swipes),
-                joinedload(Group.image),
-            )
-        )
-        result = await session.execute(query)
-        return result.unique().scalars().first()
 
     async def get_by_user_id(self, user_id) -> list[Group]:
         query = (
             select(Group)
             .join(Group.users)
             .where(GroupMember.user_id == user_id)
-            .options(
-                joinedload(Group.users)
-                .joinedload(GroupMember.user)
-                .joinedload(User.account_auth),
-                joinedload(Group.users)
-                .joinedload(GroupMember.user)
-                .joinedload(User.image),
-                joinedload(Group.swipe_sessions).joinedload(SwipeSession.swipes),
-                joinedload(Group.image),
-            )
         )
+        query = self.query_options(query)
         result = await session.execute(query)
         return result.unique().scalars().all()
 

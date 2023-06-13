@@ -59,8 +59,8 @@ async def create_group(
     return await GroupService().get_group_by_id(group_id)
 
 
-@group_v1_router.put(
-    "{group_id}",
+@group_v1_router.patch(
+    "/{group_id}",
     responses={"400": {"model": ExceptionResponseSchema}},
     response_model=GroupSchema,
     dependencies=[Depends(PermissionDependency([[IsGroupAdmin, IsAdmin]]))],

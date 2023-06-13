@@ -5,122 +5,97 @@ and returns.
 
 
 import enum
+from core.db.enums import SwipeSessionActionEnum
 
 
 class STANDARDS(str, enum.Enum):
     """
     Standard messages.
     """
+
     RESPONSE_NOT_IMPLEMENTED = "Response for this action is not implemented"
     REQUEST_NOT_IMPLEMENTED = "Request for this action is not implemented"
 
 
 actions = {
-    "CONNECTION_CODE": {
+    SwipeSessionActionEnum.CONNECTION_CODE: {
         "info": "Action for responding with a HTTP status code",
         "expected_request": {
             "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,
-            "parameters": {}
+            "parameters": {},
         },
         "expected_response": {
             "info": "The code parameter will use HTTP status codes",
             "parameters": {
                 "action": "string",
-                "payload": {
-                    "code": "integer",
-                    "message": "string"
-                }
-            }
-        }
+                "payload": {"code": "integer", "message": "string"},
+            },
+        },
     },
-    "GLOBAL_MESSAGE": {
-        "info": "Action for sending a message to all connected users within the whole application.",
+    SwipeSessionActionEnum.GLOBAL_MESSAGE: {
+        "info": "Action for sending a message to all connected users within the whole \
+            application.",
         "expected_request": {
-            "parameters": {
-                "action": "string",
-                "payload": {
-                    "message": "string"
-                }
-            }
+            "parameters": {"action": "string", "payload": {"message": "string"}}
         },
         "expected_response": {
-            "parameters": {
-                "action": "string",
-                "payload": {
-                    "message": "string"
-                }
-            }
-        }
+            "parameters": {"action": "string", "payload": {"message": "string"}}
+        },
     },
-    "RECIPE_MATCH": {
+    SwipeSessionActionEnum.RECIPE_MATCH: {
         "info": "Action where a match is received",
         "expected_request": {
             "info": STANDARDS.REQUEST_NOT_IMPLEMENTED,
-            "parameters": {}
+            "parameters": {},
         },
         "expected_response": {
-            "info": "payload -> recipe is the same response object as when getting a recipe",
+            "info": "payload -> recipe is the same response object as when getting a \
+                recipe",
             "parameters": {
                 "action": "string",
-                "payload": {
-                    "message": "string",
-                    "recipe": "json"
-                }
-            }
-        }
+                "payload": {"message": "string", "recipe": "json"},
+            },
+        },
     },
-    "RECIPE_SWIPE": {
+    SwipeSessionActionEnum.RECIPE_SWIPE: {
         "info": "Action for liking a recipe",
         "expected_request": {
             "parameters": {
                 "action": "string",
-                "payload": {
-                    "like": "boolean",
-                    "recipe_id": "integer"
-                }
+                "payload": {"like": "boolean", "recipe_id": "integer"},
             }
         },
         "expected_response": {
             "info": STANDARDS.RESPONSE_NOT_IMPLEMENTED,
-            "parameters": {}
-        }
+            "parameters": {},
+        },
     },
-    "POOL_MESSAGE": {
+    SwipeSessionActionEnum.POOL_MESSAGE: {
         "info": "Action for sending a message to all connected users within a pool.",
         "expected_request": {
-            "parameters": {
-                "action": "string",
-                "payload": {
-                    "message": "string"
-                }
-            }
+            "parameters": {"action": "string", "payload": {"message": "string"}}
         },
         "expected_response": {
-            "parameters": {
-                "action": "string",
-                "payload": {
-                    "message": "string"
-                }
-            }
-        }
+            "parameters": {"action": "string", "payload": {"message": "string"}}
+        },
     },
-    "SESSION_STATUS_UPDATE": {
+    SwipeSessionActionEnum.SESSION_STATUS_UPDATE: {
         "info": "Action for updating the session status.",
         "expected_request": {
-            "parameters": {
-                "action": "string",
-                "payload": {
-                    "status": "string"
-                }
-            }
+            "parameters": {"action": "string", "payload": {"status": "string"}}
         },
+        "expected_response": {
+            "parameters": {"action": "string", "payload": {"status": "string"}}
+        },
+    },
+    SwipeSessionActionEnum.GET_RECIPES: {
+        "info": "Action for requesting or recipes.",
+        "expected_request": {"parameters": {"action": "string"}},
         "expected_response": {
             "parameters": {
                 "action": "string",
-                "payload": {
-                    "status": "string"
-                }
+                "payload": {"recipes": "list of recipes"},
             }
-        }
+        },
     },
 }
