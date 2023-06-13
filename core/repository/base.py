@@ -5,6 +5,7 @@ Base reposity to contain crud logic
 from typing import TypeVar, Type, Optional, Generic
 
 from sqlalchemy import select, update, delete
+from sqlalchemy.inspection import inspect
 
 from core.db.session import Base, session
 from core.db.transactional import Transactional
@@ -25,6 +26,9 @@ class BaseRepo(Generic[Model]):
         :param model: The SQLAlchemy model class for which the repository should provide operations.
         """
         self.model = model
+    
+    def query_options(self, query):
+        return query
 
     async def get_by_id(self, model_id: int) -> Optional[Model]:
         """
@@ -34,6 +38,7 @@ class BaseRepo(Generic[Model]):
         :return: The model instance with the given ID, or None if no such instance exists.
         """
         query = select(self.model).where(self.model.id == model_id)
+        query = self.query_options(query)
         result = await session.execute(query)
         return result.scalars().first()
 
@@ -57,6 +62,7 @@ class BaseRepo(Generic[Model]):
             .values(**params)
             .execution_options(synchronize_session=synchronize_session)
         )
+        query = self.query_options(query)
         await session.execute(query)
 
     @Transactional()
@@ -95,4 +101,4 @@ class BaseRepo(Generic[Model]):
         """
         session.add(model)
         await session.flush()
-        return model.id
+        return model.__dict__.get(inspect(self.model).primary_key[0].name)
