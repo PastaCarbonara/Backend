@@ -26,6 +26,19 @@ from app.image.repository.image import ImageRepository
 from app.image.utils import generate_unique_filename
 
 ALLOWED_TYPES = ["image/jpeg", "image/png"]
+SMALL_SIZE = ("small", 128, 128)
+MEDIUM_SIZE = ("medium", 200, 200)
+LARGE_SIZE = ("large", 300, 300)
+THUMBNAIL_SIZE = ("thumbnail", 150, 200)
+SIZES = [SMALL_SIZE, MEDIUM_SIZE, LARGE_SIZE, THUMBNAIL_SIZE]
+
+url = ""
+image = {
+    "small": url,  # 128x128
+    "medium": url,  # 200x200 of 0.5 x oorspronkelijke grootte
+    "large": url,  # 300x300 of 1x oorspronkelijke grootte
+    "thumbnail": url,  # 150x200
+}
 
 
 class ImageService:
@@ -132,10 +145,23 @@ class ImageService:
             await self.validate_image(image)
         for image in images:
             unique_filename = generate_unique_filename(image.filename)
-            try:
-                await self.object_storage_interface.upload_image(image, unique_filename)
-            except Exception as exc:
-                raise AzureImageUploadException() from exc
+            img = Image.open(image.file)
+
+            for size in SIZES:
+                # resize image
+                resized_image = img.resize((size[1], size[2]))
+
+                unique_filename_with_size = unique_filename.replace(
+                    ".",
+                    f"_{size[0]}.",
+                )
+                # try:
+                await self.object_storage_interface.upload_image(
+                    resized_image, unique_filename_with_size
+                )
+                # except Exception as exc:
+                #     print(ex)
+                #     raise AzureImageUploadException() from exc
             image = await self.image_repo.store(unique_filename)
             new_images.append(image)
         return new_images
