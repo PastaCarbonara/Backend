@@ -133,7 +133,26 @@ class File(Base):
 
     @hybrid_property
     def file_url(self):
+        """Get the URL of the original file."""
         return config.AZURE_IMAGE_URL_BASE + self.filename
+
+    @hybrid_property
+    def urls(self):
+        """URLs of the file."""
+        return {
+            "thumbnail": config.AZURE_IMAGE_URL_BASE
+            + self.filename.split(".")[0]
+            + "-thumbnail.webp",
+            "small": config.AZURE_IMAGE_URL_BASE
+            + self.filename.split(".")[0]
+            + "-sm.webp",
+            "medium": config.AZURE_IMAGE_URL_BASE
+            + self.filename.split(".")[0]
+            + "-md.webp",
+            "large": config.AZURE_IMAGE_URL_BASE
+            + self.filename.split(".")[0]
+            + "-lg.webp",
+        }
 
 
 class Recipe(Base, TimestampMixin):

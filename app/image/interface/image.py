@@ -5,6 +5,7 @@ from fastapi import UploadFile
 
 from azure.storage.blob.aio import BlobServiceClient
 from core.config import config
+from PIL.Image import Image
 
 
 class ObjectStorageInterface(ABC):
@@ -12,7 +13,7 @@ class ObjectStorageInterface(ABC):
 
     @classmethod
     @abstractmethod
-    async def upload_image(cls, image: UploadFile, unique_filename: str) -> None:
+    async def upload_image(cls, image: Image, unique_filename: str) -> None:
         """Upload an image to the object storage.
 
         Parameters
@@ -45,7 +46,7 @@ class AzureBlobInterface(ObjectStorageInterface):
     connection_string = config.AZURE_BLOB_CONNECTION_STRING
 
     @classmethod
-    async def upload_image(cls, image: UploadFile, unique_filename: None):
+    async def upload_image(cls, image: Image, unique_filename: None):
         blob_service_client = BlobServiceClient.from_connection_string(
             cls.connection_string
         )
@@ -54,8 +55,7 @@ class AzureBlobInterface(ObjectStorageInterface):
                 cls.container_name
             )
             blob_client = container_client.get_blob_client(unique_filename)
-            file = image.file.read()
-            await blob_client.upload_blob(file)
+            await blob_client.upload_blob(image)
 
     @classmethod
     async def delete_image(cls, filename: str) -> None:

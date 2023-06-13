@@ -6,7 +6,7 @@ from azure.core.exceptions import ResourceNotFoundError
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.exc import IntegrityError
 from fastapi import UploadFile
-
+from io import BytesIO
 from core.db.models import File
 from core.db import Transactional
 from core.config import config
@@ -25,11 +25,12 @@ from app.image.interface.image import ObjectStorageInterface
 from app.image.repository.image import ImageRepository
 from app.image.utils import generate_unique_filename
 
-ALLOWED_TYPES = ["image/jpeg", "image/png"]
-SMALL_SIZE = ("small", 128, 128)
-MEDIUM_SIZE = ("medium", 200, 200)
-LARGE_SIZE = ("large", 300, 300)
-THUMBNAIL_SIZE = ("thumbnail", 150, 200)
+# ratio of the image size to the original size: 2048x1496
+ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
+THUMBNAIL_SIZE = ("thumbnail", 0.125)  # 0.125x oorspronkelijke grootte
+SMALL_SIZE = ("sm", 0.25)  # 0.25x oorspronkelijke grootte
+MEDIUM_SIZE = ("md", 0.5)  # 0.5x oorspronkelijke grootte
+LARGE_SIZE = ("lg", 1)  # 1x oorspronkelijke grootte
 SIZES = [SMALL_SIZE, MEDIUM_SIZE, LARGE_SIZE, THUMBNAIL_SIZE]
 
 url = ""
@@ -144,20 +145,28 @@ class ImageService:
         for image in images:
             await self.validate_image(image)
         for image in images:
+            contents = await image.read()
+            original_image = Image.open(BytesIO(contents))
             unique_filename = generate_unique_filename(image.filename)
-            img = Image.open(image.file)
 
-            for size in SIZES:
-                # resize image
-                resized_image = img.resize((size[1], size[2]))
+            for size_name, ratio in SIZES:
+                resized_image = original_image.resize(
+                    (
+                        int(ratio * original_image.size[0]),
+                        int(ratio * original_image.size[1]),
+                    )
+                )
+                webp_image = resized_image.convert("RGB")
+                output = BytesIO()
+                webp_image.save(output, format="webp", quality=80, method=6)
+                output.seek(0)
 
-                unique_filename_with_size = unique_filename.replace(
-                    ".",
-                    f"_{size[0]}.",
+                unique_filename_with_size = (
+                    unique_filename.split(".")[0] + f"-{size_name}.webp"
                 )
                 # try:
                 await self.object_storage_interface.upload_image(
-                    resized_image, unique_filename_with_size
+                    output, unique_filename_with_size
                 )
                 # except Exception as exc:
                 #     print(ex)
