@@ -90,8 +90,6 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
     def __init__(self) -> None:
         """Initialize the service.
         """
-        super().__init__(manager=manager)
-
         self.group_serv = GroupService()
         self.swipe_session_serv = SwipeSessionService()
         self.swipe_serv = SwipeService()
@@ -99,13 +97,15 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
         self.queue_serv = SwipeSessionRecipeQueueService()
         self.user_serv = UserService()
 
-        self.actions = {
-            SwipeSessionActionEnum.GLOBAL_MESSAGE: self.handle_global_message,
-            SwipeSessionActionEnum.RECIPE_SWIPE: self.handle_recipe_swipe,
-            SwipeSessionActionEnum.POOL_MESSAGE: self.handle_pool_message,
-            SwipeSessionActionEnum.SESSION_STATUS_UPDATE: self.handle_session_status_update_auth,  # noqa: E501
-            SwipeSessionActionEnum.GET_RECIPES: self.handle_get_recipes,
+        actions = {
+            SwipeSessionActionEnum.GLOBAL_MESSAGE.value: self.handle_global_message,
+            SwipeSessionActionEnum.RECIPE_SWIPE.value: self.handle_recipe_swipe,
+            SwipeSessionActionEnum.POOL_MESSAGE.value: self.handle_pool_message,
+            SwipeSessionActionEnum.SESSION_STATUS_UPDATE.value: self.handle_session_status_update_auth,  # noqa: E501
+            SwipeSessionActionEnum.GET_RECIPES.value: self.handle_get_recipes,
         }
+
+        super().__init__(manager=manager, actions=actions)
 
     async def handler(
         self,

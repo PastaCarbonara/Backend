@@ -12,16 +12,22 @@ from core.exceptions.websocket import (
 )
 from core.helpers.logger import get_logger
 from core.helpers.schemas.websocket import WebsocketPacketSchema
+from core.helpers.websocket.manager import WebsocketConnectionManager
 
 
 class BaseWebsocketService:
-    def __init__(self, manager) -> None:
+    def __init__(
+        self, manager: WebsocketConnectionManager, actions: dict = None
+    ) -> None:
         self.manager = manager
 
-        self.actions = {
-            WebsocketActionEnum.POOL_MESSAGE: self.handle_pool_message,
-            WebsocketActionEnum.GLOBAL_MESSAGE: self.handle_global_message,
-        }
+        if not actions:
+            self.actions = {
+                WebsocketActionEnum.POOL_MESSAGE.value: self.handle_pool_message,
+                WebsocketActionEnum.GLOBAL_MESSAGE.value: self.handle_global_message,
+            }
+        else:
+            self.actions = actions
 
     async def handler(self, websocket: WebSocket, pool_id: int, **kwargs) -> None:
         """The handler for the Websocket protocol.
@@ -50,9 +56,12 @@ class BaseWebsocketService:
                     await self.manager.handle_connection_code(websocket, exc)
 
                 else:
+                    print(packet.action.value)
+                    print([str(key) for key in self.actions.keys()])
                     func = self.actions.get(
-                        packet.action, self.handle_action_not_implemented
+                        packet.action.value, self.handle_action_not_implemented
                     )
+                    print(func.__name__)
 
                     await self.manager.queued_run(
                         pool_id=pool_id,
@@ -73,9 +82,7 @@ class BaseWebsocketService:
             logging.exception(exc)
             print(exc)
 
-    async def handle_action_not_implemented(
-        self, websocket: WebSocket, **kwargs
-    ):
+    async def handle_action_not_implemented(self, websocket: WebSocket, **kwargs):
         """Handle an action packet that has not been implemented.
 
         Args:
@@ -89,12 +96,9 @@ class BaseWebsocketService:
         await self.manager.handle_connection_code(
             websocket, ActionNotImplementedException
         )
-        
+
     async def handle_global_message(
-        self,
-        packet: WebsocketPacketSchema,
-        websocket: WebSocket,
-        **kwargs
+        self, packet: WebsocketPacketSchema, websocket: WebSocket, **kwargs
     ):
         """Handle a global message sent by an admin user to all participants of a
         swipe session.

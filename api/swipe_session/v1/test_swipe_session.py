@@ -333,10 +333,12 @@ async def test_invalid_status_update(
 
         data = ws.receive_json()
 
+        print(data)
         assert_status_code(data, exc.SuccessfullConnection)
 
         send_status_update(ws, "Some status")
         data = ws.receive_json()
+        print(data)
 
         assert_status_code(data, exc.StatusNotFoundException)
 
@@ -365,14 +367,19 @@ async def test_invalid_recipe(
         ws: WebSocketTestSession
 
         data = ws.receive_json()
+        print(data)
 
         assert_status_code(data, exc.SuccessfullConnection)
 
         send_swipe(ws, "haha recipe ID is not an int", True)
         data = ws.receive_json()
 
+        print(data)
+        print(data.get("action") == ssae.CONNECTION_CODE)
         assert data.get("action") == ssae.CONNECTION_CODE
+        print(data.get("payload").get("status_code") == 400)
         assert data.get("payload").get("status_code") == 400
+        print(type(data.get("payload").get("message")) == str)
         assert type(data.get("payload").get("message")) == str
 
 
@@ -460,6 +467,7 @@ async def test_swipe_session_1(
     admin_token_headers: Dict[str, str],
     normal_user_token_headers: Dict[str, str],
 ):
+    print("n_1")
     headers = await admin_token_headers
     normal_headers = await normal_user_token_headers
 
