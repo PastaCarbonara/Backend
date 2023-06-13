@@ -60,7 +60,7 @@ class WebsocketConnectionManager:
             ...
 
         try:
-            await func(**kwargs)
+            await func(pool_id=pool_id, **kwargs)
         except WebSocketDisconnect:
             ...
         except Exception as exc:
