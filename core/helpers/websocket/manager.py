@@ -52,6 +52,7 @@ class WebsocketConnectionManager:
         self.permissions = permissions
 
     async def queued_run(self, pool_id, func, **kwargs):
+        return await func(**kwargs)
         ticket = random.random()
         queue = self.active_pools[pool_id]["queue"]
         queue.append(ticket)
