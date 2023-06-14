@@ -79,6 +79,9 @@ class BaseWebsocketService:
             if websocket.client_state == WebSocketState.CONNECTED:
                 await self.manager.disconnect(websocket, pool_id)
 
+            elif websocket.application_state == WebSocketState.CONNECTED:
+                self.manager.remove_websocket(websocket, pool_id)
+
         except WebSocketException as exc:
             get_logger(exc)
             logging.exception(exc)

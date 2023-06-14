@@ -5,6 +5,7 @@ Connection manager for websockets
 import json
 import logging
 import random
+from starlette.websockets import WebSocketState
 from fastapi import WebSocket, WebSocketDisconnect, status
 from pydantic import ValidationError
 from pydantic.main import ModelMetaclass
@@ -41,8 +42,8 @@ class WebsocketConnectionManager:
         pools and its connections.
 
         Args:
-            permissions (List[List[BaseWebsocketPermission]], optional): A two 
-            dimensional list containing permission requirements for connecting to a 
+            permissions (List[List[BaseWebsocketPermission]], optional): A two
+            dimensional list containing permission requirements for connecting to a
             manager. Defaults to AllowAll.
         """
         if permissions is None:
@@ -58,8 +59,6 @@ class WebsocketConnectionManager:
 
         while queue[0] != ticket:
             ...
-            # print(queue)
-            print(ticket, func.__name__, queue)
 
         try:
             await func(pool_id=pool_id, **kwargs)
@@ -130,27 +129,14 @@ class WebsocketConnectionManager:
 
         self.active_pools[pool_id]["connections"].append(websocket)
 
-        # {
-        #     pool_id: {
-        #         "connections": [
-        #             user_id: {
-        #                 "websocket": WebSocket,
-        #                 "queue": [],
-        #             },
-        #         ],
-        #         "queue": [function]
-        #     }
-        # }
-
-        # SELECT *
-        # FROM recipe
-        # WHERE recipe.id is (
-        #     SELECT swipe.recipe_id
-        #     FROM swipe
-        #     WHERE swipe.
-        # )
-
         return websocket
+
+    async def send_data(self, websocket: WebSocket, data: dict):
+        if (
+            websocket.client_state == WebSocketState.CONNECTED
+            and websocket.application_state == WebSocketState.CONNECTED
+        ):
+            await websocket.send_json(data)
 
     async def receive_data(self, websocket: WebSocket, schema: ModelMetaclass):
         """
@@ -213,8 +199,23 @@ class WebsocketConnectionManager:
             websocket (WebSocket): The WebSocket connection to remove from the active
             pools list.
         """
-        self.active_pools[pool_id]["connections"].remove(websocket)
         await websocket.close(status.WS_1000_NORMAL_CLOSURE)
+        self.remove_websocket(websocket, pool_id)
+
+    def remove_websocket(self, websocket: WebSocket, pool_id: str):
+        """
+        Removes a WebSocket connection from the active pools list for a given pool ID.
+
+        If the active pools list for the pool ID becomes empty, removes the pool ID
+        from the active pools dictionary.
+
+        Args:
+            pool_id (str): The ID of the pool from which to remove the WebSocket
+            connection.
+            websocket (WebSocket): The WebSocket connection to remove from the active
+            pools list.
+        """
+        self.active_pools[pool_id]["connections"].remove(websocket)
 
         if self.get_connection_count(pool_id) < 1:
             self.active_pools.pop(pool_id)
@@ -326,7 +327,7 @@ class WebsocketConnectionManager:
             websocket (WebSocket): The WebSocket connection to send the packet to.
             packet (WebsocketPacketSchema): The packet to send.
         """
-        await websocket.send_json(packet.dict())
+        await self.send_data(websocket, packet.dict())
 
     async def global_broadcast(self, packet: WebsocketPacketSchema) -> None:
         """Broadcasts a packet to all connected websockets across all pools.
@@ -335,8 +336,8 @@ class WebsocketConnectionManager:
             packet (WebsocketPacketSchema): The packet to be broadcasted.
         """
         for _, pool in self.active_pools.items():
-            for connection in pool["connections"]:
-                await connection.send_json(packet.dict())
+            for websocket in pool["connections"]:
+                await self.send_data(websocket, packet.dict())
 
     async def pool_broadcast(self, pool_id: str, packet: WebsocketPacketSchema) -> None:
         """Broadcasts a packet to all websockets connected to a specific pool.
@@ -345,8 +346,8 @@ class WebsocketConnectionManager:
             pool_id (str): The ID of the pool to broadcast to.
             packet (WebsocketPacketSchema): The packet to be broadcasted.
         """
-        for connection in self.active_pools[pool_id]["connections"]:
-            await connection.send_json(packet.dict())
+        for websocket in self.active_pools[pool_id]["connections"]:
+            await self.send_data(websocket, packet.dict())
 
     def get_connection_count(self, pool_id: str | None = None) -> int:
         """ "Gets the total number of active websocket connections across all pools, or
