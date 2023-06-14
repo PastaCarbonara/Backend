@@ -13,13 +13,18 @@ from core.exceptions.websocket import (
 from core.helpers.logger import get_logger
 from core.helpers.schemas.websocket import WebsocketPacketSchema
 from core.helpers.websocket.manager import WebsocketConnectionManager
+from pydantic.main import ModelMetaclass
 
 
 class BaseWebsocketService:
     def __init__(
-        self, manager: WebsocketConnectionManager, actions: dict = None
+        self,
+        manager: WebsocketConnectionManager,
+        schema: ModelMetaclass = WebsocketPacketSchema,
+        actions: dict = None,
     ) -> None:
         self.manager = manager
+        self.schema = schema
 
         if not actions:
             self.actions = {
@@ -48,20 +53,17 @@ class BaseWebsocketService:
                 and websocket.client_state == WebSocketState.CONNECTED
             ):
                 try:
-                    packet: WebsocketPacketSchema = await self.manager.receive_data(
-                        websocket, WebsocketPacketSchema
+                    packet: self.schema = await self.manager.receive_data(
+                        websocket, self.schema
                     )
 
                 except CustomException as exc:
                     await self.manager.handle_connection_code(websocket, exc)
 
                 else:
-                    print(packet.action.value)
-                    print([str(key) for key in self.actions.keys()])
                     func = self.actions.get(
                         packet.action.value, self.handle_action_not_implemented
                     )
-                    print(func.__name__)
 
                     await self.manager.queued_run(
                         pool_id=pool_id,

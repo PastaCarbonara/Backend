@@ -195,7 +195,10 @@ async def test_not_in_group(
 
     cur_session = swipe_sessions[0]
 
-    normal_user_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
+    normal_user_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}"
+        f"?token={strip_headers(normal_headers)}"
+    )
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -224,7 +227,10 @@ async def test_inactive_session(
 
     cur_session = swipe_sessions[1]
 
-    normal_user_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
+    normal_user_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}"
+        f"?token={strip_headers(normal_headers)}"
+    )
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -333,12 +339,10 @@ async def test_invalid_status_update(
 
         data = ws.receive_json()
 
-        print(data)
         assert_status_code(data, exc.SuccessfullConnection)
 
         send_status_update(ws, "Some status")
         data = ws.receive_json()
-        print(data)
 
         assert_status_code(data, exc.StatusNotFoundException)
 
@@ -367,19 +371,14 @@ async def test_invalid_recipe(
         ws: WebSocketTestSession
 
         data = ws.receive_json()
-        print(data)
 
         assert_status_code(data, exc.SuccessfullConnection)
 
         send_swipe(ws, "haha recipe ID is not an int", True)
         data = ws.receive_json()
 
-        print(data)
-        print(data.get("action") == ssae.CONNECTION_CODE)
         assert data.get("action") == ssae.CONNECTION_CODE
-        print(data.get("payload").get("status_code") == 400)
         assert data.get("payload").get("status_code") == 400
-        print(type(data.get("payload").get("message")) == str)
         assert type(data.get("payload").get("message")) == str
 
 
@@ -467,7 +466,6 @@ async def test_swipe_session_1(
     admin_token_headers: Dict[str, str],
     normal_user_token_headers: Dict[str, str],
 ):
-    print("n_1")
     headers = await admin_token_headers
     normal_headers = await normal_user_token_headers
 
@@ -482,7 +480,10 @@ async def test_swipe_session_1(
         f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
     )
 
-    normal_user_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
+    normal_user_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}"
+        f"?token={strip_headers(normal_headers)}"
+    )
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -562,7 +563,10 @@ async def test_swipe_session_2(
         f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
     )
 
-    normal_user_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
+    normal_user_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}"
+        f"?token={strip_headers(normal_headers)}"
+    )
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -643,7 +647,10 @@ async def test_swipe_session_3(
         f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
     )
 
-    normal_user_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
+    normal_user_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}"
+        f"?token={strip_headers(normal_headers)}"
+    )
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect
@@ -712,7 +719,10 @@ async def test_swipe_session_4(
         f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(headers)}"
     )
 
-    normal_user_url = f"/api/v1/swipe_sessions/{cur_session.get('id')}?token={strip_headers(normal_headers)}"
+    normal_user_url = (
+        f"/api/v1/swipe_sessions/{cur_session.get('id')}"
+        f"?token={strip_headers(normal_headers)}"
+    )
 
     # i just want the context manager to fit on a single line :,)
     connect = fastapi_client.websocket_connect

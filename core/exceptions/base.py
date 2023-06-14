@@ -10,6 +10,9 @@ class CustomException(Exception):
         if message:
             self.message = message
 
+    def __str__(self) -> str:
+        return self.error_code
+
 
 class BadRequestException(CustomException):
     code = HTTPStatus.BAD_REQUEST

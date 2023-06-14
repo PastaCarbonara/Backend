@@ -69,7 +69,7 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
         user: User, swipe_session: SwipeSession): Get recipes from the queue.
 
         - handle_global_message(packet: SwipeSessionPacketSchema, websocket: WebSocket,
-        user: User, swipe_session: SwipeSession): Authorized version of 
+        user: User, swipe_session: SwipeSession): Authorized version of
         handle_global_message.
 
         - handle_recipe_swipe(packet: SwipeSessionPacketSchema, websocket: WebSocket,
@@ -88,8 +88,7 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
     """
 
     def __init__(self) -> None:
-        """Initialize the service.
-        """
+        """Initialize the service."""
         self.group_serv = GroupService()
         self.swipe_session_serv = SwipeSessionService()
         self.swipe_serv = SwipeService()
@@ -98,14 +97,18 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
         self.user_serv = UserService()
 
         actions = {
-            SwipeSessionActionEnum.GLOBAL_MESSAGE.value: self.handle_global_message,
-            SwipeSessionActionEnum.RECIPE_SWIPE.value: self.handle_recipe_swipe,
-            SwipeSessionActionEnum.POOL_MESSAGE.value: self.handle_pool_message,
-            SwipeSessionActionEnum.SESSION_STATUS_UPDATE.value: self.handle_session_status_update_auth,  # noqa: E501
-            SwipeSessionActionEnum.GET_RECIPES.value: self.handle_get_recipes,
+            SwipeSessionActionEnum.GLOBAL_MESSAGE: self.handle_global_message,
+            SwipeSessionActionEnum.RECIPE_SWIPE: self.handle_recipe_swipe,
+            SwipeSessionActionEnum.POOL_MESSAGE: self.handle_pool_message,
+            SwipeSessionActionEnum.SESSION_STATUS_UPDATE: self.handle_session_status_update_auth,  # noqa: E501
+            SwipeSessionActionEnum.GET_RECIPES: self.handle_get_recipes,
         }
 
-        super().__init__(manager=manager, actions=actions)
+        super().__init__(
+            manager=manager,
+            actions=actions,
+            schema=SwipeSessionPacketSchema,
+        )
 
     async def handler(
         self,
@@ -158,8 +161,7 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
         swipe_session: SwipeSession,
         **kwargs
     ):
-        """Function to get recipe's to the client using the QueueService.
-        """
+        """Function to get recipe's to the client using the QueueService."""
         del kwargs
 
         recipe_queue = await self.queue_serv.get_and_progress_queue(
@@ -267,7 +269,7 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
                 payload={"status": SwipeSessionEnum.COMPLETED},
             )
             await self.handle_session_status_update(
-                packet, websocket, user, swipe_session
+                packet, websocket, swipe_session
             )
 
             exception = ClosingConnection
@@ -285,8 +287,7 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
         swipe_session: SwipeSession,
         **kwargs
     ):
-        """Authorized version of handle_session_status_update.
-        """
+        """Authorized version of handle_session_status_update."""
         del kwargs
 
         if not await self.group_serv.is_admin(swipe_session.group_id, user.id):
@@ -294,7 +295,7 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
             return
 
         return await self.handle_session_status_update(
-            packet, websocket, user, swipe_session
+            packet, websocket, swipe_session
         )
 
     async def handle_session_status_update(
@@ -334,8 +335,7 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
         recipe_id: int,
         **kwargs
     ) -> None:
-        """Send a recipe match packet to all participants of a swipe session.
-        """
+        """Send a recipe match packet to all participants of a swipe session."""
         del kwargs
 
         recipe = await self.recipe_serv.get_recipe_by_id(recipe_id)
