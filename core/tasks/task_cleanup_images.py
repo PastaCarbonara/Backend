@@ -4,6 +4,9 @@ from core.tasks.base_task import BaseTask
 import asyncio
 from datetime import datetime, timedelta
 from app.image.interface import AzureBlobInterface
+from azure.core.exceptions import ResourceNotFoundError
+
+SIZES = ["thumbnail", "sm", "md", "lg"]
 
 
 class Task(BaseTask):
@@ -32,8 +35,13 @@ class Task(BaseTask):
         files_not_referenced = self.session.execute(query).scalars().all()
         for file in files_not_referenced:
             # delete from blob storage
-            asyncio.run(self.azure_blob_interface.delete_image(file.filename))
-            # delete from database
+            for size in SIZES:
+                filename = file.filename.split(".")[0] + "-" + size + ".webp"
+                try:
+                    asyncio.run(self.azure_blob_interface.delete_image(filename))
+                except ResourceNotFoundError as e:
+                    print("has already been deleted from blob storage")
+                # delete from database
             self.session.delete(file)
 
         self.session.commit()
