@@ -6,7 +6,7 @@ from azure.core.exceptions import ResourceNotFoundError
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.exc import IntegrityError
 from fastapi import UploadFile
-
+from io import BytesIO
 from core.db.models import File
 from core.db import Transactional
 from core.config import config
@@ -25,7 +25,26 @@ from app.image.interface.image import ObjectStorageInterface
 from app.image.repository.image import ImageRepository
 from app.image.utils import generate_unique_filename
 
-ALLOWED_TYPES = ["image/jpeg", "image/png"]
+# ratio of the image size to the original size: 2048x1496
+ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
+EXTRA_SMALL_SIZE = (
+    "xs",
+    20,
+)  # de width moet 20px zijn en de height moet de juiste ratio hebben
+THUMBNAIL_SIZE = ("thumbnail", 0.125)  # 0.125x oorspronkelijke grootte
+SMALL_SIZE = ("sm", 0.25)  # 0.25x oorspronkelijke grootte
+MEDIUM_SIZE = ("md", 0.5)  # 0.5x oorspronkelijke grootte
+LARGE_SIZE = ("lg", 1)  # 1x oorspronkelijke grootte
+SIZES = [EXTRA_SMALL_SIZE, SMALL_SIZE, MEDIUM_SIZE, LARGE_SIZE, THUMBNAIL_SIZE]
+
+url = ""
+image = {
+    "xs": url,
+    "sm": url,  # 128x128
+    "md": url,  # 200x200 of 0.5 x oorspronkelijke grootte
+    "lg": url,  # 300x300 of 1x oorspronkelijke grootte
+    "thumbnail": url,  # 150x200
+}
 
 
 class ImageService:
@@ -131,11 +150,26 @@ class ImageService:
         for image in images:
             await self.validate_image(image)
         for image in images:
+            contents = await image.read()
+            original_image = Image.open(BytesIO(contents))
             unique_filename = generate_unique_filename(image.filename)
-            try:
-                await self.object_storage_interface.upload_image(image, unique_filename)
-            except Exception as exc:
-                raise AzureImageUploadException() from exc
+
+            for size_name, ratio in SIZES:
+                transformed_image = self.transform_image(
+                    original_image, size_name, ratio
+                )
+                output = BytesIO()
+                transformed_image.save(output, format="webp", quality=80, method=6)
+                output.seek(0)
+                unique_filename_with_size = (
+                    unique_filename.split(".")[0] + f"-{size_name}.webp"
+                )
+                try:
+                    await self.object_storage_interface.upload_image(
+                        output, unique_filename_with_size
+                    )
+                except Exception as exc:
+                    raise AzureImageUploadException() from exc
             image = await self.image_repo.store(unique_filename)
             new_images.append(image)
         return new_images
@@ -171,12 +205,15 @@ class ImageService:
             await self.image_repo.delete(image)
         except IntegrityError as exc:
             raise FileDependecyException() from exc
-        try:
-            await self.object_storage_interface.delete_image(filename)
-        except ResourceNotFoundError as exc:
-            raise AzureImageDeleteNotFoundException() from exc
-        except Exception as exc:
-            raise AzureImageDeleteException() from exc
+        for size_name, _ in SIZES:
+            try:
+                await self.object_storage_interface.delete_image(
+                    filename.split(".")[0] + f"-{size_name}.webp"
+                )
+            except ResourceNotFoundError as exc:
+                raise AzureImageDeleteNotFoundException() from exc
+            except Exception as exc:
+                raise AzureImageDeleteException() from exc
 
     async def validate_image(self, file: UploadFile):
         """
@@ -260,3 +297,40 @@ class ImageService:
                 temp.write(chunk)
         await file.seek(0)
         return False
+
+    def transform_image(
+        self, image: Image.Image, size_name: str, ratio: float
+    ) -> Image.Image:
+        """Transforms an image to a given size.
+
+        Parameters
+        ----------
+        image : Image.Image
+            The image to transform.
+        size_name : str
+            The name of the size to transform to.
+        ratio : float
+            The ratio to transform the image with.
+
+        Returns
+        -------
+        Image.Image
+            The transformed image.
+
+        """
+        if size_name != "xs":
+            resized_image = image.resize(
+                (
+                    int(ratio * image.size[0]),
+                    int(ratio * image.size[1]),
+                )
+            )
+        else:
+            print("resizing to xs")
+            resized_image = image.resize(
+                (
+                    EXTRA_SMALL_SIZE[1],
+                    int(EXTRA_SMALL_SIZE[1] * (image.size[1] / image.size[0])),
+                )
+            )
+        return resized_image.convert("RGB")
