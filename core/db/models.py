@@ -139,19 +139,13 @@ class File(Base):
     @hybrid_property
     def urls(self):
         """URLs of the file."""
+        filename_prefix = config.AZURE_IMAGE_URL_BASE + self.filename.split(".")[0]
         return {
-            "thumbnail": config.AZURE_IMAGE_URL_BASE
-            + self.filename.split(".")[0]
-            + "-thumbnail.webp",
-            "small": config.AZURE_IMAGE_URL_BASE
-            + self.filename.split(".")[0]
-            + "-sm.webp",
-            "medium": config.AZURE_IMAGE_URL_BASE
-            + self.filename.split(".")[0]
-            + "-md.webp",
-            "large": config.AZURE_IMAGE_URL_BASE
-            + self.filename.split(".")[0]
-            + "-lg.webp",
+            "thumbnail": filename_prefix + "-thumbnail.webp",
+            "xs": filename_prefix + "-xs.webp",
+            "sm": filename_prefix + "-sm.webp",
+            "md": filename_prefix + "-md.webp",
+            "lg": filename_prefix + "-lg.webp",
         }
 
 

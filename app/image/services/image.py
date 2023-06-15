@@ -27,17 +27,22 @@ from app.image.utils import generate_unique_filename
 
 # ratio of the image size to the original size: 2048x1496
 ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
+EXTRA_SMALL_SIZE = (
+    "xs",
+    20,
+)  # de width moet 20px zijn en de height moet de juiste ratio hebben
 THUMBNAIL_SIZE = ("thumbnail", 0.125)  # 0.125x oorspronkelijke grootte
 SMALL_SIZE = ("sm", 0.25)  # 0.25x oorspronkelijke grootte
 MEDIUM_SIZE = ("md", 0.5)  # 0.5x oorspronkelijke grootte
 LARGE_SIZE = ("lg", 1)  # 1x oorspronkelijke grootte
-SIZES = [SMALL_SIZE, MEDIUM_SIZE, LARGE_SIZE, THUMBNAIL_SIZE]
+SIZES = [EXTRA_SMALL_SIZE, SMALL_SIZE, MEDIUM_SIZE, LARGE_SIZE, THUMBNAIL_SIZE]
 
 url = ""
 image = {
-    "small": url,  # 128x128
-    "medium": url,  # 200x200 of 0.5 x oorspronkelijke grootte
-    "large": url,  # 300x300 of 1x oorspronkelijke grootte
+    "xs": url,
+    "sm": url,  # 128x128
+    "md": url,  # 200x200 of 0.5 x oorspronkelijke grootte
+    "lg": url,  # 300x300 of 1x oorspronkelijke grootte
     "thumbnail": url,  # 150x200
 }
 
@@ -150,27 +155,21 @@ class ImageService:
             unique_filename = generate_unique_filename(image.filename)
 
             for size_name, ratio in SIZES:
-                resized_image = original_image.resize(
-                    (
-                        int(ratio * original_image.size[0]),
-                        int(ratio * original_image.size[1]),
-                    )
+                transformed_image = self.transform_image(
+                    original_image, size_name, ratio
                 )
-                webp_image = resized_image.convert("RGB")
                 output = BytesIO()
-                webp_image.save(output, format="webp", quality=80, method=6)
+                transformed_image.save(output, format="webp", quality=80, method=6)
                 output.seek(0)
-
                 unique_filename_with_size = (
                     unique_filename.split(".")[0] + f"-{size_name}.webp"
                 )
-                # try:
-                await self.object_storage_interface.upload_image(
-                    output, unique_filename_with_size
-                )
-                # except Exception as exc:
-                #     print(ex)
-                #     raise AzureImageUploadException() from exc
+                try:
+                    await self.object_storage_interface.upload_image(
+                        output, unique_filename_with_size
+                    )
+                except Exception as exc:
+                    raise AzureImageUploadException() from exc
             image = await self.image_repo.store(unique_filename)
             new_images.append(image)
         return new_images
@@ -298,3 +297,40 @@ class ImageService:
                 temp.write(chunk)
         await file.seek(0)
         return False
+
+    def transform_image(
+        self, image: Image.Image, size_name: str, ratio: float
+    ) -> Image.Image:
+        """Transforms an image to a given size.
+
+        Parameters
+        ----------
+        image : Image.Image
+            The image to transform.
+        size_name : str
+            The name of the size to transform to.
+        ratio : float
+            The ratio to transform the image with.
+
+        Returns
+        -------
+        Image.Image
+            The transformed image.
+
+        """
+        if size_name != "xs":
+            resized_image = image.resize(
+                (
+                    int(ratio * image.size[0]),
+                    int(ratio * image.size[1]),
+                )
+            )
+        else:
+            print("resizing to xs")
+            resized_image = image.resize(
+                (
+                    EXTRA_SMALL_SIZE[1],
+                    int(EXTRA_SMALL_SIZE[1] * (image.size[1] / image.size[0])),
+                )
+            )
+        return resized_image.convert("RGB")
