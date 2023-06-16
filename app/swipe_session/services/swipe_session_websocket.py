@@ -166,6 +166,8 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
 
         if packet.payload:
             limit = packet.payload.get("limit")
+        else:
+            limit = None
 
         recipe_queue = await self.queue_serv.get_and_progress_queue(
             swipe_session.id, user.id, limit
@@ -219,9 +221,6 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
         swipe session.
         """
         del kwargs
-
-        print(packet)
-        await self.manager.handle_pool_message(websocket, swipe_session.id, "hello")
 
         try:
             swipe_schema = CreateSwipeSchema(
