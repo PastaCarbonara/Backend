@@ -10,6 +10,8 @@ services:
       POSTGRES_DB: mealmatch
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
   pgadmin:
     container_name: munchie_pgadmin
     image: dpage/pgadmin4
@@ -37,3 +39,5 @@ services:
     depends_on:
       - fastapi
     command: alembic upgrade head
+volumes:
+  postgres_data:
