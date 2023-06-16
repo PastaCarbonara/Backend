@@ -29,49 +29,43 @@ jobs:
   build:
     name: Functionality code test
 
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.11"
-        
-    - uses: actions/cache@v3
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
-        
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pytest
-        pip install -r requirements_ubuntu.txt
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Build Docker image
+      run: docker build -t munchie-image .
     - name: Test with pytest
       run: | 
-        pytest --cov=app --cov=api --cov-report=html --cov-fail-under=85
+        docker run \
+        -e DU="${DU}" \
+        -e DP="${DP}" \
+        -e DB="${DB}" \
+        -e H="${H}" \
+        -e P="${P}" \
+        -e JWT_SECRET_KEY="${JWT_SECRET_KEY}" \
+        -e HASH_MIN_LEN="${HASH_MIN_LEN}" \
+        -e HASH_SALT="${HASH_SALT}" \
+        -e AZURE_BLOB_ACCOUNT_URL="${AZURE_BLOB_ACCOUNT_URL}" \
+        -e IMAGE_CONTAINER_NAME="${IMAGE_CONTAINER_NAME}" \
+        -e AZURE_BLOB_CONNECTION_STRING="${AZURE_BLOB_CONNECTION_STRING}" \
+        -e AZURE_IMAGE_URL_BASE="${AZURE_IMAGE_URL_BASE}" \
+        munchie-image pytest --cov=app --cov=api --cov-report=html --cov-fail-under=85
+
   quality:
       name: Quality code test
 
-      runs-on: windows-latest
+      runs-on: ubuntu-latest
 
       steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.11"
-      - uses: actions/cache@v3
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}-2
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pylint
-          pip install -r requirements_ubuntu.txt
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build Docker image
+        run: docker build -t munchie-image .
       - name: Lint with pylint
         run: |
-          python linting.py app
+          docker run munchie-image python linting.py app
 
