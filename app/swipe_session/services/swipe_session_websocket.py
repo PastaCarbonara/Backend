@@ -164,14 +164,19 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
         """Function to get recipe's to the client using the QueueService."""
         del kwargs
 
+        if packet.payload:
+            limit = packet.payload.get("limit")
+        else:
+            limit = None
+
         recipe_queue = await self.queue_serv.get_and_progress_queue(
-            swipe_session.id, user.id
+            swipe_session.id, user.id, limit
         )
 
         if not recipe_queue and type(recipe_queue) is not list:
             await self.queue_serv.create_queue(swipe_session.id)
             recipe_queue = await self.queue_serv.get_and_progress_queue(
-                swipe_session.id, user.id
+                swipe_session.id, user.id, limit
             )
 
         recipes = []
@@ -258,8 +263,10 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
                 like=True,
             )
         )
+        print(matching_swipes)
 
         group = await self.group_serv.get_group_by_id(swipe_session.group_id)
+        print(group.users)
 
         if len(matching_swipes) >= len(group.users):
             await self.handle_session_match(websocket, swipe_session, recipe_id)
