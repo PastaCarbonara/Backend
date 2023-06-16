@@ -63,6 +63,7 @@ class WebsocketConnectionManager:
             ...
             if start_time + 60 * 60 > time.time():
                 print("ignoring queue position 1...")
+                start_time = time.time()
                 queue.pop(0)
 
         try:
