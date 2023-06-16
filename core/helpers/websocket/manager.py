@@ -5,6 +5,7 @@ Connection manager for websockets
 import json
 import logging
 import random
+import time
 from starlette.websockets import WebSocketState
 from fastapi import WebSocket, WebSocketDisconnect, status
 from pydantic import ValidationError
@@ -56,9 +57,13 @@ class WebsocketConnectionManager:
         ticket = random.random()
         queue = self.active_pools[pool_id]["queue"]
         queue.append(ticket)
+        start_time = time.time()
 
         while queue[0] != ticket:
             ...
+            if start_time + 60 * 60 > time.time():
+                print("ignoring queue position 1...")
+                queue.pop(0)
 
         try:
             await func(pool_id=pool_id, **kwargs)
