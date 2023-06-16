@@ -169,6 +169,8 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
         else:
             limit = None
 
+        print(limit)
+
         recipe_queue = await self.queue_serv.get_and_progress_queue(
             swipe_session.id, user.id, limit
         )
