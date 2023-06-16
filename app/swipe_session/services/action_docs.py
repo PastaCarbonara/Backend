@@ -90,7 +90,12 @@ actions = {
     },
     SwipeSessionActionEnum.GET_RECIPES: {
         "info": "Action for requesting or recipes.",
-        "expected_request": {"parameters": {"action": "string"}},
+        "expected_request": {
+            "parameters": {
+                "action": "string",
+                "payload": {"limit": "[Optional] integer"}
+            }
+        },
         "expected_response": {
             "parameters": {
                 "action": "string",
