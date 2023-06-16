@@ -23,8 +23,11 @@ class SwipeSessionRecipeQueueService:
 
     @Transactional()
     async def get_and_progress_queue(
-        self, swipe_session_id, user_id, limit=config.SWIPE_SESSION_RECIPE_QUEUE
+        self, swipe_session_id, user_id, limit=None
     ):
+        if not limit:
+            limit = config.SWIPE_SESSION_RECIPE_QUEUE
+        print(limit)
         swipe_session_recipe_queue = await self.repo.get_by_id(swipe_session_id)
         if not swipe_session_recipe_queue:
             return None
