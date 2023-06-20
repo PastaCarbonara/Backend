@@ -2,9 +2,12 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
+from opencensus.ext.azure.log_exporter import AzureLogHandler
 
 import unicodedata
 import re
+
+from core.config import config
 
 
 def slugify(value, allow_unicode=False):
@@ -28,10 +31,8 @@ def slugify(value, allow_unicode=False):
     return re.sub(r"[-\s]+", "-", value).strip("-_")
 
 
-def get_logger(exc: Exception | str = None):
+def get_logger(exc: Exception | str = None) -> tuple[logging.Logger, str]:
     """Initializes logger and generates log name."""
-
-    Path(os.getcwd() + "/logs").mkdir(parents=True, exist_ok=True)
 
     log_name = "_".join(
         [
@@ -39,6 +40,26 @@ def get_logger(exc: Exception | str = None):
             (slugify(str(exc)[:50]) or "untitled"),
         ]
     ).lower()
+
+    if config.ENV == "local":
+        return get_azure_logger("testing-logger!"), log_name
+        return get_local_logger(log_name), log_name
+
+    if config.ENV == "dev":
+        return get_azure_logger(), log_name
+
+        
+    return "No logger", log_name
+    
+
+def get_azure_logger(module_name: str = "backend-server"):
+    logger = logging.getLogger(module_name)
+    logger.addHandler(AzureLogHandler())
+
+    return logger
+
+def get_local_logger(log_name):
+    Path(os.getcwd() + "/logs").mkdir(parents=True, exist_ok=True)
 
     logging.basicConfig(
         filename=f"logs/{log_name}.log",
@@ -48,4 +69,4 @@ def get_logger(exc: Exception | str = None):
         force=True,
     )
 
-    return log_name
+    return logging

@@ -3,7 +3,6 @@ Connection manager for websockets
 """
 
 import json
-import logging
 import random
 import time
 from starlette.websockets import WebSocketState
@@ -71,9 +70,9 @@ class WebsocketConnectionManager:
         except WebSocketDisconnect:
             ...
         except Exception as exc:
-            log_name = get_logger(exc)
-            logging.info(f"pool_id {pool_id}, func: {func.__name__}")
-            logging.exception(exc)
+            logger, log_name = get_logger(exc)
+            logger.info(f"pool_id {pool_id}, func: {func.__name__}")
+            logger.exception(exc)
 
             packet = WebsocketPacketSchema(
                 action=WebsocketActionEnum.CONNECTION_CODE,
@@ -242,11 +241,11 @@ class WebsocketConnectionManager:
         pool = self.active_pools.get(pool_id)
 
         if not pool:
-            get_logger("disconnect_from_no_pool")
-            logging.error("Tried to disconnect from non existing pool")
-            logging.info("pool_id: %s", pool_id)
-            logging.info("sending packet: %s", packet)
-            logging.info("manager object: %s", self.__dict__)
+            logger, log_name = get_logger("disconnect_from_no_pool")
+            logger.error("Tried to disconnect from non existing pool")
+            logger.info("pool_id: %s", pool_id)
+            logger.info("sending packet: %s", packet)
+            logger.info("manager object: %s", self.__dict__)
             return
 
         connections = [ws for ws in pool["connections"]]

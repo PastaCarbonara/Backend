@@ -52,11 +52,11 @@ def init_listeners(app_: FastAPI) -> None:
 
     @app_.exception_handler(Exception)
     async def unicorn_exception_handler(request: Request, exc: Exception):
-        log_name = get_logger(exc)
+        logger, log_name = get_logger(exc)
 
-        logging.info(request.scope.get("raw_path"))
-        logging.info(request.__dict__)
-        logging.exception(exc)
+        logger.info(request.scope.get("raw_path"))
+        logger.info(request.__dict__)
+        logger.exception(exc)
 
         return JSONResponse(
             status_code=500,

@@ -6,4 +6,5 @@ home_router = APIRouter()
 
 @home_router.get("/health", dependencies=[Depends(PermissionDependency([[AllowAll]]))])
 async def home():
+    raise Exception("D:")
     return Response(status_code=200)

@@ -83,8 +83,8 @@ class BaseWebsocketService:
                 self.manager.remove_websocket(websocket, pool_id)
 
         except WebSocketException as exc:
-            get_logger(exc)
-            logging.exception(exc)
+            logger, log_name = get_logger(exc)
+            logger.exception(exc)
             print(exc)
 
     async def handle_action_not_implemented(self, websocket: WebSocket, **kwargs):

@@ -1,12 +1,25 @@
 # pylint: skip-file
 
-import json
+import logging
+from opencensus.ext.azure.log_exporter import AzureLogHandler
+import os
+from dotenv import load_dotenv
 
 
-x = """{"action": "GET_RECIPES", "payload": {"recipes": [{"id": 1, "name": "1", "description": "string", "image": {"filename": "dummy_file", "urls": {"xs": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-xs.webp", "sm": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-sm.webp", "md": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-md.webp", "lg": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-lg.webp", "thumbnail": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-thumbnail.webp"}}, "creator": {"id": "LEP89vBqj7r3Vyma", "display_name": "mr. admin", "is_admin": true, "image": null, "account_auth": {"username": "admin"}}, "preparation_time": 0, "spiciness": 0, "tags": [], "instructions": ["string"], "materials": null, "ingredients": [], "likes": 0}, {"id": 2, "name": "2", "description": "string", "image": {"filename": "dummy_file", "urls": {"xs": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-xs.webp", "sm": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-sm.webp", "md": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-md.webp", "lg": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-lg.webp", "thumbnail": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-thumbnail.webp"}}, "creator": {"id": "LEP89vBqj7r3Vyma", "display_name": "mr. admin", "is_admin": true, "image": null, "account_auth": {"username": "admin"}}, "preparation_time": 0, "spiciness": 0, "tags": [], "instructions": ["string"], "materials": null, "ingredients": [], "likes": 0}, {"id": 3, "name": "123456789.123456789.123456789.123456789.123456789.", "description": "string", "image": {"filename": "dummy_file", "urls": {"xs": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-xs.webp", "sm": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-sm.webp", "md": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-md.webp", "lg": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-lg.webp", "thumbnail": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-thumbnail.webp"}}, "creator": {"id": "LEP89vBqj7r3Vyma", "display_name": "mr. admin", "is_admin": true, "image": null, "account_auth": {"username": "admin"}}, "preparation_time": 0, "spiciness": 0, "tags": [{"id": 3, "name": "string", "tag_type": "Allergie\u00ebn"}], "instructions": ["string"], "materials": ["string"], "ingredients": [{"id": 3, "name": "string", "amount": 0.0, "unit": "string"}], "likes": 0}, {"id": 4, "name": "123456789.123456789.123456789.123456789.123456789.1", "description": "string", "image": {"filename": "dummy_file", "urls": {"xs": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-xs.webp", "sm": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-sm.webp", "md": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-md.webp", "lg": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-lg.webp", "thumbnail": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-thumbnail.webp"}}, "creator": {"id": "LEP89vBqj7r3Vyma", "display_name": "mr. admin", "is_admin": true, "image": null, "account_auth": {"username": "admin"}}, "preparation_time": 0, "spiciness": 0, "tags": [{"id": 3, "name": "string", "tag_type": "Allergie\u00ebn"}], "instructions": ["string"], "materials": ["string"], "ingredients": [{"id": 3, "name": "string", "amount": 0.0, "unit": "string"}], "likes": 0}, {"id": 5, "name": "string", "description": "string", "image": {"filename": "dummy_file", "urls": {"xs": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-xs.webp", "sm": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-sm.webp", "md": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-md.webp", "lg": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-lg.webp", "thumbnail": "https://munchiestore.blob.core.windows.net/munchie-images/dummy_file-thumbnail.webp"}}, "creator": {"id": "LEP89vBqj7r3Vyma", "display_name": "mr. admin", "is_admin": true, "image": null, "account_auth": {"username": "admin"}}, "preparation_time": 0, "spiciness": 3, "tags": [], "instructions": ["string"], "materials": ["string"], "ingredients": [], "likes": 0}]}}"""
+# Check if environment variables are present if not we make use of the .env file to load them
+if os.getenv("DU") is None:
+    load_dotenv()
 
-y = json.loads(x)
+logger = logging.getLogger("backend-server-test")
+logger.addHandler(AzureLogHandler())
 
-print(y)
+# Alternatively manually pass in the connection_string
+# logger.addHandler(AzureLogHandler(connection_string=<appinsights-connection-string>))
 
-print(len(y.get("payload").get("recipes")))
+"""Generate random log data."""
+for num in range(5):
+    logger.info(f"test info {num}")
+    logger.debug(f"test debug {num}")
+    logger.warning(f"Log warning - {num}")
+    logger.error(f"test error {num}")
+    logger.exception(ValueError("test exc"))

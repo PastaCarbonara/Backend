@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import logging
 import threading
 import time
 
@@ -25,7 +24,8 @@ class BaseTask:
         `stop()`: Stops the task.
         `run()`: Runs the task.
         `exec()`: Placeholder method for defining task behavior.
-        `countdown()`: Placeholder property method that returns the time interval between task runs in seconds.
+        `countdown()`: Placeholder property method that returns the time interval 
+        between task runs in seconds.
     """
 
     def __init__(
@@ -95,8 +95,8 @@ class BaseTask:
             print(success_message)
 
         except Exception as exc:
-            get_logger("task-failed_" + str(exc))
-            logging.exception(exc)
+            logger, log_name = get_logger("task-failed_" + str(exc))
+            logger.exception(exc)
 
             if self.capture_exceptions:
                 end = time.time()
@@ -109,7 +109,7 @@ class BaseTask:
                     f" - Error: {exc}"
                 )
                 print(failure_message)
-                logging.info(failure_message)
+                logger.info(failure_message)
                 self.stop()
                 return exc
 

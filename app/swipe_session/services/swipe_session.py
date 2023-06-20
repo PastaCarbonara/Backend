@@ -141,8 +141,8 @@ class SwipeSessionService:
         recipe_ids = await self.repo.get_matches(swipe_session_id)
 
         if len(recipe_ids) > 1:
-            get_logger("multiple_matches")
-            logging.warning("There should only be one match, not %e", len(recipe_ids))
+            logger, log_name = get_logger("multiple_matches")
+            logger.warning("There should only be one match, not %e", len(recipe_ids))
 
         return [await self.recipe_serv.get_recipe_by_id(id) for id in recipe_ids]
 
