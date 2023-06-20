@@ -56,7 +56,8 @@ class RecipeRepository(BaseRepo):
         )
 
     def get_no_dieet_filter_queries(self, user_id, user_tags):
-        print("no dieet")
+        del user_tags
+
         query = (
             select(Recipe)
             .join(RecipeTag)
@@ -97,7 +98,8 @@ class RecipeRepository(BaseRepo):
         return query, count_query
 
     def get_vegan_filter_queries(self, user_id, user_tags):
-        print("vegan")
+        del user_tags
+
         query = (
             select(Recipe)
             .join(RecipeTag)
@@ -136,7 +138,8 @@ class RecipeRepository(BaseRepo):
         return query, count_query
 
     def get_vegetarian_filter_queries(self, user_id, user_tags):
-        print("vegetarian")
+        del user_tags
+
         query = (
             select(Recipe)
             .join(RecipeTag)
