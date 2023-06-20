@@ -126,6 +126,8 @@ class BaseTask:
         ...
 
 
+# NOTE: Example task.
+
 class Task(BaseTask):
     def __init__(self, session, capture_exceptions) -> None:
         name = "Example Task"

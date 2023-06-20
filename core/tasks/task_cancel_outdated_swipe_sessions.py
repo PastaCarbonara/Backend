@@ -12,6 +12,7 @@ class Task(BaseTask):
 
     @property
     def countdown(self):
+        return 60 * 20  # every 20 minutes
         # Everyday at 01:00:00
         x = datetime.today()
         y = x.replace(day=x.day, hour=1, minute=0, second=0, microsecond=0)
@@ -22,6 +23,7 @@ class Task(BaseTask):
         return delta_t.total_seconds()
 
     def exec(self) -> None:
+        print("EXECUTING TASK!")
         cur_date = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         query = (
             update(SwipeSession)
@@ -38,4 +40,4 @@ class Task(BaseTask):
         )
         self.session.execute(query)
         self.session.commit()
-        
+        print("END OF TASK")

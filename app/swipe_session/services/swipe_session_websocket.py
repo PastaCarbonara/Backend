@@ -169,8 +169,6 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
         else:
             limit = None
 
-        print(limit)
-
         recipe_queue = await self.queue_serv.get_and_progress_queue(
             swipe_session.id, user.id, limit
         )
@@ -265,12 +263,11 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
                 like=True,
             )
         )
-        print(matching_swipes)
 
         group = await self.group_serv.get_group_by_id(swipe_session.group_id)
-        print(group.users)
 
         if len(matching_swipes) >= len(group.users):
+            print("Match found")
             await self.handle_session_match(websocket, swipe_session, recipe_id)
 
             packet = SwipeSessionPacketSchema(

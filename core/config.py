@@ -2,7 +2,10 @@ import os
 from dotenv import load_dotenv
 from pydantic import BaseSettings
 
-load_dotenv()
+
+# Check if environment variables are present if not we make use of the .env file to load them
+if os.getenv("DU") is None:
+    load_dotenv()
 
 
 class Config(BaseSettings):

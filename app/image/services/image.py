@@ -326,7 +326,6 @@ class ImageService:
                 )
             )
         else:
-            print("resizing to xs")
             resized_image = image.resize(
                 (
                     EXTRA_SMALL_SIZE[1],

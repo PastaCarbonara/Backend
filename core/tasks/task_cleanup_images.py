@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from app.image.interface import AzureBlobInterface
 from azure.core.exceptions import ResourceNotFoundError
 
-SIZES = ["thumbnail", "sm", "md", "lg"]
+SIZES = ["thumbnail", "sm", "md", "lg", "xs"]
 
 
 class Task(BaseTask):
@@ -17,9 +17,9 @@ class Task(BaseTask):
 
     @property
     def countdown(self):
-        # Everyday at 01:00:00
+        # Everyday at 01:15:00
         x = datetime.today()
-        y = x.replace(day=x.day, hour=1, minute=0, second=0, microsecond=0)
+        y = x.replace(day=x.day, hour=1, minute=15, second=0, microsecond=0)
         if x > y:
             y += timedelta(days=1)
 

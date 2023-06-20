@@ -760,10 +760,10 @@ async def test_swipe_session_4(
         data_2 = ws_normal_user.receive_json()
 
         assert data_1.get("action") == ssae.RECIPE_MATCH
-        assert data_1.get("payload").get("recipe").get("id") == 2
+        assert data_1.get("payload").get("recipe").get("id") == user_recipes[0]["id"]
 
         assert data_2.get("action") == ssae.RECIPE_MATCH
-        assert data_2.get("payload").get("recipe").get("id") == 2
+        assert data_2.get("payload").get("recipe").get("id") == user_recipes[0]["id"]
 
         data_1 = ws_admin.receive_json()
         data_2 = ws_normal_user.receive_json()
