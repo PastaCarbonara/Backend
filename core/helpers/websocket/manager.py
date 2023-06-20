@@ -138,12 +138,10 @@ class WebsocketConnectionManager:
         return websocket
 
     async def send_data(self, websocket: WebSocket, data: dict):
-        print("Trying to send websocket data.")
         if (
             websocket.client_state == WebSocketState.CONNECTED
             and websocket.application_state == WebSocketState.CONNECTED
         ):
-            print(websocket.client_state, websocket.application_state)
             await websocket.send_json(data)
 
     async def receive_data(self, websocket: WebSocket, schema: ModelMetaclass):
@@ -165,6 +163,7 @@ class WebsocketConnectionManager:
             schema.
         """
         data = await websocket.receive_text()
+        print("WEBSOCKET:", data)
 
         try:
             data_json = json.loads(data)
