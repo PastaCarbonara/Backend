@@ -23,14 +23,14 @@ jobs:
       uses: docker/login-action@v2
       with:
         registry: https://index.docker.io/v1/
-        username: ${{ secrets.AzureAppService_ContainerUsername_d459bcc2179143298f7ae66f58bd15d1 }}
-        password: ${{ secrets.AzureAppService_ContainerPassword_37e1b9ef3dea44c9bd0deb41680dcd2e }}
+        username: ${{ secrets.AzureAppService_ContainerUsername_0065a3c008a7463681b0da12e59207b8 }}
+        password: ${{ secrets.AzureAppService_ContainerPassword_17f929a8adf34cd28439ef3c1f2694fc }}
 
     - name: Build and push container image to registry
       uses: docker/build-push-action@v3
       with:
         push: true
-        tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_d459bcc2179143298f7ae66f58bd15d1 }}/munchie1/munchie:${{ github.sha }}
+        tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_0065a3c008a7463681b0da12e59207b8 }}/munchie1:${{ github.sha }}
         file: ./Dockerfile
 
   deploy:
@@ -47,5 +47,5 @@ jobs:
       with:
         app-name: 'Munchie2'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_ba5b8d21ce5343279667040e9f2f58f2 }}
-        images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_d459bcc2179143298f7ae66f58bd15d1 }}/munchie1/munchie:${{ github.sha }}'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_b3200553ca2244d183902042abe9470e }}
+        images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_0065a3c008a7463681b0da12e59207b8 }}/munchie1:${{ github.sha }}'
