@@ -67,5 +67,18 @@ jobs:
         run: docker build -t munchie-image .
       - name: Lint with pylint
         run: |
-          docker run munchie-image python linting.py app
+         docker run \
+         -e DU="${DU}" \
+         -e DP="${DP}" \
+         -e DB="${DB}" \
+         -e H="${H}" \
+         -e P="${P}" \
+         -e JWT_SECRET_KEY="${JWT_SECRET_KEY}" \
+         -e HASH_MIN_LEN="${HASH_MIN_LEN}" \
+         -e HASH_SALT="${HASH_SALT}" \
+         -e AZURE_BLOB_ACCOUNT_URL="${AZURE_BLOB_ACCOUNT_URL}" \
+         -e IMAGE_CONTAINER_NAME="${IMAGE_CONTAINER_NAME}" \
+         -e AZURE_BLOB_CONNECTION_STRING="${AZURE_BLOB_CONNECTION_STRING}" \
+         -e AZURE_IMAGE_URL_BASE="${AZURE_IMAGE_URL_BASE}" \
+         munchie-image python linting.py app
 
