@@ -11,6 +11,5 @@ RUN python -m pip install --no-cache-dir -r requirements.txt
 
 WORKDIR /app
 COPY . /app
-# Set executable permissions for the entrypoint script
-RUN chmod +x /app/entrypoint.sh
-ENTRYPOINT ["/app/entrypoint.sh"]
+
+CMD ["python", "main.py"]
