@@ -11,5 +11,6 @@ RUN python -m pip install --no-cache-dir -r requirements.txt
 
 WORKDIR /app
 COPY . /app
-
+# to ensure database is up to date
+RUN alembic upgrade head
 CMD ["python", "main.py"]
