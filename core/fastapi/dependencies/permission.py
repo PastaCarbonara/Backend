@@ -5,38 +5,40 @@ from typing import List, Type
 from fastapi import Request
 from fastapi.openapi.models import APIKey, APIKeyIn
 from fastapi.security.base import SecurityBase
+
 from app.group.services.group import GroupService
 from app.swipe_session.services.swipe_session import SwipeSessionService
-
+from app.image.services import ImageService
 from app.user.services import UserService
 from core.exceptions import (
     CustomException,
     UnauthorizedException,
 )
+from core.fastapi.dependencies.object_storage import get_object_storage
 from core.helpers.hashid import decode_single
-    
+
 
 def get_group_id_from_path(request):
     hashed_id = request.path_params.get("group_id")
     if not hashed_id:
         return None
-    
+
     return decode_single(hashed_id)
-    
+
 
 def get_user_id_from_path(request):
     hashed_id = request.path_params.get("user_id")
     if not hashed_id:
         return None
-    
+
     return decode_single(hashed_id)
-    
+
 
 def get_session_id_from_path(request):
     hashed_id = request.path_params.get("session_id")
     if not hashed_id:
         return None
-    
+
     return decode_single(hashed_id)
 
 
@@ -53,7 +55,7 @@ class IsAuthenticated(BasePermission):
 
     async def has_permission(self, request: Request) -> bool:
         return request.user.id is not None
-    
+
 
 class IsUserOwner(BasePermission):
     async def has_permission(self, request: Request) -> bool:
@@ -61,10 +63,10 @@ class IsUserOwner(BasePermission):
 
         if not user_id:
             return False
-        
+
         if user_id != request.user.id:
             return False
-        
+
         return True
 
 
@@ -74,12 +76,26 @@ class IsSessionOwner(BasePermission):
 
         if not session_id:
             return False
-        
+
         swipe_session = SwipeSessionService().get_swipe_session_by_id(session_id)
 
         if swipe_session.user_id != request.user.id:
             return False
-        
+
+        return True
+
+
+class IsImageOwner(BasePermission):
+    exception = UnauthorizedException
+
+    async def has_permission(self, request: Request) -> bool:
+        object_storage = await get_object_storage()
+        image = await ImageService(object_storage).get_image_by_name(
+            request.path_params.get("filename")
+        )
+        if image.user_id != request.user.id:
+            return False
+
         return True
 
 
@@ -111,7 +127,7 @@ class IsGroupMember(BasePermission):
         group_id = get_group_id_from_path(request)
         if not group_id:
             return False
-        
+
         try:
             group_id = int(group_id)
         except ValueError as e:

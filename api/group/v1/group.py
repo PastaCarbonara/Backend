@@ -142,7 +142,7 @@ async def leave_group(request: Request, group_id: int = Depends(get_path_group_i
 @group_v1_router.delete(
     "/{group_id}/members/{user_id}",
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[IsAdmin, IsGroupAdmin]]))],
+    dependencies=[Depends(PermissionDependency([[IsAdmin], [IsGroupAdmin]]))],
 )
 @version(1)
 async def remove_member(
