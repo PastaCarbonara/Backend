@@ -2,11 +2,11 @@
 
 from typing import List
 from tempfile import NamedTemporaryFile
+from io import BytesIO
 from azure.core.exceptions import ResourceNotFoundError
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.exc import IntegrityError
 from fastapi import UploadFile
-from io import BytesIO
 from core.db.models import File
 from core.db import Transactional
 from core.config import config
@@ -25,26 +25,18 @@ from app.image.interface.image import ObjectStorageInterface
 from app.image.repository.image import ImageRepository
 from app.image.utils import generate_unique_filename
 
-# ratio of the image size to the original size: 2048x1496
 ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
+
+# de width moet 20px zijn en de height moet de juiste ratio hebben
 EXTRA_SMALL_SIZE = (
     "xs",
     20,
-)  # de width moet 20px zijn en de height moet de juiste ratio hebben
+)
 THUMBNAIL_SIZE = ("thumbnail", 0.125)  # 0.125x oorspronkelijke grootte
 SMALL_SIZE = ("sm", 0.25)  # 0.25x oorspronkelijke grootte
 MEDIUM_SIZE = ("md", 0.5)  # 0.5x oorspronkelijke grootte
 LARGE_SIZE = ("lg", 1)  # 1x oorspronkelijke grootte
 SIZES = [EXTRA_SMALL_SIZE, SMALL_SIZE, MEDIUM_SIZE, LARGE_SIZE, THUMBNAIL_SIZE]
-
-url = ""
-image = {
-    "xs": url,
-    "sm": url,  # 128x128
-    "md": url,  # 200x200 of 0.5 x oorspronkelijke grootte
-    "lg": url,  # 300x300 of 1x oorspronkelijke grootte
-    "thumbnail": url,  # 150x200
-}
 
 
 class ImageService:
@@ -82,6 +74,10 @@ class ImageService:
 
     async def is_image_to_large(file: UploadFile) -> bool:
         Check if an image file exceeds a maximum file size.
+
+    async def transform_image(image: Image, size_name: str, ratio: float) -> Image:
+        Transform an image to a specific size.
+
     """
 
     def __init__(self, object_storage: ObjectStorageInterface):
