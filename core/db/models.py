@@ -47,7 +47,9 @@ class User(Base, TimestampMixin):
         ForeignKey("file.filename", ondelete="CASCADE"), nullable=True
     )
 
-    image: Mapped["File"] = relationship(back_populates="user", lazy="immediate")
+    image: Mapped["File"] = relationship(
+        back_populates="user", lazy="immediate", foreign_keys=[filename]
+    )
     account_auth: Mapped["AccountAuth"] = relationship(
         back_populates="user",
         lazy="immediate",
@@ -63,6 +65,11 @@ class User(Base, TimestampMixin):
     )
     filters: Mapped[List["UserTag"]] = relationship(
         back_populates="user", cascade="all, delete"
+    )
+    uploaded_files: Mapped[List["File"]] = relationship(
+        back_populates="uploaded_by",
+        cascade="all, delete",
+        foreign_keys="[File.user_id]",
     )
 
 
@@ -126,10 +133,17 @@ class File(Base):
     __tablename__ = "file"
 
     filename: Mapped[str] = mapped_column(String(), primary_key=True)
-
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"), primary_key=True
+    )
     recipe: Mapped["Recipe"] = relationship(back_populates="image")
     group: Mapped["Group"] = relationship(back_populates="image")
-    user: Mapped["User"] = relationship(back_populates="image")
+    user: Mapped["User"] = relationship(
+        back_populates="image", foreign_keys="[User.filename]"
+    )
+    uploaded_by: Mapped["User"] = relationship(
+        back_populates="uploaded_files", foreign_keys=[user_id]
+    )
 
     @hybrid_property
     def file_url(self):

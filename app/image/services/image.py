@@ -117,7 +117,7 @@ class ImageService:
         return images
 
     @Transactional()
-    async def upload_images(self, images: List[UploadFile]) -> List[File]:
+    async def upload_images(self, images: List[UploadFile], user_id: int) -> List[File]:
         """
         Upload a list of images to the object storage and repository.
 
@@ -166,7 +166,7 @@ class ImageService:
                     )
                 except Exception as exc:
                     raise AzureImageUploadException() from exc
-            image = await self.image_repo.store(unique_filename)
+            image = await self.image_repo.store(unique_filename, user_id)
             new_images.append(image)
         return new_images
 
