@@ -1,14 +1,15 @@
 from typing import List
 from fastapi import APIRouter, Depends, UploadFile
 from core.exceptions import ExceptionResponseSchema
-from core.fastapi.dependencies.permission import IsAuthenticated
+from core.fastapi.dependencies.permission import IsAuthenticated, IsImageOwner
 from core.fastapi_versioning import version
 from core.fastapi.dependencies.object_storage import get_object_storage
+from core.fastapi.dependencies.user import get_current_user
 from core.fastapi.dependencies import (
     AllowAll,
     PermissionDependency,
-    IsAdmin,
     IsAuthenticated,
+    IsAdmin,
 )
 from app.image.schemas import ImageSchema
 from app.image.services import ImageService
@@ -21,7 +22,7 @@ image_v1_router = APIRouter()
     "",
     response_model=List[ImageSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
-    dependencies=[Depends(PermissionDependency([[AllowAll]]))],
+    dependencies=[Depends(PermissionDependency([[IsAdmin]]))],
 )
 @version(1)
 async def get_images(object_storage=Depends(get_object_storage)):
@@ -47,15 +48,17 @@ async def get_images(filename: str, object_storage=Depends(get_object_storage)):
 )
 @version(1)
 async def create_image(
-    images: list[UploadFile], object_storage=Depends(get_object_storage)
+    images: list[UploadFile],
+    object_storage=Depends(get_object_storage),
+    user=Depends(get_current_user),
 ):
-    return await ImageService(object_storage).upload_images(images)
+    return await ImageService(object_storage).upload_images(images, user.id)
 
 
 @image_v1_router.delete(
     "/{filename}",
     status_code=204,
-    dependencies=[Depends(PermissionDependency([[IsAuthenticated]]))],
+    dependencies=[Depends(PermissionDependency([[IsImageOwner], [IsAdmin]]))],
 )
 @version(1)
 async def delete_image(filename: str, object_storage=Depends(get_object_storage)):

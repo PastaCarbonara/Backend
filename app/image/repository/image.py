@@ -9,6 +9,7 @@ from core.db import session
 from core.repository.base import BaseRepo
 from app.image.exceptions.image import DuplicateFileNameException
 
+
 class ImageRepository(BaseRepo):
     """
     A class that interacts with the database to perform CRUD operations on the 'files' table.
@@ -17,12 +18,13 @@ class ImageRepository(BaseRepo):
     def __init__(self):
         super().__init__(File)
 
-    async def store(self, filename: str) -> File:
+    async def store(self, filename: str, user_id: int) -> File:
         """
         Store the image file with the given filename in the database.
 
         Args:
             filename (str): The name of the image file.
+            user_id (int): The id of the user who uploaded the image file.
 
         Raises:
             DuplicateFileNameException: If a file with the same filename already exists in the
@@ -36,7 +38,7 @@ class ImageRepository(BaseRepo):
         is_exist = result.scalars().first()
         if is_exist:
             raise DuplicateFileNameException()
-        file = File(filename=filename)
+        file = File(filename=filename, user_id=user_id)
         session.add(file)
         return file
 

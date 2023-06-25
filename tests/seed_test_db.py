@@ -13,17 +13,22 @@ def seed_db():
     Session = sessionmaker(engine)
 
     with Session() as session:
-        image_1 = File(filename="image_1")
-        image_2 = File(filename="image_2")
-        image_3 = File(filename="image_3")
-        image_4 = File(filename="image_4")
-        
-        admin = User(display_name="admin", is_admin=True, client_token=uuid.uuid4(), filename="image_4")
-        admin_acc = AccountAuth(
-            username="admin", password=get_password_hash("admin")
+        image_1 = File(filename="image_1", user_id=1)
+        image_2 = File(filename="image_2", user_id=1)
+        image_3 = File(filename="image_3", user_id=1)
+        image_4 = File(filename="image_4", user_id=1)
+
+        admin = User(
+            display_name="admin",
+            is_admin=True,
+            client_token=uuid.uuid4(),
+            filename="image_4",
         )
+        admin_acc = AccountAuth(username="admin", password=get_password_hash("admin"))
         admin.account_auth = admin_acc
-        normal_user = User(display_name="normal_user", client_token=uuid.uuid4(), filename="image_4")
+        normal_user = User(
+            display_name="normal_user", client_token=uuid.uuid4(), filename="image_4"
+        )
         normal_acc = AccountAuth(
             username="normal_user", password=get_password_hash("normal_user")
         )
@@ -71,7 +76,11 @@ def seed_db():
             filename="image_2",
             creator=admin,
         )
-        tags = [Tag(name="tag1", tag_type="Keuken"), Tag(name="tag2", tag_type="Keuken"), Tag(name="tag3", tag_type="Keuken")]
+        tags = [
+            Tag(name="tag1", tag_type="Keuken"),
+            Tag(name="tag2", tag_type="Keuken"),
+            Tag(name="tag3", tag_type="Keuken"),
+        ]
         ingredients = [
             Ingredient(name="ingredient1"),
             Ingredient(name="ingredient2"),
