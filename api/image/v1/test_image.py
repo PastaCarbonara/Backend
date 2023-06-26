@@ -108,3 +108,15 @@ async def test_delete_image_not_exist(
         "/api/v1/images/image_x", headers=admin_token_headers
     )
     assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_not_authorized_to_delete_image(
+    client: AsyncClient, normal_user_token_headers: Dict[str, str]
+):
+    normal_user_token_headers = await normal_user_token_headers
+
+    response = await client.delete(
+        "/api/v1/images/image_1", headers=normal_user_token_headers
+    )
+    assert response.status_code == 401
