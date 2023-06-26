@@ -1,7 +1,6 @@
 # MealMatch backend repository
 
-Boilerplate from [teamhide](https://github.com/teamhide/fastapi-boilerplate).
-
+Hosted backend: https://munchie.azurewebsites.net/api/latest/docs
 ## To run the project
 
 `python -m virualenv venv`
