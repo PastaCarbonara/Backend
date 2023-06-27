@@ -1,6 +1,6 @@
 # MealMatch backend repository
 
-Hosted backend: https://munchie.azurewebsites.net/api/latest/docs 
+Hosted backend: https://munchie.azurewebsites.net/api/latest/docs
 
 ## To run the project
 
