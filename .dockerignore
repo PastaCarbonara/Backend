@@ -9,6 +9,7 @@ venv/
 logs/
 .vs/
 .pytest_cache/
+htmlcov/
 
 # Ignore specific files
 docker-compose*
