@@ -1,5 +1,6 @@
 import random
 from app.recipe.services.recipe import RecipeService
+from app.swipe_session.services.swipe_session import SwipeSessionService
 from app.swipe_session_recipe_queue.exceptions.swipe_session_recipe_queue import (
     QueueAlreadyExistsException,
     QueueItemAlreadyExistsException,
@@ -18,14 +19,13 @@ class SwipeSessionRecipeQueueService:
         self.repo = SwipeSessionRecipeQueueRepository()
         self.recipe_serv = RecipeService()
         self.swipe_serv = SwipeService()
+        self.swipe_session_serv = SwipeSessionService()
 
     # async def get(self, limit = config.SWIPE_SESSION_RECIPE_QUEUE, offset = 0):
     #     return await self.repo.get(limit, offset)
 
     @Transactional()
-    async def get_and_progress_queue(
-        self, swipe_session_id, user_id, limit=None
-    ):
+    async def get_and_progress_queue(self, swipe_session_id, user_id, limit=None):
         if not limit:
             limit = config.SWIPE_SESSION_RECIPE_QUEUE
 
@@ -66,17 +66,20 @@ class SwipeSessionRecipeQueueService:
 
         users = [swipe.user_id for swipe in swipes]
         new_item = {"users": users, "recipe_id": recipe_id}
-        
+
         queue.insert(0, new_item)
         swipe_session_recipe_queue.queue = queue
 
     @Transactional()
     async def create_queue(self, swipe_session_id: int) -> int:
-        print("Creating new queue.")
         if await self.repo.get_by_id(swipe_session_id):
             raise QueueAlreadyExistsException
 
-        recipes = await self.recipe_serv.get()
+        swipe_session = await self.swipe_session_serv.get_swipe_session_by_id(
+            swipe_session_id
+        )
+
+        recipes = await self.recipe_serv.get_filtered_for_group(swipe_session.group_id)
 
         queue = [{"users": [], "recipe_id": recipe.id} for recipe in recipes]
         random.shuffle(queue)

@@ -1,6 +1,7 @@
 """Recipe service module."""
 
 from typing import List, Dict
+from app.group.repository.group import GroupRepository
 from core.db.models import RecipeIngredient, Recipe, RecipeTag, User
 from core.db import Transactional
 from core.exceptions.base import UnauthorizedException
@@ -50,6 +51,7 @@ class RecipeService:
         self.image_repo = ImageRepository()
         self.recipe_repo = RecipeRepository()
         self.user_serv = UserService()
+        self.group_repo = GroupRepository()
 
     async def get(self, limit: int = None, offset: int = None):
         return await self.recipe_repo.get(limit, offset)
@@ -68,6 +70,26 @@ class RecipeService:
             limit, offset, user.id if user else None
         )
         return {"total_count": total_count, "recipes": recipes}
+
+    async def get_filtered_for_group(
+        self,
+        group_id: int,
+        limit: int = None,
+        offset: int = None,
+    ):
+        group = await self.group_repo.get_by_id(group_id)
+
+        user_tags = [
+            await self.recipe_repo.get_user_tags(member.user_id)
+            for member in group.users
+        ]
+        user_tags = [item for sublist in user_tags for item in sublist]
+
+        recipes = await self.recipe_repo.get_custom_filtered(
+            user_tags, limit, offset
+        )
+
+        return recipes
 
     async def get_recipe_by_id(self, recipe_id: int) -> Recipe:
         """Get a recipe by id.
