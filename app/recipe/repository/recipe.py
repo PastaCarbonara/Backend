@@ -206,6 +206,9 @@ class RecipeRepository(BaseRepo):
                 if "Vegetarisch" in [tag.tag.name for tag in recipe.tags]:
                     result.append(recipe)
 
+        else:
+            result = recipes
+
         if offset:
             result = result[offset:]
 
