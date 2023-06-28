@@ -22,8 +22,3 @@ async def cheat():
         result[key] = item
 
     return result
-
-
-@home_router.get("/xd/recipes", dependencies=[Depends(PermissionDependency([[AllowAll]]))])
-async def recipes():
-    return await RecipeService().get_filtered_for_group(1, None, None)
