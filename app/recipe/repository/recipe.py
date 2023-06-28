@@ -44,7 +44,7 @@ class RecipeRepository(BaseRepo):
 
     def __init__(self):
         super().__init__(Recipe)
-        
+
     def query_options(self, query):
         return query.options(
             joinedload(Recipe.tags).joinedload(RecipeTag.tag),
@@ -176,21 +176,47 @@ class RecipeRepository(BaseRepo):
             .where((Tag.name == "Veganistisch") | (Tag.name == "Vegetarisch"))
         )
         return query, count_query
-    
+
     async def get(self, limit: int = None, offset: int = None):
-        query = (
-            select(Recipe)
-        )
+        query = select(Recipe)
         if limit:
             query = query.limit(limit)
-        if offset: 
+        if offset:
             query = query.offset(offset)
         query = self.query_options(query)
 
         result = await session.execute(query)
         return result.scalars().unique().all()
 
-    async def get_filtered(self, limit: int, offset: int, user_id: int = None) -> List[Recipe]:
+    async def get_custom_filtered(
+        self, tags: list[Tag], limit: int, offset: int
+    ) -> list[Recipe]:
+        recipes = await self.get()
+
+        result = []
+
+        if "Veganistisch" in [tag.name for tag in tags]:
+            for recipe in recipes:
+                if ("Veganistisch" in [tag.tag.name for tag in recipe.tags] or 
+                    "Vegetarisch" in [tag.tag.name for tag in recipe.tags]):
+                    result.append(recipe)
+
+        elif "Vegetarisch" in [tag.name for tag in tags]:
+            for recipe in recipes:
+                if "Vegetarisch" in [tag.tag.name for tag in recipe.tags]:
+                    result.append(recipe)
+
+        if offset:
+            result = result[offset:]
+
+        if limit:
+            result = result[:limit]
+
+        return result
+
+    async def get_filtered(
+        self, limit: int, offset: int, user_id: int = None
+    ) -> List[Recipe]:
         """Get a list of recipes.
 
         Returns
@@ -254,10 +280,7 @@ class RecipeRepository(BaseRepo):
         Recipe
             The recipe with the given id.
         """
-        query = (
-            select(Recipe)
-            .where(Recipe.id == model_id)
-        )
+        query = select(Recipe).where(Recipe.id == model_id)
         query = self.query_options(query)
         result = await session.execute(query)
         return result.scalars().first()
@@ -275,11 +298,7 @@ class RecipeRepository(BaseRepo):
         List[Recipe]
             A list of recipes filtered by the given tags.
         """
-        query = (
-            select(Recipe)
-            .join(Recipe.tags)
-            .where(Tag.name.in_(tags))
-        )
+        query = select(Recipe).join(Recipe.tags).where(Tag.name.in_(tags))
         query = self.query_options(query)
         result = await session.execute(query)
         return result.scalars().all()

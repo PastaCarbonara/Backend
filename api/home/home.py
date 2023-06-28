@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Response, Depends
+from app.recipe.repository.recipe import RecipeRepository
+from app.recipe.services.recipe import RecipeService
 
 from core.fastapi.dependencies.permission import PermissionDependency, AllowAll, IsAdmin
 from app.swipe_session.services.swipe_session_websocket import manager
@@ -20,3 +22,8 @@ async def cheat():
         result[key] = item
 
     return result
+
+
+@home_router.get("/xd/recipes", dependencies=[Depends(PermissionDependency([[AllowAll]]))])
+async def recipes():
+    return await RecipeService().get_filtered_for_group(1, None, None)

@@ -114,6 +114,9 @@ class RecipeTag(Base):
     recipe: Mapped["Recipe"] = relationship(back_populates="tags")
     tag: Mapped["Tag"] = relationship(back_populates="recipes")
 
+    def __repr__(self) -> str:
+        return f"RecipeTag({self.recipe.name}/{self.tag.name})"
+
 
 class UserTag(Base):
     __tablename__ = "user_tag"
@@ -197,10 +200,6 @@ class Recipe(Base, TimestampMixin):
         return (
             f"Recipe(id='{self.id}' "
             + f"name='{self.name}' "
-            + f"description='{self.description}' "
-            + f"instructions='{self.instructions}' "
-            + f"preparation_time='{self.preparation_time}' "
-            + f"image='{self.image}' "
             + f"creator_id='{self.creator_id}')"
         )
 
@@ -225,6 +224,9 @@ class Tag(Base):
         back_populates="tag", cascade="all, delete"
     )
     users: Mapped[UserTag] = relationship(back_populates="tag")
+
+    def __repr__(self) -> str:
+        return f"Tag({self.name})"
 
 
 class Ingredient(Base):
