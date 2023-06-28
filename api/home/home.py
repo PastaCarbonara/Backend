@@ -5,6 +5,7 @@ from app.swipe_session.services.swipe_session_websocket import manager
 
 home_router = APIRouter()
 
+
 @home_router.get("/health", dependencies=[Depends(PermissionDependency([[AllowAll]]))])
 async def home():
     return Response(status_code=200)
@@ -12,5 +13,10 @@ async def home():
 
 @home_router.get("/cheat", dependencies=[Depends(PermissionDependency([[IsAdmin]]))])
 async def cheat():
-    print(manager.active_pools)
-    return manager.active_pools
+    result = {}
+
+    for key, item in manager.active_pools.items():
+        item["connections"] = ["WebSocket" for _ in item["connections"]]
+        result[key] = item
+
+    return result
