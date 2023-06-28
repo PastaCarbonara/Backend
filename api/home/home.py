@@ -12,4 +12,5 @@ async def home():
 
 @home_router.get("/cheat", dependencies=[Depends(PermissionDependency([[IsAdmin]]))])
 async def cheat():
+    print(manager.active_pools)
     return manager.active_pools
