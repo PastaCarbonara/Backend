@@ -84,6 +84,9 @@ class BaseWebsocketService:
 
         except WebSocketException as exc:
             get_logger(exc)
+            logging.info(self.active_pools)
+            logging.info(f"pool_id {pool_id}, func: {func.__name__}")
+            logging.info(self.active_pools.get(pool_id))
             logging.exception(exc)
             print(exc)
 

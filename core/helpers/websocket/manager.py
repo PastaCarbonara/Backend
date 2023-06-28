@@ -59,10 +59,13 @@ class WebsocketConnectionManager:
         queue.append(ticket)
         start_time = time.time()
 
+        timeout = 20
+
         while queue[0] != ticket:
             ...
-            if start_time + 60 * 60 > time.time():
-                print("ignoring queue position 1... is currently:", queue)
+            if start_time + timeout < time.time():
+                print(f"{timeout} seconds have passed, " "ignoring queue position 1...")
+                print(queue)
                 start_time = time.time()
                 queue.pop(0)
 
@@ -72,7 +75,8 @@ class WebsocketConnectionManager:
             ...
         except Exception as exc:
             log_name = get_logger(exc)
-            logging.info(f"pool_id {pool_id}, func: {func.__name__}")
+            logging.info(f"func: {func.__name__}, params: {kwargs}")
+            logging.info(self.active_pools.get(pool_id))
             logging.exception(exc)
 
             packet = WebsocketPacketSchema(

@@ -130,9 +130,7 @@ class SwipeSessionWebsocketService(BaseWebsocketService):
             access_token=access_token, swipe_session_id=swipe_session_id
         )
         if exc:
-            await websocket.accept()
-            await self.manager.handle_connection_code(websocket, exc)
-            await websocket.close()
+            await self.manager.deny(websocket, exc)
             return
 
         decoded_token = TokenHelper.decode(token=access_token)
