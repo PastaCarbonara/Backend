@@ -9,3 +9,17 @@ home_router = APIRouter()
 @home_router.get("/health", dependencies=[Depends(PermissionDependency([[AllowAll]]))])
 async def home():
     return Response(status_code=200)
+
+
+@home_router.get("/cheat", dependencies=[Depends(PermissionDependency([[IsAdmin]]))])
+async def cheat():
+    result = {}
+
+    for key, item in manager.active_pools.items():
+        new_item = {
+            "connections": ["WebSocket" for _ in item["connections"]],
+            "queue": item["queue"]
+        }
+        result[key] = new_item
+
+    return result
