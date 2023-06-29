@@ -253,9 +253,14 @@ class SwipeSession(Base, TimestampMixin):
 
     swipe_match: Mapped[Recipe] = relationship(back_populates="swipe_session_matches")
     swipes: Mapped[List["Swipe"]] = relationship(
-        back_populates="swipe_session", uselist=True
+        back_populates="swipe_session", cascade="all, delete", uselist=True
     )
-    group: Mapped["Group"] = relationship(back_populates="swipe_sessions")
+    group: Mapped["Group"] = relationship(
+        back_populates="swipe_sessions", cascade="all, delete"
+    )
+    recipe_queue: Mapped["SwipeSessionRecipeQueue"] = relationship(
+        back_populates="swipe_session", cascade="all, delete"
+    )
 
     def __repr__(self) -> str:
         return f"SwipeSession({self.id}, {self.session_date}, {self.status})"
@@ -265,7 +270,10 @@ class SwipeSessionRecipeQueue(Base):
     __tablename__ = "session_recipe_queue"
 
     swipe_session_id: Mapped[int] = mapped_column(
-        ForeignKey("swipe_session.id"), primary_key=True
+        ForeignKey("swipe_session.id", ondelete="cascade"), primary_key=True
+    )
+    swipe_session: Mapped[SwipeSession] = relationship(
+        back_populates="recipe_queue", cascade="all, delete"
     )
     queue: Mapped[JSON] = Column(JSON)
 
