@@ -54,20 +54,20 @@ class WebsocketConnectionManager:
         self.permissions = permissions
 
     async def queued_run(self, pool_id, func, **kwargs):
-        ticket = random.random()
-        queue = self.active_pools[pool_id]["queue"]
-        queue.append(ticket)
-        start_time = time.time()
+        # ticket = random.random()
+        # queue = self.active_pools[pool_id]["queue"]
+        # queue.append(ticket)
+        # start_time = time.time()
 
-        timeout = 20
+        # timeout = 20
 
-        while queue[0] != ticket:
-            ...
-            if start_time + timeout < time.time():
-                print(f"{timeout} seconds have passed, " "ignoring queue position 1...")
-                print(queue)
-                start_time = time.time()
-                queue.pop(0)
+        # while queue[0] != ticket:
+        #     ...
+        #     if start_time + timeout < time.time():
+        #         print(f"{timeout} seconds have passed, " "ignoring queue position 1...")
+        #         print(queue)
+        #         start_time = time.time()
+        #         queue.pop(0)
 
         try:
             await func(pool_id=pool_id, **kwargs)
@@ -89,7 +89,7 @@ class WebsocketConnectionManager:
             )
             await self.pool_broadcast(pool_id, packet)
 
-        queue.pop(0)
+        # queue.pop(0)
 
     async def check_auth(
         self, permissions: list[list[BaseWebsocketPermission]] = None, **kwargs
