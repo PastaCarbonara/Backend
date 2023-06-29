@@ -16,7 +16,10 @@ async def cheat():
     result = {}
 
     for key, item in manager.active_pools.items():
-        item["connections"] = ["WebSocket" for _ in item["connections"]]
-        result[key] = item
+        new_item = {
+            "connections": ["WebSocket" for _ in item["connections"]],
+            "queue": item["queue"]
+        }
+        result[key] = new_item
 
     return result
